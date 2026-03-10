@@ -1,0 +1,124 @@
+<Window x:Class="FoTestingApp.Views.MainShell"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="FO Testing &amp; Commissioning — Jinom AI"
+        MinWidth="1024" MinHeight="640"
+        Width="1280" Height="768"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F6FA">
+
+    <Window.Resources>
+        <Style x:Key="NavButtonStyle" TargetType="Button"
+               BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Foreground" Value="#B3CCE8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Margin" Value="4,2"/>
+        </Style>
+        <Style x:Key="NavButtonActiveStyle" TargetType="Button"
+               BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#2E6FBF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Margin" Value="4,2"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ========== SIDEBAR ========== -->
+        <Border Grid.Column="0" Background="#1E5AA0">
+            <DockPanel>
+                <!-- Logo / App Title -->
+                <Border DockPanel.Dock="Top" Background="#163F73" Padding="16,18">
+                    <StackPanel>
+                        <TextBlock Text="🔌 Jinom AI" Foreground="White"
+                                   FontSize="16" FontWeight="Bold"/>
+                        <TextBlock Text="FO Testing" Foreground="#9EC5E8" FontSize="11"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- User Info -->
+                <Border DockPanel.Dock="Top" Background="#174880" Padding="16,10">
+                    <StackPanel>
+                        <TextBlock x:Name="UserNameLabel" Text="Teknisi"
+                                   Foreground="White" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="UserEmailLabel" Text=""
+                                   Foreground="#9EC5E8" FontSize="11"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigation Items -->
+                <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0">
+                    <Button x:Name="BtnDashboard" Style="{StaticResource NavButtonActiveStyle}"
+                            Click="NavButton_Click" Tag="Dashboard">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialDesign:PackIcon Kind="ViewDashboard" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnNewTest" Style="{StaticResource NavButtonStyle}"
+                            Click="NavButton_Click" Tag="NewTest">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialDesign:PackIcon Kind="Play" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Pengujian Baru" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnHistory" Style="{StaticResource NavButtonStyle}"
+                            Click="NavButton_Click" Tag="History">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialDesign:PackIcon Kind="History" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Riwayat" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnReport" Style="{StaticResource NavButtonStyle}"
+                            Click="NavButton_Click" Tag="Report">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Laporan" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Separator Margin="16,8" Background="#2E6FBF"/>
+
+                    <!-- Admin-only items -->
+                    <Button x:Name="BtnSettings" Style="{StaticResource NavButtonStyle}"
+                            Click="NavButton_Click" Tag="Settings" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialDesign:PackIcon Kind="Cog" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Pengaturan" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Logout at bottom -->
+                <Button DockPanel.Dock="Bottom" Style="{StaticResource NavButtonStyle}"
+                        Click="LogoutButton_Click" Margin="4,4,4,16">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <materialDesign:PackIcon Kind="Logout" Width="18" Height="18" VerticalAlignment="Center"/>
+                        <TextBlock Text="Keluar" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </DockPanel>
+        </Border>
+
+        <!-- ========== MAIN CONTENT AREA ========== -->
+        <Frame x:Name="ContentFrame"
+               Grid.Column="1"
+               NavigationUIVisibility="Hidden"
+               Background="#F4F6FA"/>
+    </Grid>
+</Window>

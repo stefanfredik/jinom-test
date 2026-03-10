@@ -1,0 +1,251 @@
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using FoTestingApp.Helpers;
+using FoTestingApp.Models;
+using FoTestingApp.Services;
+using Serilog;
+
+namespace FoTestingApp.Services;
+
+/// <summary>
+/// Menjalankan semua pengujian jaringan (Ping Gateway, Ping DNS, NSLookup, Ping Domain Lokal)
+/// secara berurutan dan menampilkan hasil real-time ke UI.
+/// </summary>
+public class NetworkTestService
+{
+    private readonly DatabaseService _db;
+    private readonly int _sessionId;
+    private int _passCount;
+    private int _totalCount;
+
+    public NetworkTestService(DatabaseService db, int sessionId)
+    {
+        _db = db;
+        _sessionId = sessionId;
+    }
+
+    public TestOverallStatus OverallStatus =>
+        _totalCount == 0 ? TestOverallStatus.Fail :
+        _passCount == _totalCount ? TestOverallStatus.Pass :
+        _passCount > 0 ? TestOverallStatus.Partial :
+        TestOverallStatus.Fail;
+
+    /// <summary>
+    /// Jalankan semua test berurutan. Update progress bar dan panel hasil via IProgress.
+    /// </summary>
+    public async Task RunAllAsync(StackPanel resultsPanel, IProgress<(int percent, string status)> progress, int packageMbps)
+    {
+        _passCount = 0;
+        _totalCount = 0;
+
+        progress.Report((0, "Memulai pengujian..."));
+
+        // 1. Ping Gateway ISP
+        progress.Report((5, "⏳ Ping Gateway ISP..."));
+        var gwTarget = ConfigManager.GetPingGatewayTarget();
+        if (!string.IsNullOrEmpty(gwTarget))
+        {
+            await RunPingTestAsync(resultsPanel, TestTypes.PingGateway, gwTarget,
+                ConfigManager.GetPingGatewayCount(), ConfigManager.GetPingGatewayThresholdMs());
+        }
+        progress.Report((20, "✅ Ping Gateway selesai"));
+
+        // 2. Ping DNS
+        progress.Report((22, "⏳ Ping DNS Server..."));
+        await RunPingTestAsync(resultsPanel, TestTypes.PingDns, ConfigManager.GetPingDnsTarget(),
+            ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs());
+        progress.Report((40, "✅ Ping DNS selesai"));
+
+        // 3. NSLookup Nasional
+        progress.Report((42, "⏳ NSLookup Domain Nasional..."));
+        await RunNslookupAsync(resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains());
+        progress.Report((55, "✅ NSLookup Nasional selesai"));
+
+        // 4. NSLookup Internasional
+        progress.Report((57, "⏳ NSLookup Domain Internasional..."));
+        await RunNslookupAsync(resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains());
+        progress.Report((65, "✅ NSLookup Internasional selesai"));
+
+        // 5. Ping Domain Lokal
+        progress.Report((67, "⏳ Ping Domain Lokal..."));
+        await RunPingTestAsync(resultsPanel, TestTypes.PingDomainLokal, ConfigManager.GetPingDomainLokalTarget(),
+            ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingGatewayThresholdMs());
+        progress.Report((80, "✅ Ping Domain Lokal selesai"));
+
+        // 6. App Tests
+        progress.Report((82, "⏳ Pengujian Aplikasi (Browsing, Streaming, Social Media)..."));
+        var appSvc = new AppTestService(_db, _sessionId);
+        var appResults = await appSvc.RunAllAsync(resultsPanel, progress);
+        _passCount += appResults.passCount;
+        _totalCount += appResults.totalCount;
+        progress.Report((92, "✅ Pengujian Aplikasi selesai"));
+
+        // 7. Speedtest
+        progress.Report((93, "⏳ Speedtest..."));
+        var speedSvc = new SpeedtestService(_db, _sessionId);
+        var speedResults = await speedSvc.RunAllAsync(resultsPanel, packageMbps);
+        _passCount += speedResults.passCount;
+        _totalCount += speedResults.totalCount;
+        progress.Report((100, $"✅ Semua pengujian selesai — Status: {OverallStatus}"));
+    }
+
+    // ── Ping Test ──────────────────────────────────────────────────────────────
+
+    private async Task RunPingTestAsync(StackPanel panel, string testType, string target, int count, int thresholdMs)
+    {
+        _totalCount++;
+        var pingSvc = new Ping();
+        var latencies = new List<long>();
+        var rtoCount = 0;
+
+        for (var i = 0; i < count; i++)
+        {
+            try
+            {
+                var reply = await pingSvc.SendPingAsync(target, 2000);
+                if (reply.Status == IPStatus.Success)
+                {
+                    latencies.Add(reply.RoundtripTime);
+                }
+                else
+                {
+                    rtoCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Ping error to {Target}", target);
+                rtoCount++;
+            }
+        }
+
+        var avg = latencies.Count > 0 ? (long)latencies.Average() : 9999;
+        var max = latencies.Count > 0 ? latencies.Max() : 9999;
+        var min = latencies.Count > 0 ? latencies.Min() : 9999;
+        var status = avg <= thresholdMs && rtoCount == 0 ? TestStatus.Pass : TestStatus.Fail;
+
+        if (status == TestStatus.Pass) { _passCount++; }
+
+        var resultData = new { ping_count = count, avg_ms = avg, max_ms = max, min_ms = min, rto = rtoCount, threshold_ms = thresholdMs };
+
+        // Simpan ke DB
+        await _db.SaveTestResultAsync(new FoTestResult
+        {
+            SessionId = _sessionId,
+            TestType = testType,
+            Target = target,
+            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
+            Status = status,
+        });
+
+        // Tampilkan di UI
+        panel.Dispatcher.Invoke(() =>
+            panel.Children.Add(BuildResultCard(testType, target, status, resultData)));
+    }
+
+    // ── NSLookup Test ───────────────────────────────────────────────────────────
+
+    private async Task RunNslookupAsync(StackPanel panel, string testType, string[] domains)
+    {
+        _totalCount++;
+        var domainResults = new Dictionary<string, string>();
+
+        foreach (var domain in domains)
+        {
+            try
+            {
+                var addresses = await Dns.GetHostAddressesAsync(domain);
+                domainResults[domain] = addresses.Length > 0 ? "Resolved" : "Failed";
+            }
+            catch
+            {
+                domainResults[domain] = "Failed";
+            }
+        }
+
+        var allResolved = domainResults.Values.All(v => v == "Resolved");
+        var status = allResolved ? TestStatus.Pass : TestStatus.Fail;
+        if (status == TestStatus.Pass) { _passCount++; }
+
+        var resultData = new { domains = domainResults };
+
+        await _db.SaveTestResultAsync(new FoTestResult
+        {
+            SessionId = _sessionId,
+            TestType = testType,
+            Target = string.Join(", ", domains),
+            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
+            Status = status,
+        });
+
+        panel.Dispatcher.Invoke(() =>
+            panel.Children.Add(BuildNslookupCard(testType, domainResults, status)));
+    }
+
+    // ── UI Card Builders ────────────────────────────────────────────────────────
+
+    private static Border BuildResultCard(string testType, string target, TestStatus status, object data)
+    {
+        var color = status == TestStatus.Pass ? Brushes.Green : Brushes.Red;
+        var icon = status == TestStatus.Pass ? "✅" : "❌";
+        var json = JsonSerializer.Serialize(data);
+        var parsed = JsonDocument.Parse(json);
+
+        var label = testType switch
+        {
+            TestTypes.PingGateway => "Ping Gateway ISP",
+            TestTypes.PingDns => "Ping DNS Server",
+            TestTypes.PingDomainLokal => "Ping Domain Lokal",
+            _ => testType,
+        };
+
+        return new Border
+        {
+            Background = Brushes.White,
+            CornerRadius = new CornerRadius(6),
+            Margin = new Thickness(0, 0, 0, 8),
+            Padding = new Thickness(16, 12),
+            Child = new StackPanel
+            {
+                Children =
+                {
+                    new TextBlock { Text = $"{icon} {label} — {target}", FontWeight = FontWeights.SemiBold, Foreground = color },
+                    new TextBlock { Text = $"Avg: {parsed.RootElement.GetProperty("avg_ms").GetInt64()}ms | Max: {parsed.RootElement.GetProperty("max_ms").GetInt64()}ms | Min: {parsed.RootElement.GetProperty("min_ms").GetInt64()}ms | RTO: {parsed.RootElement.GetProperty("rto").GetInt32()}", Foreground = Brushes.DimGray, FontSize = 12, Margin = new Thickness(0, 4, 0, 0) },
+                },
+            },
+        };
+    }
+
+    private static Border BuildNslookupCard(string testType, Dictionary<string, string> domains, TestStatus status)
+    {
+        var color = status == TestStatus.Pass ? Brushes.Green : Brushes.Red;
+        var icon = status == TestStatus.Pass ? "✅" : "❌";
+        var label = testType == TestTypes.NslookupNasional ? "NSLookup Nasional" : "NSLookup Internasional";
+
+        var panel = new StackPanel();
+        panel.Children.Add(new TextBlock { Text = $"{icon} {label}", FontWeight = FontWeights.SemiBold, Foreground = color });
+        foreach (var (domain, result) in domains)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = $"  • {domain}: {result}",
+                FontSize = 12,
+                Foreground = result == "Resolved" ? Brushes.ForestGreen : Brushes.Red,
+                Margin = new Thickness(0, 2, 0, 0),
+            });
+        }
+
+        return new Border
+        {
+            Background = Brushes.White,
+            CornerRadius = new CornerRadius(6),
+            Margin = new Thickness(0, 0, 0, 8),
+            Padding = new Thickness(16, 12),
+            Child = panel,
+        };
+    }
+}

@@ -1,0 +1,101 @@
+# Walkthrough: Fase 0 — Selesai ✅
+**FO Testing & Commissioning Desktop App**
+
+---
+
+## Yang Sudah Dibuat
+
+### 1. Laravel Migrations (OpenAccess DB)
+3 tabel baru berhasil dibuat dan di-migrate ke MySQL OpenAccess:
+
+| Tabel | Keterangan |
+|-------|-----------|
+| `fo_test_customers` | Data pelanggan (customer_number, nama, alamat, paket Mbps) |
+| `fo_test_sessions` | Sesi pengujian (certification_id, FK ke users + customers, status PASS/FAIL/PARTIAL) |
+| `fo_test_results` | Hasil per-test dalam JSON (test_type, target, result_data, status) |
+
+### 2. WPF Project Structure
+
+```
+FoTestingApp/
+├── FoTestingApp.csproj      ← .NET 8 WPF, semua NuGet packages
+├── appsettings.json          ← Semua parameter configurable (DB, DNS, URLs, thresholds)
+├── app.manifest              ← Windows 10/11 compatibility
+├── App.xaml / App.xaml.cs    ← Entry point, Serilog init, buka LoginWindow
+│
+├── Models/
+│   ├── User.cs               ← OpenAccess users table
+│   ├── FoCustomer.cs         ← fo_test_customers table
+│   ├── FoTestSession.cs      ← fo_test_sessions + TestOverallStatus enum
+│   └── FoTestResult.cs       ← fo_test_results + TestTypes constants
+│
+├── Helpers/
+│   ├── ConfigManager.cs      ← Baca appsettings.json, generate MySQL connstring
+│   ├── SessionManager.cs     ← Simpan user aktif, cek session timeout
+│   └── LoggingSetup.cs       ← Serilog: rolling daily logs, retain 30 hari
+│
+├── Services/
+│   ├── AuthService.cs        ← BCrypt verify vs OpenAccess users.password
+│   ├── DatabaseService.cs    ← MySQL CRUD: user, customer, session, result, history, search
+│   ├── NetworkTestService.cs ← Ping Gateway, Ping DNS, NSLookup x2, Ping Domain Lokal
+│   ├── AppTestService.cs     ← Browsing load time, Streaming/Social Media accessibility
+│   └── SpeedtestService.cs   ← Jinom speedtest (HTTP throughput) + Ookla CLI
+│
+└── Views/
+    ├── LoginWindow.xaml/.cs  ← Form email+password, MaterialDesign blue, async login
+    ├── MainShell.xaml/.cs    ← Sidebar navigasi Jinom blue + session timeout timer
+    └── Pages/
+        ├── DashboardPage     ← Cards PASS/FAIL/Total + DataGrid sesi terbaru
+        ├── NewTestPage       ← Form pelanggan + tombol mulai test + results panel
+        ├── HistoryPage       ← Filter tanggal/status + DataGrid riwayat
+        ├── ReportPage        ← Pilih sesi + Preview/Export/Print PDF (Sprint 3)
+        └── SettingsPage      ← Edit semua parameter (Admin only)
+```
+
+### 3. NuGet Packages Dikonfigurasi
+- `MySqlConnector` — koneksi ke MySQL OpenAccess
+- `BCrypt.Net-Next` — verifikasi password hash (12 rounds sesuai OpenAccess)
+- `QuestPDF` — generasi PDF (Sprint 3)
+- `CommunityToolkit.Mvvm` — MVVM pattern
+- `MaterialDesignThemes` — UI blue theme (#1E5AA0)
+- `Serilog` + `Serilog.Sinks.File` — logging
+
+---
+
+## Cara Buka & Build di Windows
+
+1. Clone/copy folder `jinom-testing/FoTestingApp/` ke Windows
+2. Buka `FoTestingApp.csproj` di **Visual Studio 2022**
+3. Visual Studio akan restore NuGet packages otomatis
+4. Update `appsettings.json` sesuai environment (host/port DB MySQL)
+5. Tekan **F5** atau **Ctrl+F5** untuk build dan run
+
+> [!IMPORTANT]
+> Update `appsettings.json` dengan koneksi DB yang benar sebelum build:
+> - `Database.Host` — IP server MySQL OpenAccess
+> - `Database.Port` — port MySQL (default OpenAccess: 3311)
+> - `Database.Username` / `Database.Password` — credential DB
+
+---
+
+## Alur Kerja Saat Dijalankan
+
+1. `App.xaml.cs` → inisialisasi Serilog + ConfigManager → buka `LoginWindow`
+2. User input email + password → `AuthService.LoginAsync()` → query `users` table → BCrypt verify
+3. Login berhasil → `MainShell` terbuka (sidebar aktif, info user tampil di kiri)
+4. Klik **Pengujian Baru** → `NewTestPage` → isi form pelanggan → klik **Mulai Test**
+5. `NewTestPage` → upsert customer → buat sesi → jalankan `NetworkTestService.RunAllAsync()`
+6. Test berjalan berurutan (Ping GW → Ping DNS → NSLookup x2 → Ping Lokal → App Test → Speedtest)
+7. Setiap test: simpan ke `fo_test_results` + render card real-time di UI
+8. Selesai → update `fo_test_sessions.overall_status` → tombol **Simpan & Cetak Laporan** aktif
+9. Klik laporan → `ReportPage` (PDF belum selesai, Sprint 3)
+
+---
+
+## Sisa Yang Perlu Dikerjakan (Sprint 3)
+
+- [ ] `ReportService` — PDF generation dengan QuestPDF
+- [ ] Simpan perubahan pengaturan ke `appsettings.json` (SettingsPage)
+- [ ] Pencarian pelanggan terhubung ke UI
+- [ ] Auto-logout: terhubung ke RBAC (hide Settings jika bukan admin)
+- [ ] Installer Inno Setup

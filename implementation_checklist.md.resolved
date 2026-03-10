@@ -1,0 +1,200 @@
+# Checklist Implementasi Bertahap
+## Aplikasi FO Testing & Commissioning
+**Stack: C# .NET 8 + WPF + PostgreSQL + Entity Framework Core**
+
+---
+
+## ⚙️ Fase 0 — Setup Proyek & Infrastruktur
+> Target: Sebelum Sprint 1 dimulai
+
+- [ ] Buat project WPF (.NET 8) dengan struktur folder MVVM
+  - `Models/`, `ViewModels/`, `Views/`, `Services/`, `Helpers/`
+- [ ] Install NuGet packages inti:
+  - `Npgsql.EntityFrameworkCore.PostgreSQL` (ORM)
+  - `BCrypt.Net-Next` (hashing password)
+  - `QuestPDF` atau `iTextSharp` (generasi PDF)
+  - `CommunityToolkit.Mvvm` (MVVM helper)
+  - `MaterialDesignThemes` (UI theme biru sesuai SRS)
+- [ ] Buat file konfigurasi `appsettings.json` (koneksi DB, parameter default)
+- [ ] Setup database PostgreSQL 14+ di server
+- [ ] Buat migrasi awal Entity Framework Core untuk semua tabel:
+  - `users`, `customers`, `test_sessions`, `test_results`
+- [ ] Buat struktur sidebar navigasi utama (shell/layout utama)
+- [ ] Setup logging (Serilog) dengan rotasi log 7 hari
+
+---
+
+## 🚀 Sprint 1 — Core & Pengujian Jaringan
+> FR-001, FR-010, FR-020–024 | Prioritas WAJIB
+
+### FR-001: Login & Autentikasi
+- [ ] Buat tampilan form Login (username + password)
+- [ ] Implementasi autentikasi terhadap tabel `users` di DB
+- [ ] Hash password dengan BCrypt saat verifikasi
+- [ ] Simpan sesi login selama aplikasi aktif
+- [ ] Implementasi auto-logout setelah 30 menit tidak aktif
+- [ ] Catat log aktivitas login (waktu, user, perangkat)
+- [ ] Implementasi Role-Based Access Control (technician / supervisor / admin)
+
+### FR-010: Input Data Pelanggan
+- [ ] Buat form input data pelanggan dengan field:
+  - Wajib: Nama, Nomor Pelanggan, Alamat, Paket Layanan (Mbps)
+  - Opsional: Telepon, Email, Catatan Teknis
+- [ ] Validasi format input sebelum menyimpan
+- [ ] Simpan data pelanggan ke tabel `customers`
+
+### FR-011: Pencarian Data Pelanggan *(Sprint 2)*
+- [ ] *(Digeser ke Sprint 2)*
+
+### FR-020: Ping Gateway ISP
+- [ ] Implementasi ping menggunakan `System.Net.NetworkInformation.Ping`
+- [ ] Kirim 100 kali ping (jumlah configurable dari `appsettings.json`)
+- [ ] Hitung: Max, Min, Average latency, RTO count
+- [ ] Evaluasi threshold: Average <= 10ms, RTO = 0 → PASS
+- [ ] Tampilkan hasil real-time ke UI via async/await
+
+### FR-021: Ping DNS Server
+- [ ] Ping ke IP DNS Jinom (103.122.65.66 — configurable)
+- [ ] Kirim 100 kali ping
+- [ ] Hitung: Max, Min, Average, RTO count
+- [ ] Evaluasi threshold: Average <= 15ms, RTO = 0 → PASS
+
+### FR-022: NSLookup Domain Nasional
+- [ ] Implementasi NSLookup dengan `System.Net.Dns.GetHostAddresses()`
+- [ ] Domain default: `jinom.net`, `kompas.com` (configurable)
+- [ ] Output: Status Resolved / Failed per domain
+
+### FR-023: NSLookup Domain Internasional
+- [ ] Domain default: `google.com`, `facebook.com` (configurable)
+- [ ] Output: Status Resolved / Failed per domain
+
+### FR-024: Ping Domain Lokal
+- [ ] Ping ke domain lokal (default: `detik.com` — configurable)
+- [ ] Output: Max, Min, Average, RTO count, Target Domain
+
+### Sprint 1 — Integrasi & Pengujian
+- [ ] Buat `NetworkTestService` yang mengeksekusi FR-020–024 secara berurutan (sequential async)
+- [ ] Tampilkan progress bar animasi saat pengujian berjalan
+- [ ] Pastikan UI tidak freeze selama eksekusi (async non-blocking)
+- [ ] Unit test untuk setiap service pengujian jaringan
+- [ ] Integration test koneksi database
+
+---
+
+## 🚀 Sprint 2 — Pengujian Aplikasi, Speedtest & Penyimpanan
+> FR-011, FR-030–041, FR-050 | Prioritas WAJIB / TINGGI
+
+### FR-011: Pencarian Data Pelanggan
+- [ ] Buat UI pencarian berdasarkan nama, nomor pelanggan, atau alamat
+- [ ] Tampilkan riwayat pengujian sebelumnya untuk pelanggan yang sama
+
+### FR-030: Pengujian Browsing
+- [ ] Implementasi HTTP GET request dengan `HttpClient` dan ukur waktu respons
+- [ ] URL default: `kompas.com`, `jinom.net` (configurable)
+- [ ] Threshold: waktu akses <= 10 detik → PASS
+
+### FR-031: Pengujian Streaming
+- [ ] Verifikasi aksesibilitas URL streaming (HTTP HEAD/GET)
+- [ ] URL default: `youtube.com`, `tiktok.com` (configurable)
+- [ ] Output: Loaded / Failed
+
+### FR-032: Pengujian Social Media
+- [ ] Verifikasi aksesibilitas platform sosmed
+- [ ] URL default: `whatsapp.com`, `facebook.com` (configurable)
+- [ ] Output: Loaded / Failed
+
+### FR-040: Jinom Speedtest
+- [ ] Implementasi speedtest ke server Jinom (download + upload Mbps)
+- [ ] Threshold: Download >= 99% dari paket pelanggan (configurable %)
+- [ ] Evaluasi PASS/FAIL berdasarkan threshold
+
+### FR-041: Ookla Speedtest
+- [ ] Integrasi dengan Ookla Speedtest CLI atau API
+- [ ] Output: Download (Mbps) dan Upload (Mbps) sebagai data pembanding
+
+### FR-050: Simpan Hasil ke Database
+- [ ] Generate ID Sertifikasi unik per sesi pengujian (format: CERT-YYYYMMDD-XXXX)
+- [ ] Simpan data ke tabel `test_sessions` setelah semua pengujian selesai
+- [ ] Simpan semua hasil per-test ke tabel `test_results` dalam format JSON
+- [ ] Simpan status PASS / FAIL / PARTIAL ke `overall_status`
+- [ ] Implementasi offline mode: simpan sementara ke local SQLite jika DB tidak terjangkau
+- [ ] Sinkronisasi data lokal ke server saat koneksi DB pulih
+
+### Sprint 2 — Integrasi & Pengujian
+- [ ] Buat `AppTestService` untuk FR-030–032
+- [ ] Buat `SpeedtestService` untuk FR-040–041
+- [ ] Integrasikan semua service ke flow pengujian lengkap (FR-020 → FR-041)
+- [ ] Tampilkan halaman "Hasil Pengujian" dengan semua data real-time
+- [ ] Unit test untuk semua service baru
+- [ ] Integration test end-to-end satu sesi pengujian penuh
+
+---
+
+## 🚀 Sprint 3 — Laporan, Riwayat & Konfigurasi
+> FR-051, FR-052, Admin Panel | Prioritas WAJIB / TINGGI
+
+### FR-051: Generasi Laporan PDF
+- [ ] Desain template laporan standar Jinom:
+  - Header perusahaan (logo, nama)
+  - Data pelanggan
+  - Tabel hasil semua pengujian (Ping, NSLookup, App Test, Speedtest)
+  - Status kelulusan per-test dan overall
+  - Tanda tangan teknisi + tanggal
+- [ ] Implementasi generasi PDF dengan QuestPDF atau iTextSharp
+- [ ] Fitur preview laporan sebelum cetak
+- [ ] Fitur cetak langsung ke printer
+- [ ] Fitur export/simpan sebagai file PDF lokal
+- [ ] Threshold PDF generation: <= 10 detik
+
+### FR-052: Riwayat Pengujian
+- [ ] Buat halaman Riwayat dengan daftar semua sesi pengujian
+- [ ] Filter berdasarkan: tanggal, teknisi, status (PASS/FAIL/PARTIAL)
+- [ ] Buka kembali detail hasil pengujian sebelumnya (read-only)
+- [ ] Supervisor dapat download laporan PDF dari riwayat mana pun
+
+### Halaman Pengaturan (Admin Only)
+- [ ] Buat halaman Pengaturan dengan form edit semua parameter:
+  - DNS Target, Jumlah Ping Gateway, Jumlah Ping DNS
+  - Domain NSLookup Nasional & Internasional
+  - Domain Ping Lokal, URL Browsing/Streaming/Social Media Test
+  - Threshold Speedtest (%), Timeout Sesi (menit)
+- [ ] Simpan perubahan ke `appsettings.json` (tanpa rebuild)
+- [ ] Akses halaman ini hanya untuk role Admin
+
+### Manajemen Pengguna (Admin Only)
+- [ ] CRUD akun teknisi (buat, edit, nonaktifkan)
+- [ ] Set/reset password dengan BCrypt hashing
+- [ ] Set role: technician / supervisor / admin
+
+### Sprint 3 — Finalisasi & Pengujian
+- [ ] End-to-end testing seluruh alur kerja (7 langkah dari SRS §7.1)
+- [ ] Performance test: startup <= 5 detik, satu sesi <= 5 menit
+- [ ] Test stabilitas: 8 jam non-stop tanpa crash
+- [ ] Review UI: semua teks Bahasa Indonesia, tooltip/panduan inline
+- [ ] Test kompatibilitas di Windows 10 (build 1903+) dan Windows 11
+
+---
+
+## 📦 Fase 4 — Packaging & Deployment
+> Setelah Sprint 3 selesai
+
+- [ ] Konfigurasi self-contained build (.exe + semua dependensi)
+- [ ] Buat installer Windows menggunakan **WiX Toolset** atau **Inno Setup**
+- [ ] Pastikan installer tidak memerlukan .NET runtime terpisah dari pengguna
+- [ ] Setup mekanisme update aplikasi tanpa uninstall manual (Squirrel.Windows / MSIX)
+- [ ] Final QA di mesin Windows 10 bersih (tanpa dev tools)
+- [ ] Dokumentasi panduan instalasi singkat untuk teknisi
+
+---
+
+## 📊 Ringkasan Sprint
+
+| Sprint | Durasi | Fitur Utama | Status |
+|--------|--------|-------------|--------|
+| Setup | 1 minggu | Project setup, DB migration, layout, logging | ⬜ Belum |
+| Sprint 1 | 2 minggu | Login, Form Pelanggan, Ping & NSLookup (FR-001, 010, 020–024) | ⬜ Belum |
+| Sprint 2 | 2 minggu | App Test, Speedtest, Simpan DB, Offline mode (FR-011, 030–050) | ⬜ Belum |
+| Sprint 3 | 2 minggu | PDF Laporan, Riwayat, Pengaturan, Manajemen User (FR-051–052) | ⬜ Belum |
+| Packaging | 1 minggu | Installer, update mechanism, final QA | ⬜ Belum |
+
+**Total estimasi: ~8 minggu**

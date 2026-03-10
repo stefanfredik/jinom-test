@@ -1,0 +1,144 @@
+# Implementation Plan: FO Testing & Commissioning Desktop App
+**Stack:** C# WPF + .NET 8 | **DB:** OpenAccess MySQL | **Auth:** OpenAccess `users` table
+
+---
+
+## Background
+
+Aplikasi desktop Windows untuk teknisi lapangan Jinom, dieksekusi bertahap sesuai SRS. Integrasi dengan OpenAccess:
+- **Autentikasi**: Login menggunakan `email` + `password` dari tabel `users` OpenAccess (bcrypt, 12 rounds).
+- **Penyimpanan data**: Hasil pengujian disimpan ke tabel-tabel baru di database OpenAccess yang sama. Tabel baru dibuat via Laravel migration agar konsisten dengan ekosistem OpenAccess.
+
+> [!IMPORTANT]
+> DB OpenAccess saat ini adalah **MySQL** (bukan PostgreSQL), host `127.0.0.1`, port `3311`, database `openaccess`.
+> NuGet yang digunakan di desktop app: `MySqlConnector` (bukan EF Core yang berat).
+
+---
+
+## Proposed Changes
+
+### Laravel Migrations (di OpenAccess)
+
+#### [NEW] Migration: `fo_test_customers`
+Tabel pelanggan untuk sesi pengujian FO.
+
+#### [NEW] Migration: `fo_test_sessions`
+Sesi pengujian (1 sesi = 1 commissioning pelanggan), berisi `certification_id` unik, FK ke `users` (teknisi) dan `fo_test_customers`.
+
+#### [NEW] Migration: `fo_test_results`
+Hasil per-test dalam sesi (ping, nslookup, app test, speedtest), disimpan sebagai JSON.
+
+---
+
+### Desktop Application (NEW Project)
+
+Path: `/home/homenet/dev/jinom-project/jinom-testing/FoTestingApp/`
+
+#### Struktur Solusi
+```
+FoTestingApp/
+├── FoTestingApp.sln
+├── FoTestingApp/               ← WPF Project (.NET 8)
+│   ├── App.xaml
+│   ├── appsettings.json        ← config: DB conn, ping counts, DNS, URLs, thresholds
+│   ├── Models/                 ← POCO classes (User, Customer, TestSession, TestResult)
+│   ├── ViewModels/             ← MVVM ViewModels
+│   ├── Views/                  ← XAML Pages/Windows
+│   │   ├── LoginWindow.xaml
+│   │   ├── MainShell.xaml      ← Sidebar + ContentFrame
+│   │   ├── Pages/
+│   │   │   ├── DashboardPage.xaml
+│   │   │   ├── NewTestPage.xaml
+│   │   │   ├── TestResultPage.xaml
+│   │   │   ├── HistoryPage.xaml
+│   │   │   ├── ReportPage.xaml
+│   │   │   └── SettingsPage.xaml (Admin only)
+│   ├── Services/
+│   │   ├── AuthService.cs      ← BCrypt verify terhadap OpenAccess users
+│   │   ├── DatabaseService.cs  ← MySQL connection (MySqlConnector)
+│   │   ├── NetworkTestService.cs ← Ping, NSLookup
+│   │   ├── AppTestService.cs   ← Browsing, Streaming, Social Media
+│   │   ├── SpeedtestService.cs ← Jinom + Ookla speedtest
+│   │   └── ReportService.cs    ← PDF generation (QuestPDF)
+│   ├── Helpers/
+│   │   ├── ConfigManager.cs    ← Read/write appsettings.json
+│   │   └── SessionManager.cs   ← Current user session
+│   └── Resources/              ← Icons, styles, themes
+```
+
+#### NuGet Packages
+| Package | Kegunaan |
+|---------|---------|
+| `MySqlConnector` | Koneksi ke MySQL OpenAccess |
+| `BCrypt.Net-Next` | Verifikasi password hash dari OpenAccess |
+| `QuestPDF` | Generasi laporan PDF |
+| `CommunityToolkit.Mvvm` | MVVM (ObservableObject, RelayCommand) |
+| `MaterialDesignThemes` | UI blue theme sesuai SRS |
+| `Serilog` + `Serilog.Sinks.File` | Logging dengan rotasi 7 hari |
+| `Microsoft.Extensions.Configuration` | Baca appsettings.json |
+
+---
+
+## Sprint Plan
+
+### ✅ Fase 0 — Setup & DB Migrations (Dikerjakan Pertama)
+1. Buat Laravel migrations di OpenAccess untuk tabel `fo_test_customers`, `fo_test_sessions`, `fo_test_results`
+2. Jalankan `php artisan migrate`
+3. Buat project WPF baru di `/jinom-testing/FoTestingApp/`
+4. Install semua NuGet packages
+5. Setup `appsettings.json` dengan config DB dan parameter default
+6. Buat layout utama: `LoginWindow` + `MainShell` dengan sidebar navigasi
+
+### 🚀 Sprint 1 — Auth, Form Pelanggan, Pengujian Jaringan
+- `AuthService`: connect ke MySQL, query `users` table, verifikasi bcrypt
+- `LoginWindow`: form email + password, animasi loading, pesan error
+- `MainShell`: sidebar dengan 6 menu item, RBAC hide/show menu admin
+- `NewTestPage`: form input pelanggan (nama, nomor, alamat, paket Mbps)
+- `NetworkTestService`: Ping (via `System.Net.NetworkInformation`), NSLookup (via `System.Net.Dns`)
+- Eksekusi test berurutan dengan progress bar animasi (async/await)
+- `TestResultPage`: tampilkan hasil real-time per-seksi
+
+### 🚀 Sprint 2 — App Test, Speedtest, Simpan DB
+- `AppTestService`: HTTP load time via `HttpClient` (browsing), HTTP status check (streaming/sosmed)
+- `SpeedtestService`: Jinom speedtest (custom), Ookla CLI/API
+- `DatabaseService`: simpan sesi + hasil ke `fo_test_sessions` dan `fo_test_results`
+- Generate `certification_id` unik: format `CERT-YYYYMMDD-XXXXXX`
+- Halaman Riwayat: list sesi dengan filter tanggal/teknisi/status
+- Pencarian pelanggan by nama/nomor/alamat
+
+### 🚀 Sprint 3 — PDF, Riwayat, Pengaturan, Packaging
+- `ReportService`: generate PDF dengan QuestPDF (template Jinom)
+- Halaman Laporan: preview, print, export PDF
+- Halaman Pengaturan (Admin only): edit semua parameter ke `appsettings.json`
+- Manajemen User (Admin only): CRUD user (baca/nonaktifkan dari tabel `users`)
+- Auto-logout timer 30 menit tidak aktif
+- Installer dengan Inno Setup (self-contained)
+
+---
+
+## Verification Plan
+
+### Sprint 0 — Migrations
+```bash
+# Di folder openaccess/
+php artisan migrate --compact
+php artisan migrate:status | grep fo_test
+```
+Verifikasi: 3 tabel `fo_test_*` muncul di `migrate:status` dengan status `Ran`.
+
+### Sprint 1 — Auth
+- Build dan jalankan app dari Visual Studio / `dotnet run`
+- Login dengan credential user OpenAccess yang valid → harus masuk ke `MainShell`
+- Login dengan password salah → harus tampil pesan error, tidak masuk
+- Login dengan user nonaktif → harus ditolak
+
+### Sprint 2 — Network Tests
+- Jalankan sesi pengujian dengan koneksi internet aktif
+- Verifikasi hasil ping gateway muncul real-time di UI
+- Setelah selesai: cek tabel `fo_test_sessions` dan `fo_test_results` di DB via `php artisan db:show` atau MySQL client
+
+### Sprint 3 — PDF
+- Klik "Cetak Laporan" dari sesi yang sudah selesai
+- PDF harus terbuka dengan semua data sesi (nama pelanggan, hasil test, status)
+- Export PDF ke file lokal berhasil
+

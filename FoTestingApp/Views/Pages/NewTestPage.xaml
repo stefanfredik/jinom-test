@@ -1,0 +1,151 @@
+<Page x:Class="FoTestingApp.Views.Pages.NewTestPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Title="Pengujian Baru">
+
+    <Grid Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="Pengujian Baru" FontSize="24" FontWeight="Bold" Foreground="#1E5AA0"/>
+            <TextBlock Text="Isi data pelanggan, lalu mulai eksekusi pengujian jaringan" Foreground="#666"/>
+        </StackPanel>
+
+        <!-- Customer Form -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="24"
+                Effect="{DynamicResource MaterialDesignShadowDepth1}" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.ColumnSpan="3" Text="Data Pelanggan" FontSize="15" FontWeight="SemiBold"
+                           Foreground="#333" Margin="0,0,0,8" Grid.Row="0"/>
+
+                <!-- Customer Search -->
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal"
+                            HorizontalAlignment="Right" Margin="0,0,0,8">
+                    <TextBox x:Name="SearchBox"
+                             materialDesign:HintAssist.Hint="Cari pelanggan (nama / no. pelanggan)..."
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Width="280" Height="36" VerticalContentAlignment="Center"
+                             TextChanged="SearchBox_TextChanged"/>
+                    <ListBox x:Name="SearchDropdown"
+                             Visibility="Collapsed"
+                             MaxHeight="200" Width="280"
+                             SelectionChanged="SearchDropdown_SelectionChanged"
+                             Panel.ZIndex="100"
+                             Background="White"
+                             BorderThickness="1" BorderBrush="#DDD"
+                             HorizontalAlignment="Left">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding CustomerNumber}" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+
+
+                <TextBox Grid.Row="1" Grid.Column="0"
+                         x:Name="CustomerNumberBox"
+                         materialDesign:HintAssist.Hint="Nomor Pelanggan *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,12"/>
+
+                <TextBox Grid.Row="1" Grid.Column="2"
+                         x:Name="FullNameBox"
+                         materialDesign:HintAssist.Hint="Nama Lengkap *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,12"/>
+
+                <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                         x:Name="AddressBox"
+                         materialDesign:HintAssist.Hint="Alamat Instalasi *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,12"/>
+
+                <TextBox Grid.Row="3" Grid.Column="0"
+                         x:Name="PackageMbpsBox"
+                         materialDesign:HintAssist.Hint="Paket Layanan (Mbps) *"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,12"/>
+
+                <TextBox Grid.Row="3" Grid.Column="2"
+                         x:Name="PhoneBox"
+                         materialDesign:HintAssist.Hint="Nomor Telepon (opsional)"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,12"/>
+
+                <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                         x:Name="NotesBox"
+                         materialDesign:HintAssist.Hint="Catatan Teknis (opsional)"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
+            </Grid>
+        </Border>
+
+        <!-- Test Execution Area -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="24"
+                Effect="{DynamicResource MaterialDesignShadowDepth1}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                    <TextBlock Text="Eksekusi Pengujian" FontSize="15" FontWeight="SemiBold"
+                               Foreground="#333" VerticalAlignment="Center"/>
+                    <Button x:Name="StartTestBtn"
+                            Content="▶  MULAI TEST"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#1E5AA0" Foreground="White"
+                            Margin="16,0,0,0" Padding="20,0" Height="36"
+                            Click="StartTestBtn_Click"/>
+                    <Button x:Name="SaveReportBtn"
+                            Content="💾  Simpan &amp; Cetak Laporan"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#27AE60" Foreground="White"
+                            Margin="8,0,0,0" Padding="16,0" Height="36"
+                            IsEnabled="False"
+                            Click="SaveReportBtn_Click"/>
+                </StackPanel>
+
+                <!-- Progress Bar -->
+                <ProgressBar x:Name="TestProgressBar" Grid.Row="1"
+                             Style="{StaticResource MaterialDesignLinearProgressBar}"
+                             IsIndeterminate="False" Value="0" Maximum="100"
+                             Height="6" Margin="0,0,0,8" Foreground="#1E5AA0"/>
+
+                <TextBlock x:Name="StatusLabel" Grid.Row="1"
+                           Text="Siap memulai pengujian." Foreground="#666"
+                           FontSize="12" Margin="0,16,0,8"/>
+
+                <!-- Results Panel (akan diisi saat test berjalan) -->
+                <ScrollViewer Grid.Row="2" x:Name="ResultsScrollViewer">
+                    <StackPanel x:Name="ResultsPanel"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

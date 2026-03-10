@@ -1,0 +1,30 @@
+<Page x:Class="FoTestingApp.Views.Pages.ReportPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Title="Laporan">
+    <StackPanel Margin="32">
+        <TextBlock Text="Laporan Sertifikasi" FontSize="24" FontWeight="Bold" Foreground="#1E5AA0" Margin="0,0,0,8"/>
+        <TextBlock Text="Generate dan download laporan hasil pengujian dalam format PDF" Foreground="#666" Margin="0,0,0,24"/>
+
+        <Border Background="White" CornerRadius="8" Padding="24"
+                Effect="{DynamicResource MaterialDesignShadowDepth1}">
+            <StackPanel>
+                <TextBlock Text="Pilih sesi pengujian untuk dibuat laporannya:" Foreground="#333" Margin="0,0,0,12"/>
+                <ComboBox x:Name="SessionComboBox"
+                          materialDesign:HintAssist.Hint="Pilih ID Sertifikasi"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Width="320" HorizontalAlignment="Left" Margin="0,0,0,16"/>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button Content="📄 Preview PDF" Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#1E5AA0" Foreground="White" Click="PreviewBtn_Click"/>
+                    <Button Content="💾 Export PDF" Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#27AE60" Foreground="White" Click="ExportBtn_Click"/>
+                    <Button Content="🖨️ Cetak" Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#666" Foreground="White" Click="PrintBtn_Click"/>
+                </StackPanel>
+                <TextBlock x:Name="ReportStatus" Foreground="#666" FontSize="12" Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</Page>

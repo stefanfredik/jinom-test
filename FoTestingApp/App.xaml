@@ -1,0 +1,24 @@
+<Application x:Class="FoTestingApp.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <materialDesign:BundledTheme BaseTheme="Light"
+                                             PrimaryColor="Blue"
+                                             SecondaryColor="LightBlue" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Primary Brand Color - Jinom Blue -->
+            <Color x:Key="JinomBlue">#1E5AA0</Color>
+            <SolidColorBrush x:Key="JinomBlueBrush" Color="#1E5AA0" />
+            <SolidColorBrush x:Key="JinomLightBlueBrush" Color="#E8F0FB" />
+            <SolidColorBrush x:Key="PassGreenBrush" Color="#27AE60" />
+            <SolidColorBrush x:Key="FailRedBrush" Color="#E74C3C" />
+            <SolidColorBrush x:Key="WarnYellowBrush" Color="#F39C12" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
