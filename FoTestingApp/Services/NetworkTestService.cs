@@ -208,7 +208,7 @@ public class NetworkTestService
             Background = Brushes.White,
             CornerRadius = new CornerRadius(6),
             Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12),
+            Padding = new Thickness(16, 12, 16, 12),
             Child = new StackPanel
             {
                 Children =
@@ -244,7 +244,7 @@ public class NetworkTestService
             Background = Brushes.White,
             CornerRadius = new CornerRadius(6),
             Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12),
+            Padding = new Thickness(16, 12, 16, 12),
             Child = panel,
         };
     }

@@ -62,33 +62,33 @@
                 <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0">
                     <Button x:Name="BtnDashboard" Style="{StaticResource NavButtonActiveStyle}"
                             Click="NavButton_Click" Tag="Dashboard">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
+                        <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboard" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Button>
 
                     <Button x:Name="BtnNewTest" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="NewTest">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
+                        <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Play" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Pengujian Baru" VerticalAlignment="Center"/>
+                            <TextBlock Text="Pengujian Baru" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Button>
 
                     <Button x:Name="BtnHistory" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="History">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
+                        <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="History" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Riwayat" VerticalAlignment="Center"/>
+                            <TextBlock Text="Riwayat" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Button>
 
                     <Button x:Name="BtnReport" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="Report">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
+                        <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="FilePdfBox" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Laporan" VerticalAlignment="Center"/>
+                            <TextBlock Text="Laporan" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Button>
 
@@ -97,9 +97,9 @@
                     <!-- Admin-only items -->
                     <Button x:Name="BtnSettings" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="Settings" Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
+                        <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Cog" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Pengaturan" VerticalAlignment="Center"/>
+                            <TextBlock Text="Pengaturan" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -107,9 +107,9 @@
                 <!-- Logout at bottom -->
                 <Button DockPanel.Dock="Bottom" Style="{StaticResource NavButtonStyle}"
                         Click="LogoutButton_Click" Margin="4,4,4,16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Logout" Width="18" Height="18" VerticalAlignment="Center"/>
-                        <TextBlock Text="Keluar" VerticalAlignment="Center"/>
+                        <TextBlock Text="Keluar" VerticalAlignment="Center" Margin="10,0,0,0"/>
                     </StackPanel>
                 </Button>
             </DockPanel>

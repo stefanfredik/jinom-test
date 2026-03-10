@@ -16,20 +16,20 @@
         <!-- Filters -->
         <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16"
                 Effect="{DynamicResource MaterialDesignShadowDepth1}" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal" Spacing="12">
+            <StackPanel Orientation="Horizontal">
                 <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160"/>
                 <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Margin="12,0,0,0"/>
                 <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="120">
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="120" Margin="12,0,0,0">
                     <ComboBoxItem Content="Semua"/>
                     <ComboBoxItem Content="PASS"/>
                     <ComboBoxItem Content="FAIL"/>
                     <ComboBoxItem Content="PARTIAL"/>
                 </ComboBox>
                 <Button Content="🔍 Filter" Style="{StaticResource MaterialDesignRaisedButton}"
-                        Background="#1E5AA0" Foreground="White" Click="FilterBtn_Click"/>
+                        Background="#1E5AA0" Foreground="White" Click="FilterBtn_Click" Margin="12,0,0,0"/>
             </StackPanel>
         </Border>
 

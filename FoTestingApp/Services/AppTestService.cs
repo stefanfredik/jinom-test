@@ -153,7 +153,7 @@ public class AppTestService
             Background = Brushes.White,
             CornerRadius = new CornerRadius(6),
             Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12),
+            Padding = new Thickness(16, 12, 16, 12),
             Child = panel,
         };
     }

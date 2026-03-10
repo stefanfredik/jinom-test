@@ -15,13 +15,13 @@
                           materialDesign:HintAssist.Hint="Pilih ID Sertifikasi"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
                           Width="320" HorizontalAlignment="Left" Margin="0,0,0,16"/>
-                <StackPanel Orientation="Horizontal" Spacing="12">
+                <StackPanel Orientation="Horizontal">
                     <Button Content="📄 Preview PDF" Style="{StaticResource MaterialDesignRaisedButton}"
                             Background="#1E5AA0" Foreground="White" Click="PreviewBtn_Click"/>
                     <Button Content="💾 Export PDF" Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="#27AE60" Foreground="White" Click="ExportBtn_Click"/>
+                            Background="#27AE60" Foreground="White" Click="ExportBtn_Click" Margin="12,0,0,0"/>
                     <Button Content="🖨️ Cetak" Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="#666" Foreground="White" Click="PrintBtn_Click"/>
+                            Background="#666" Foreground="White" Click="PrintBtn_Click" Margin="12,0,0,0"/>
                 </StackPanel>
                 <TextBlock x:Name="ReportStatus" Foreground="#666" FontSize="12" Margin="0,12,0,0"/>
             </StackPanel>

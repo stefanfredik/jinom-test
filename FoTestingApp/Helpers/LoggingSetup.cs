@@ -1,3 +1,4 @@
+using System.IO;
 using Serilog;
 
 namespace FoTestingApp.Helpers;

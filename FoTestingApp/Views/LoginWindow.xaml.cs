@@ -62,7 +62,7 @@ public partial class LoginWindow : Window
         catch (Exception ex)
         {
             Log.Error(ex, "Login error");
-            ShowError("Tidak dapat terhubung ke server. Periksa koneksi jaringan.");
+            ShowError($"Tidak dapat terhubung ke server: {ex.Message}");
         }
         finally
         {

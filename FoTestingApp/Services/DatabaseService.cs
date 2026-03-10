@@ -39,34 +39,26 @@ public class DatabaseService
     /// <summary>Ambil user berdasarkan email dari tabel `users` OpenAccess.</summary>
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        try
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT id, name, email, password FROM users WHERE email = @email AND deleted_at IS NULL LIMIT 1";
+        cmd.Parameters.AddWithValue("@email", email);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
         {
-            await using var conn = CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT id, name, email, password FROM users WHERE email = @email AND deleted_at IS NULL LIMIT 1";
-            cmd.Parameters.AddWithValue("@email", email);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            return new User
             {
-                return new User
-                {
-                    Id = reader.GetInt32("id"),
-                    Name = reader.GetString("name"),
-                    Email = reader.GetString("email"),
-                    PasswordHash = reader.GetString("password"),
-                };
-            }
+                Id = reader.GetInt32("id"),
+                Name = reader.GetString("name"),
+                Email = reader.GetString("email"),
+                PasswordHash = reader.GetString("password"),
+            };
+        }
 
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "GetUserByEmail failed for email: {Email}", email);
-            return null;
-        }
+        return null;
     }
 
     /// <summary>Simpan pelanggan baru atau update jika customer_number sudah ada.</summary>
