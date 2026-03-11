@@ -106,12 +106,12 @@ public class ApiService
         }
     }
     
-    public async Task<List<FoCustomer>> SearchCustomersAsync(string query)
+    public async Task<List<FoCustomer>> SearchCustomersAsync(string query, string type = "customer")
     {
         SetAuthorizationHeader();
         try
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/customers/search?q={Uri.EscapeDataString(query)}");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/customers/search?q={Uri.EscapeDataString(query)}&type={Uri.EscapeDataString(type)}");
             if (response.IsSuccessStatusCode)
             {
                 var customers = await response.Content.ReadFromJsonAsync<List<FoCustomer>>();

@@ -54,7 +54,7 @@ public partial class NewTestPage : Page
         {
             // Debounce 300ms
             await Task.Delay(300, cts.Token);
-            var results = await _api.SearchCustomersAsync(query);
+            var results = await _api.SearchCustomersAsync(query, _testMode);
 
             if (!cts.IsCancellationRequested)
             {
