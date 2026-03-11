@@ -126,36 +126,95 @@ public class SpeedtestService
     }
 
     /// <summary>
-    /// Ookla Speedtest via CLI (speedtest.exe harus ada di PATH atau folder app).
+    /// Ookla Speedtest via CLI. Mengunduh secara otomatis jika tidak ada.
     /// </summary>
     private async Task<(double downloadMbps, double uploadMbps, string? error)> RunOoklaSpeedtestAsync()
     {
+        var exePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "speedtest.exe");
+
         try
         {
+            if (!System.IO.File.Exists(exePath))
+            {
+                var error = await DownloadOoklaCliAsync(exePath);
+                if (error != null) return (0, 0, error);
+            }
+
             var psi = new ProcessStartInfo
             {
-                FileName = "speedtest",
+                FileName = exePath,
                 Arguments = "--format=json --accept-license --accept-gdpr",
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
 
             using var process = Process.Start(psi);
-            if (process is null) { return (0, 0, "Speedtest CLI tidak ditemukan"); }
+            if (process is null) { return (0, 0, "Gagal menjalankan Speedtest CLI"); }
 
-            var output = await process.StandardOutput.ReadToEndAsync();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+            
             await process.WaitForExitAsync();
 
-            var json = JsonDocument.Parse(output);
-            var download = json.RootElement.GetProperty("download").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
-            var upload = json.RootElement.GetProperty("upload").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+            var output = await outputTask;
+            var errOutput = await errorTask;
 
-            return (Math.Round(download, 2), Math.Round(upload, 2), null);
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                return (0, 0, string.IsNullOrWhiteSpace(errOutput) ? "Tidak ada respon dari Speedtest" : errOutput.Trim());
+            }
+
+            // Bersihkan baris sebelum '{' jika ada teks tambahan akibat error
+            var jsonStart = output.IndexOf('{');
+            if (jsonStart < 0) return (0, 0, "Respon Speedtest tidak valid");
+            var validJson = output.Substring(jsonStart);
+
+            var json = JsonDocument.Parse(validJson);
+            
+            if (json.RootElement.TryGetProperty("type", out var typeProp) && typeProp.GetString() == "result")
+            {
+                var download = json.RootElement.GetProperty("download").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+                var upload = json.RootElement.GetProperty("upload").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+                return (Math.Round(download, 2), Math.Round(upload, 2), null);
+            }
+            else if (json.RootElement.TryGetProperty("message", out var msgProp))
+            {
+                return (0, 0, msgProp.GetString());
+            }
+            else if (json.RootElement.TryGetProperty("error", out var errProp))
+            {
+                return (0, 0, errProp.GetString());
+            }
+
+            return (0, 0, "Format data Speedtest tidak dikenali");
         }
         catch (Exception ex)
         {
             return (0, 0, ex.Message);
+        }
+    }
+
+    private async Task<string?> DownloadOoklaCliAsync(string destExePath)
+    {
+        try
+        {
+            var zipUrl = "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-win64.zip";
+            var zipPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "speedtest.zip");
+
+            var zipBytes = await _client.GetByteArrayAsync(zipUrl);
+            await System.IO.File.WriteAllBytesAsync(zipPath, zipBytes);
+
+            System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, AppDomain.CurrentDomain.BaseDirectory, overwriteFiles: true);
+            System.IO.File.Delete(zipPath);
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Gagal mengunduh Ookla CLI");
+            return "Gagal mengunduh speedtest.exe otomatis";
         }
     }
 

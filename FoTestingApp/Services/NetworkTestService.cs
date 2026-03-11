@@ -45,52 +45,56 @@ public class NetworkTestService
         progress.Report((0, "Memulai pengujian..."));
 
         // 1. Ping Gateway ISP
-        progress.Report((5, "⏳ Ping Gateway ISP..."));
+        progress.Report((5, "Task 1 of 7|Ping Gateway ISP|Mengirim paket ICMP..."));
         var gwTarget = ConfigManager.GetPingGatewayTarget();
         if (!string.IsNullOrEmpty(gwTarget))
         {
             await RunPingTestAsync(resultsPanel, TestTypes.PingGateway, gwTarget,
                 ConfigManager.GetPingGatewayCount(), ConfigManager.GetPingGatewayThresholdMs());
         }
-        progress.Report((20, "✅ Ping Gateway selesai"));
+        progress.Report((20, "Task 1 of 7|Ping Gateway ISP|Selesai"));
 
         // 2. Ping DNS
-        progress.Report((22, "⏳ Ping DNS Server..."));
+        progress.Report((22, "Task 2 of 7|Ping DNS Server|Mengirim paket ICMP..."));
         await RunPingTestAsync(resultsPanel, TestTypes.PingDns, ConfigManager.GetPingDnsTarget(),
             ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs());
-        progress.Report((40, "✅ Ping DNS selesai"));
+        progress.Report((40, "Task 2 of 7|Ping DNS Server|Selesai"));
 
         // 3. NSLookup Nasional
-        progress.Report((42, "⏳ NSLookup Domain Nasional..."));
+        progress.Report((42, "Task 3 of 7|NSLookup Nasional|Resolving DNS..."));
         await RunNslookupAsync(resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains());
-        progress.Report((55, "✅ NSLookup Nasional selesai"));
+        progress.Report((55, "Task 3 of 7|NSLookup Nasional|Selesai"));
 
         // 4. NSLookup Internasional
-        progress.Report((57, "⏳ NSLookup Domain Internasional..."));
+        progress.Report((57, "Task 4 of 7|NSLookup Internasional|Resolving DNS..."));
         await RunNslookupAsync(resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains());
-        progress.Report((65, "✅ NSLookup Internasional selesai"));
+        progress.Report((65, "Task 4 of 7|NSLookup Internasional|Selesai"));
 
         // 5. Ping Domain Lokal
-        progress.Report((67, "⏳ Ping Domain Lokal..."));
-        await RunPingTestAsync(resultsPanel, TestTypes.PingDomainLokal, ConfigManager.GetPingDomainLokalTarget(),
-            ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingGatewayThresholdMs());
-        progress.Report((80, "✅ Ping Domain Lokal selesai"));
+        progress.Report((67, "Task 5 of 7|Ping Domain Lokal|Mengirim paket ICMP..."));
+        var localDomains = ConfigManager.GetPingDomainLokalDomains();
+        foreach (var domain in localDomains)
+        {
+            await RunPingTestAsync(resultsPanel, TestTypes.PingDomainLokal, domain,
+                ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingGatewayThresholdMs());
+        }
+        progress.Report((80, "Task 5 of 7|Ping Domain Lokal|Selesai"));
 
         // 6. App Tests
-        progress.Report((82, "⏳ Pengujian Aplikasi (Browsing, Streaming, Social Media)..."));
+        progress.Report((82, "Task 6 of 7|Aksesibilitas Aplikasi|Loading resource..."));
         var appSvc = new AppTestService(_api, _sessionId);
         var appResults = await appSvc.RunAllAsync(resultsPanel, progress);
         _passCount += appResults.passCount;
         _totalCount += appResults.totalCount;
-        progress.Report((92, "✅ Pengujian Aplikasi selesai"));
+        progress.Report((92, "Task 6 of 7|Aksesibilitas Aplikasi|Selesai"));
 
         // 7. Speedtest
-        progress.Report((93, "⏳ Speedtest..."));
+        progress.Report((93, "Task 7 of 7|Speedtest|Mengukur throughput..."));
         var speedSvc = new SpeedtestService(_api, _sessionId);
         var speedResults = await speedSvc.RunAllAsync(resultsPanel, packageMbps);
         _passCount += speedResults.passCount;
         _totalCount += speedResults.totalCount;
-        progress.Report((100, $"✅ Semua pengujian selesai — Status: {OverallStatus}"));
+        progress.Report((100, $"Task 7 of 7|Selesai|Status Akhir: {OverallStatus}"));
     }
 
     // ── Ping Test ──────────────────────────────────────────────────────────────

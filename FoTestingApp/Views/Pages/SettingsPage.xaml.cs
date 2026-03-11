@@ -17,7 +17,7 @@ public partial class SettingsPage : Page
         DnsTargetBox.Text = ConfigManager.GetPingDnsTarget();
         PingGwCountBox.Text = ConfigManager.GetPingGatewayCount().ToString();
         PingDnsCountBox.Text = ConfigManager.GetPingDnsCount().ToString();
-        PingLocalTargetBox.Text = ConfigManager.GetPingDomainLokalTarget();
+        PingLocalTargetBox.Text = string.Join(", ", ConfigManager.GetPingDomainLokalDomains());
         NslookupNasionalBox.Text = string.Join(", ", ConfigManager.GetNslookupNasionalDomains());
         NslookupInternasionalBox.Text = string.Join(", ", ConfigManager.GetNslookupInternasionalDomains());
         SpeedtestThresholdBox.Text = ConfigManager.GetSpeedtestThresholdPercentage().ToString();
@@ -28,6 +28,8 @@ public partial class SettingsPage : Page
     {
         try
         {
+            var lokalDomains = PingLocalTargetBox.Text
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var nasionalDomains = NslookupNasionalBox.Text
                 .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var internasionalDomains = NslookupInternasionalBox.Text
@@ -38,7 +40,7 @@ public partial class SettingsPage : Page
                 ["NetworkTest:PingDns:Target"] = DnsTargetBox.Text.Trim(),
                 ["NetworkTest:PingGateway:Count"] = int.TryParse(PingGwCountBox.Text, out var gwc) ? gwc : 100,
                 ["NetworkTest:PingDns:Count"] = int.TryParse(PingDnsCountBox.Text, out var dnsc) ? dnsc : 100,
-                ["NetworkTest:PingDomainLokal:Target"] = PingLocalTargetBox.Text.Trim(),
+                ["NetworkTest:PingDomainLokal:Domains"] = lokalDomains,
                 ["NetworkTest:NslookupNasional:Domains"] = nasionalDomains,
                 ["NetworkTest:NslookupInternasional:Domains"] = internasionalDomains,
                 ["Speedtest:ThresholdPercentage"] = int.TryParse(SpeedtestThresholdBox.Text, out var spd) ? spd : 99,

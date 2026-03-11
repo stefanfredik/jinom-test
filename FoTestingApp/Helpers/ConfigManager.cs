@@ -85,7 +85,8 @@ public static class ConfigManager
     public static string[] GetNslookupInternasionalDomains() =>
         _config!.GetSection("NetworkTest:NslookupInternasional:Domains").Get<string[]>() ?? ["google.com", "facebook.com"];
 
-    public static string GetPingDomainLokalTarget() => _config!["NetworkTest:PingDomainLokal:Target"] ?? "detik.com";
+    public static string[] GetPingDomainLokalDomains() =>
+        _config!.GetSection("NetworkTest:PingDomainLokal:Domains").Get<string[]>() ?? ["detik.com", "tokopedia.com"];
     public static int GetPingDomainLokalCount() => int.TryParse(_config!["NetworkTest:PingDomainLokal:Count"], out var v) ? v : 10;
 
     // App Test configs
