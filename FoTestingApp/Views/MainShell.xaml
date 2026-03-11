@@ -9,24 +9,30 @@
         Background="#F4F6FA">
 
     <Window.Resources>
+        <!-- Inactive Navigation Button Style -->
         <Style x:Key="NavButtonStyle" TargetType="Button"
                BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Foreground" Value="#B3CCE8"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Height" Value="46"/>
+            <Setter Property="Foreground" Value="#93C5FD"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="48"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="Margin" Value="12,4"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="{StaticResource ButtonCornerRadius}"/>
         </Style>
+
+        <!-- Active Navigation Button Style -->
         <Style x:Key="NavButtonActiveStyle" TargetType="Button"
                BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="#2E6FBF"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Height" Value="46"/>
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="48"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="Margin" Value="12,4"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="{StaticResource ButtonCornerRadius}"/>
         </Style>
     </Window.Resources>
 
@@ -37,26 +43,33 @@
         </Grid.ColumnDefinitions>
 
         <!-- ========== SIDEBAR ========== -->
-        <Border Grid.Column="0" Background="#1E5AA0">
+        <Border Grid.Column="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#1E3A8A" Offset="0.0"/>
+                    <GradientStop Color="#2563EB" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            
             <DockPanel>
                 <!-- Logo / App Title -->
-                <Border DockPanel.Dock="Top" Background="#163F73" Padding="16,18">
-                    <StackPanel>
-                        <TextBlock Text="🔌 Jinom AI" Foreground="White"
-                                   FontSize="16" FontWeight="Bold"/>
-                        <TextBlock Text="FO Testing" Foreground="#9EC5E8" FontSize="11"/>
-                    </StackPanel>
-                </Border>
+                <StackPanel DockPanel.Dock="Top" Margin="20,28,20,16">
+                    <TextBlock Text="🔌 Jinom AI" Foreground="White"
+                               FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="FO Testing &amp; Commissioning" Foreground="#93C5FD" FontSize="11" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <!-- Divider -->
+                <Border DockPanel.Dock="Top" Height="1" Background="#3B82F6" Margin="16,0"/>
 
                 <!-- User Info -->
-                <Border DockPanel.Dock="Top" Background="#174880" Padding="16,10">
-                    <StackPanel>
-                        <TextBlock x:Name="UserNameLabel" Text="Teknisi"
-                                   Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                        <TextBlock x:Name="UserEmailLabel" Text=""
-                                   Foreground="#9EC5E8" FontSize="11"/>
-                    </StackPanel>
-                </Border>
+                <StackPanel DockPanel.Dock="Top" Margin="20,16,20,20">
+                    <TextBlock Text="PENGGUNA SAAT INI:" Foreground="#93C5FD" FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="UserNameLabel" Text="Teknisi"
+                               Foreground="White" FontSize="14" FontWeight="Bold"/>
+                    <TextBlock x:Name="UserEmailLabel" Text="-"
+                               Foreground="#BFDBFE" FontSize="12" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
 
                 <!-- Navigation Items -->
                 <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0">
@@ -92,24 +105,25 @@
                         </StackPanel>
                     </Button>
 
-                    <Separator Margin="16,8" Background="#2E6FBF"/>
+                    <Separator Margin="20,12" Background="#3B82F6"/>
 
                     <!-- Admin-only items -->
                     <Button x:Name="BtnSettings" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="Settings" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Cog" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Pengaturan" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <materialDesign:PackIcon Kind="CogOutline" Width="20" Height="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Pengaturan" VerticalAlignment="Center" Margin="12,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
                 <!-- Logout at bottom -->
                 <Button DockPanel.Dock="Bottom" Style="{StaticResource NavButtonStyle}"
-                        Click="LogoutButton_Click" Margin="4,4,4,16">
+                        Click="LogoutButton_Click" Margin="12,12,12,24"
+                        Background="#EF4444" Foreground="White">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Logout" Width="18" Height="18" VerticalAlignment="Center"/>
-                        <TextBlock Text="Keluar" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        <materialDesign:PackIcon Kind="Logout" Width="20" Height="20" VerticalAlignment="Center"/>
+                        <TextBlock Text="Keluar" VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="Bold"/>
                     </StackPanel>
                 </Button>
             </DockPanel>

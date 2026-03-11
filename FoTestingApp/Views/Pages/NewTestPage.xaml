@@ -12,18 +12,18 @@
         </Grid.RowDefinitions>
 
         <!-- Page Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,24">
-            <TextBlock Text="Pengujian Baru" FontSize="24" FontWeight="Bold" Foreground="#1E5AA0"/>
-            <TextBlock Text="Isi data pelanggan, lalu mulai eksekusi pengujian jaringan" Foreground="#666"/>
+        <StackPanel Grid.Row="0" Margin="0,0,0,32">
+            <TextBlock Text="Pengujian Baru" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource JinomDarkBlueBrush}"/>
+            <TextBlock Text="Isi data pelanggan di bawah ini, lalu mulai eksekusi pengujian jaringan." FontSize="15" Foreground="#64748B"/>
         </StackPanel>
 
         <!-- Customer Form -->
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="24"
-                Effect="{DynamicResource MaterialDesignShadowDepth1}" Margin="0,0,0,16">
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="28"
+                Effect="{DynamicResource MaterialDesignShadowDepth2}" Margin="0,0,0,24">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -34,37 +34,37 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.ColumnSpan="3" Text="Data Pelanggan" FontSize="15" FontWeight="SemiBold"
-                           Foreground="#333" Margin="0,0,0,8" Grid.Row="0"/>
+                <TextBlock Grid.ColumnSpan="3" Text="1. Data Pelanggan" FontSize="18" FontWeight="Bold"
+                           Foreground="{DynamicResource JinomDarkBlueBrush}" Margin="0,0,0,16" Grid.Row="0"/>
 
                 <!-- Mode Selection -->
-                <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
-                    <TextBlock Text="Mode Uji:" VerticalAlignment="Center" Margin="0,0,16,0" FontWeight="SemiBold" Foreground="#555"/>
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Right">
+                    <TextBlock Text="Mode Uji:" VerticalAlignment="Center" Margin="0,0,16,0" FontWeight="SemiBold" Foreground="#64748B"/>
                     <RadioButton x:Name="PopModeBtn" Content="POP" GroupName="TestMode" Checked="TestMode_Changed"/>
-                    <RadioButton x:Name="CustomerModeBtn" Content="Pelanggan" GroupName="TestMode" IsChecked="True" Checked="TestMode_Changed" Margin="16,0,0,0"/>
+                    <RadioButton x:Name="CustomerModeBtn" Content="Pelanggan" GroupName="TestMode" IsChecked="True" Checked="TestMode_Changed" Margin="24,0,0,0"/>
                 </StackPanel>
 
                 <!-- Customer Search -->
                 <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal"
                             HorizontalAlignment="Right" Margin="0,0,0,8">
                     <TextBox x:Name="SearchBox"
-                             materialDesign:HintAssist.Hint="Cari pelanggan (nama / no. pelanggan)..."
+                             materialDesign:HintAssist.Hint="🔍 Cari pelanggan (nama / no. pelanggan)..."
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             Width="280" Height="36" VerticalContentAlignment="Center"
+                             Width="320" Height="40" VerticalContentAlignment="Center"
                              TextChanged="SearchBox_TextChanged"/>
                     <ListBox x:Name="SearchDropdown"
                              Visibility="Collapsed"
-                             MaxHeight="200" Width="280"
+                             MaxHeight="200" Width="320"
                              SelectionChanged="SearchDropdown_SelectionChanged"
                              Panel.ZIndex="100"
                              Background="White"
-                             BorderThickness="1" BorderBrush="#DDD"
+                             BorderThickness="1" BorderBrush="#E2E8F0"
                              HorizontalAlignment="Left">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding CustomerNumber}" FontSize="11" Foreground="#888"/>
+                                <StackPanel Padding="4">
+                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="14" Foreground="#1E293B"/>
+                                    <TextBlock Text="{Binding CustomerNumber}" FontSize="12" Foreground="#64748B"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -76,37 +76,37 @@
                          x:Name="SiteIdBox"
                          materialDesign:HintAssist.Hint="Site ID *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,0,0,12"/>
+                         Margin="0,0,0,16" Height="48" VerticalContentAlignment="Center"/>
 
                 <TextBox Grid.Row="1" Grid.Column="2"
                          x:Name="FullNameBox"
                          materialDesign:HintAssist.Hint="Nama Lengkap *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,0,0,12"/>
+                         Margin="0,0,0,16" Height="48" VerticalContentAlignment="Center"/>
 
                 <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                          x:Name="AddressBox"
                          materialDesign:HintAssist.Hint="Alamat Instalasi *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,0,0,12"/>
+                         Margin="0,0,0,16" Height="48" VerticalContentAlignment="Center"/>
 
                 <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
                          x:Name="PackageMbpsBox"
                          materialDesign:HintAssist.Hint="Paket Layanan (Mbps) *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,0,0,12"/>
+                         Margin="0,0,0,16" Height="48" VerticalContentAlignment="Center"/>
 
                 <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
                          x:Name="NotesBox"
                          materialDesign:HintAssist.Hint="Catatan Teknis (opsional)"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
+                         Height="80" AcceptsReturn="True" TextWrapping="Wrap" Padding="12,12"/>
             </Grid>
         </Border>
 
         <!-- Test Execution Area -->
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="24"
-                Effect="{DynamicResource MaterialDesignShadowDepth1}">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="28"
+                Effect="{DynamicResource MaterialDesignShadowDepth2}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -114,20 +114,22 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-                    <TextBlock Text="Eksekusi Pengujian" FontSize="15" FontWeight="SemiBold"
-                               Foreground="#333" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,24">
+                    <TextBlock Text="2. Eksekusi Pengujian" FontSize="18" FontWeight="Bold"
+                               Foreground="{DynamicResource JinomDarkBlueBrush}" VerticalAlignment="Center"/>
                     <Button x:Name="StartTestBtn"
                             Content="▶  MULAI TEST"
                             Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="#1E5AA0" Foreground="White"
-                            Margin="16,0,0,0" Padding="20,0" Height="36"
+                            materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
+                            Background="{DynamicResource JinomBlueBrush}" BorderBrush="{DynamicResource JinomBlueBrush}" Foreground="White"
+                            Margin="24,0,0,0" Padding="24,0" Height="44" FontSize="14" FontWeight="Bold"
                             Click="StartTestBtn_Click"/>
                     <Button x:Name="SaveReportBtn"
                             Content="💾  Simpan &amp; Cetak Laporan"
                             Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="#27AE60" Foreground="White"
-                            Margin="8,0,0,0" Padding="16,0" Height="36"
+                            materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
+                            Background="{DynamicResource PassGreenBrush}" BorderBrush="{DynamicResource PassGreenBrush}" Foreground="White"
+                            Margin="12,0,0,0" Padding="20,0" Height="44" FontSize="14" FontWeight="Bold"
                             IsEnabled="False"
                             Click="SaveReportBtn_Click"/>
                 </StackPanel>
@@ -136,11 +138,11 @@
                 <ProgressBar x:Name="TestProgressBar" Grid.Row="1"
                              Style="{StaticResource MaterialDesignLinearProgressBar}"
                              IsIndeterminate="False" Value="0" Maximum="100"
-                             Height="6" Margin="0,0,0,8" Foreground="#1E5AA0"/>
+                             Height="6" Margin="0,0,0,8" Foreground="{DynamicResource JinomBlueBrush}"/>
 
                 <TextBlock x:Name="StatusLabel" Grid.Row="1"
-                           Text="Siap memulai pengujian." Foreground="#666"
-                           FontSize="12" Margin="0,16,0,8"/>
+                           Text="Siap memulai pengujian." Foreground="#64748B"
+                           FontSize="13" Margin="0,16,0,12"/>
 
                 <!-- Results Panel (akan diisi saat test berjalan) -->
                 <ScrollViewer Grid.Row="2" x:Name="ResultsScrollViewer">
