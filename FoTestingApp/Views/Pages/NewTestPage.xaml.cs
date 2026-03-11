@@ -11,7 +11,6 @@ public partial class NewTestPage : Page
 {
     private readonly ApiService _api = new();
     private int? _currentSessionId;
-    private CancellationTokenSource? _searchCts;
 
     private string _testMode = "customer";
 
@@ -72,62 +71,26 @@ public partial class NewTestPage : Page
     {
         if (_testMode == "pop")
         {
-            SiteIdBox.Visibility = Visibility.Collapsed;
             FormTitle.Text = "POP Network Test";
-            FormSubtitle.Text = "DIAGNOSTIC SUITE FOR POP VERIFICATION";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Langganan JNIX (Mbps) *");
+            FormSubtitle.Text = "PENGUJIAN JARINGAN POP";
+            FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.ServerNetwork;
+            FormSectionTitle.Text = "Data POP";
+            NameFieldLabel.Text = "NAMA POP";
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Masukkan nama POP");
+            PackageFieldLabel.Text = "PAKET JNIX";
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
         }
         else
         {
-            SiteIdBox.Visibility = Visibility.Visible;
             FormTitle.Text = "Customer Network Test";
-            FormSubtitle.Text = "DIAGNOSTIC SUITE FOR CPE VERIFICATION";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Layanan (Mbps) *");
+            FormSubtitle.Text = "PENGUJIAN JARINGAN CPE";
+            FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountPlus;
+            FormSectionTitle.Text = "Data Pelanggan";
+            NameFieldLabel.Text = "NAMA PELANGGAN";
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Masukkan nama pelanggan");
+            PackageFieldLabel.Text = "PAKET INTERNET";
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
         }
-    }
-
-    // ── Customer Search ───────────────────────────────────────────────────────
-
-    private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        _searchCts?.Cancel();
-        _searchCts = new CancellationTokenSource();
-        var cts = _searchCts;
-
-        var query = SearchBox.Text.Trim();
-        if (query.Length < 2)
-        {
-            SearchDropdown.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        try
-        {
-            // Debounce 300ms
-            await Task.Delay(300, cts.Token);
-            var results = await _api.SearchCustomersAsync(query, _testMode);
-
-            if (!cts.IsCancellationRequested)
-            {
-                SearchDropdown.ItemsSource = results;
-                SearchDropdown.Visibility = results.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            }
-        }
-        catch (TaskCanceledException) { /* normal debounce cancel */ }
-    }
-
-    private void SearchDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (SearchDropdown.SelectedItem is not FoCustomer customer) { return; }
-
-        // Auto-fill semua field dari pelanggan yang dipilih
-        SiteIdBox.Text = customer.SiteId ?? string.Empty;
-        FullNameBox.Text = customer.FullName;
-        AddressBox.Text = customer.Address;
-        PackageMbpsBox.Text = customer.PackageMbps.ToString();
-
-        SearchDropdown.Visibility = Visibility.Collapsed;
-        SearchBox.Text = customer.FullName;
     }
 
     private async void StartTestBtn_Click(object sender, RoutedEventArgs e)
@@ -152,9 +115,8 @@ public partial class NewTestPage : Page
             var customer = new FoCustomer
             {
                 SiteType = isPopMode ? "pop" : "customer",
-                SiteId = isPopMode ? null : string.IsNullOrWhiteSpace(SiteIdBox.Text) ? null : SiteIdBox.Text.Trim(),
                 FullName = FullNameBox.Text.Trim(),
-                Address = AddressBox.Text.Trim(),
+                Address = "-",
                 PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
                 TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
             };
@@ -227,19 +189,16 @@ public partial class NewTestPage : Page
 
     private bool ValidateForm()
     {
-        var isPopMode = _testMode == "pop";
-        if ((!isPopMode && string.IsNullOrWhiteSpace(SiteIdBox.Text)) ||
-            string.IsNullOrWhiteSpace(FullNameBox.Text) ||
-            string.IsNullOrWhiteSpace(AddressBox.Text) ||
+        if (string.IsNullOrWhiteSpace(FullNameBox.Text) ||
             string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
         {
-            MessageBox.Show("Field bertanda * wajib diisi.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Nama dan Paket wajib diisi.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 
         if (!int.TryParse(PackageMbpsBox.Text, out var pkg) || pkg <= 0)
         {
-            MessageBox.Show("Paket layanan harus berupa angka positif (Mbps).", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Paket harus berupa angka positif (Mbps).", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 

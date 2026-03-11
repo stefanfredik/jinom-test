@@ -18,13 +18,13 @@
                     <!-- Outer glow ring -->
                     <Ellipse Width="220" Height="220" StrokeThickness="3">
                         <Ellipse.Stroke>
-                            <SolidColorBrush Color="#30ec5b13"/>
+                            <SolidColorBrush Color="#3022c55e"/>
                         </Ellipse.Stroke>
                     </Ellipse>
                     <!-- Middle ring -->
                     <Ellipse Width="200" Height="200" StrokeThickness="2">
                         <Ellipse.Stroke>
-                            <SolidColorBrush Color="#20ec5b13"/>
+                            <SolidColorBrush Color="#2022c55e"/>
                         </Ellipse.Stroke>
                     </Ellipse>
                     <!-- Main button -->
@@ -128,58 +128,23 @@
                         <!-- Section Title -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
                             <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="8">
-                                <materialDesign:PackIcon Kind="AccountPlus" Foreground="{DynamicResource PrimaryBrush}" Width="24" Height="24"/>
+                                <materialDesign:PackIcon x:Name="FormSectionIcon" Kind="AccountPlus" Foreground="{DynamicResource PrimaryBrush}" Width="24" Height="24"/>
                             </Border>
-                            <TextBlock Text="Customer Configuration" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            <TextBlock x:Name="FormSectionTitle" Text="Data Pengujian" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
                         </StackPanel>
 
-                        <!-- Customer Search -->
-                        <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="CARI PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                            <Grid>
-                                <TextBox x:Name="SearchBox"
-                                         materialDesign:HintAssist.Hint="Nama atau No. Pelanggan"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
-                                         VerticalContentAlignment="Center"
-                                         materialDesign:TextFieldAssist.LeadingIcon="AccountSearch"
-                                         BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="#F8FAFC"
-                                         TextChanged="SearchBox_TextChanged"/>
-                                <ListBox x:Name="SearchDropdown"
-                                         Visibility="Collapsed"
-                                         MaxHeight="200"
-                                         SelectionChanged="SearchDropdown_SelectionChanged"
-                                         Panel.ZIndex="100"
-                                         Background="White"
-                                         BorderThickness="1" BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Margin="0,50,0,0">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Margin="4">
-                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextDarkBrush}"/>
-                                                <TextBlock Text="{Binding CustomerNumber}" FontSize="12" Foreground="{DynamicResource TextLightBrush}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Data Fields Grid -->
+                        <!-- Data Fields -->
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="24"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="24"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="NameFieldLabel" Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
                                 <TextBox x:Name="FullNameBox"
-                                         materialDesign:HintAssist.Hint="Nama Lengkap"
+                                         materialDesign:HintAssist.Hint="Masukkan nama"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="48" FontSize="14"
                                          VerticalContentAlignment="Center"
@@ -189,21 +154,9 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="SITE ID REFERENCE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                                <TextBox x:Name="SiteIdBox"
-                                         materialDesign:HintAssist.Hint="Contoh: JKT-01"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
-                                         VerticalContentAlignment="Center"
-                                         materialDesign:TextFieldAssist.LeadingIcon="Tag"
-                                         BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="#F8FAFC"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="4">
-                                <TextBlock Text="PAKET LANGGANAN (MBPS)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="PackageFieldLabel" Text="PAKET INTERNET" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
                                 <TextBox x:Name="PackageMbpsBox"
-                                         materialDesign:HintAssist.Hint="100"
+                                         materialDesign:HintAssist.Hint="Contoh: 100 Mbps"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="48" FontSize="14"
                                          VerticalContentAlignment="Center"
@@ -213,38 +166,20 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Additional Info -->
-                        <Grid Margin="0,24,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="24"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="ALAMAT INSTALASI" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                                <TextBox x:Name="AddressBox"
-                                         materialDesign:HintAssist.Hint="Alamat lengkap"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
-                                         VerticalContentAlignment="Center"
-                                         materialDesign:TextFieldAssist.LeadingIcon="MapMarkerOutline"
-                                         BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="#F8FAFC"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="CATATAN TEKNIS" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                                <TextBox x:Name="NotesBox"
-                                         materialDesign:HintAssist.Hint="Catatan (opsional)"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
-                                         VerticalContentAlignment="Center"
-                                         materialDesign:TextFieldAssist.LeadingIcon="NoteTextOutline"
-                                         BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="#F8FAFC"/>
-                            </StackPanel>
-                        </Grid>
+                        <!-- Catatan -->
+                        <StackPanel Margin="0,24,0,0">
+                            <TextBlock Text="CATATAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <TextBox x:Name="NotesBox"
+                                     materialDesign:HintAssist.Hint="Catatan tambahan (opsional)"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Height="80" FontSize="14"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalContentAlignment="Top"
+                                     materialDesign:TextFieldAssist.LeadingIcon="NoteTextOutline"
+                                     BorderBrush="{DynamicResource BorderLightBrush}"
+                                     Background="#F8FAFC"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -302,7 +237,7 @@
                     <!-- Central Progress Visualization -->
                     <Grid Width="256" Height="256" HorizontalAlignment="Center" Margin="0,0,0,64">
                         <!-- Outer Glow (Simulated) -->
-                        <Ellipse Fill="#1AEc5b13" Margin="-32"/>
+                        <Ellipse Fill="#1A22c55e" Margin="-32"/>
                         
                         <!-- Progress Ring -->
                         <ProgressBar x:Name="MainCircularProgress" 
@@ -321,7 +256,7 @@
                     </Grid>
 
                     <!-- Current Task Card -->
-                    <Border Background="White" CornerRadius="16" BorderBrush="#1AEc5b13" BorderThickness="1" Margin="0,0,0,40">
+                    <Border Background="White" CornerRadius="16" BorderBrush="#1A22c55e" BorderThickness="1" Margin="0,0,0,40">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="{DynamicResource PrimaryColor}" Opacity="0.05"/>
                         </Border.Effect>

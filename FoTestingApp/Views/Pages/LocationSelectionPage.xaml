@@ -91,7 +91,7 @@
                 </Grid>
 
                 <!-- Footer Summary -->
-                <Border Background="{DynamicResource PrimaryLightBrush}" BorderBrush="#40ec5b13" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,48,0,48">
+                <Border Background="{DynamicResource PrimaryLightBrush}" BorderBrush="#4022c55e" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,48,0,48">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -99,7 +99,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         
-                        <Border Grid.Column="0" Background="#33ec5b13" CornerRadius="24" Width="48" Height="48" Margin="0,0,16,0">
+                        <Border Grid.Column="0" Background="#3322c55e" CornerRadius="24" Width="48" Height="48" Margin="0,0,16,0">
                             <materialDesign:PackIcon Kind="InformationOutline" Foreground="{DynamicResource PrimaryBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         

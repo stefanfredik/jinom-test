@@ -8,19 +8,19 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Light"
-                                             PrimaryColor="Blue"
+                                             PrimaryColor="Green"
                                              SecondaryColor="Teal" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Primary Brand Color - NetPulse Orange -->
-            <Color x:Key="NetPulsePrimary">#ec5b13</Color>
-            <Color x:Key="NetPulseDark">#1a0d07</Color>
+            <!-- Primary Brand Color - Jinom Green -->
+            <Color x:Key="NetPulsePrimary">#22c55e</Color>
+            <Color x:Key="NetPulseDark">#071a0e</Color>
             
-            <SolidColorBrush x:Key="PrimaryBrush" Color="#ec5b13" />
-            <SolidColorBrush x:Key="PrimaryLightBrush" Color="#FCEde5" /> <!-- Simulated primary/10 -->
-            <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#d04e0f" />
-            <SolidColorBrush x:Key="DarkOverlayBrush" Color="#221610" />
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#22c55e" />
+            <SolidColorBrush x:Key="PrimaryLightBrush" Color="#dcfce7" />
+            <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#16a34a" />
+            <SolidColorBrush x:Key="DarkOverlayBrush" Color="#0a1f10" />
             <SolidColorBrush x:Key="PassGreenBrush" Color="#10B981" />
             <SolidColorBrush x:Key="FailRedBrush" Color="#EF4444" />
             <SolidColorBrush x:Key="WarnYellowBrush" Color="#F59E0B" />

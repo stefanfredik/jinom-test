@@ -55,18 +55,18 @@ public class ReportService
 
     private static void ComposeHeader(IContainer container)
     {
-        container.PaddingBottom(10).BorderBottom(1).BorderColor(Colors.Blue.Medium).Row(row =>
+        container.PaddingBottom(10).BorderBottom(1).BorderColor(Colors.Green.Medium).Row(row =>
         {
             row.RelativeItem().Column(col =>
             {
-                col.Item().Text("JINOM AI").FontSize(18).Bold().FontColor(Color.FromHex("#1E5AA0"));
+                col.Item().Text("JINOM TEST").FontSize(18).Bold().FontColor(Color.FromHex("#16a34a"));
                 col.Item().Text("Laporan Hasil Pengujian & Sertifikasi Jaringan Fiber Optik")
                    .FontSize(11).FontColor(Colors.Grey.Darken2);
             });
 
             row.ConstantItem(120).AlignRight().Column(col =>
             {
-                col.Item().Text("FO Testing & Commissioning").FontSize(9).FontColor(Colors.Grey.Darken1);
+                col.Item().Text("Jinom Test").FontSize(9).FontColor(Colors.Grey.Darken1);
                 col.Item().Text($"Tanggal: {DateTime.Now:dd MMMM yyyy}").FontSize(9);
             });
         });
@@ -79,7 +79,7 @@ public class ReportService
         container.PaddingTop(10).Column(col =>
         {
             // Certification ID badge
-            col.Item().Background(Color.FromHex("#1E5AA0")).Padding(8).Row(row =>
+            col.Item().Background(Color.FromHex("#16a34a")).Padding(8).Row(row =>
             {
                 row.RelativeItem().Text($"ID SERTIFIKASI: {session.CertificationId}")
                    .FontColor(Colors.White).Bold().FontSize(11);
@@ -123,7 +123,7 @@ public class ReportService
             col.Item().PaddingTop(12);
 
             // Results Table
-            col.Item().Text("HASIL PENGUJIAN").Bold().FontSize(10).FontColor(Color.FromHex("#1E5AA0"));
+            col.Item().Text("HASIL PENGUJIAN").Bold().FontSize(10).FontColor(Color.FromHex("#16a34a"));
             col.Item().PaddingTop(4);
             col.Item().Element(c => ComposeResultsTable(c, session.Results));
 
@@ -173,15 +173,15 @@ public class ReportService
             // Header
             table.Header(header =>
             {
-                header.Cell().Background(Color.FromHex("#1E5AA0")).Padding(5)
+                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
                       .Text("No").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#1E5AA0")).Padding(5)
+                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
                       .Text("Jenis Pengujian").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#1E5AA0")).Padding(5)
+                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
                       .Text("Target").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#1E5AA0")).Padding(5)
+                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
                       .Text("Detail Hasil").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#1E5AA0")).Padding(5)
+                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
                       .Text("Status").FontColor(Colors.White).Bold().FontSize(9);
             });
 
@@ -210,7 +210,7 @@ public class ReportService
     {
         container.PaddingTop(6).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(row =>
         {
-            row.RelativeItem().Text("Jinom AI | Dokumen Sertifikasi FO Testing & Commissioning | Rahasia")
+            row.RelativeItem().Text("Jinom Test | Dokumen Sertifikasi Pengujian Jaringan | Rahasia")
                .FontSize(8).FontColor(Colors.Grey.Darken1);
             row.ConstantItem(80).AlignRight().Text(text =>
             {

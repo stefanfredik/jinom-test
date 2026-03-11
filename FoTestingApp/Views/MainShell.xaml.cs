@@ -8,7 +8,7 @@ using FoTestingApp.Views.Pages;
 namespace FoTestingApp.Views;
 
 /// <summary>
-/// Code-behind untuk MainShell — window utama dengan sidebar navigasi.
+/// Code-behind untuk MainShell — window utama dengan top navigation bar.
 /// </summary>
 public partial class MainShell : Window
 {
