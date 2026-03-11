@@ -15,6 +15,28 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Global exception handlers
+        DispatcherUnhandledException += (s, args) =>
+        {
+            Log.Error(args.Exception, "Unhandled UI exception");
+            MessageBox.Show(
+                $"Terjadi kesalahan: {args.Exception.Message}",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+                Log.Fatal(ex, "Unhandled domain exception");
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, args) =>
+        {
+            Log.Error(args.Exception, "Unobserved task exception");
+            args.SetObserved();
+        };
+
         // Setup Serilog
         LoggingSetup.Configure();
 

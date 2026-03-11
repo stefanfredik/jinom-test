@@ -34,20 +34,24 @@ public class SpeedtestService
         var jinomResult = await RunJinomSpeedtestAsync(packageMbps);
         if (jinomResult.pass) { pass++; }
 
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = TestTypes.SpeedtestJinom,
-            Target = ConfigManager.GetJinomSpeedtestServer(),
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new
+            await _api.SaveTestResultAsync(new FoTestResult
             {
-                download_mbps = jinomResult.downloadMbps,
-                upload_mbps = jinomResult.uploadMbps,
-                threshold_pct = ConfigManager.GetSpeedtestThresholdPercentage(),
-                package_mbps = packageMbps,
-            })),
-            Status = jinomResult.pass ? TestStatus.Pass : TestStatus.Fail,
-        });
+                SessionId = _sessionId,
+                TestType = TestTypes.SpeedtestJinom,
+                Target = ConfigManager.GetJinomSpeedtestServer(),
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new
+                {
+                    download_mbps = jinomResult.downloadMbps,
+                    upload_mbps = jinomResult.uploadMbps,
+                    threshold_pct = ConfigManager.GetSpeedtestThresholdPercentage(),
+                    package_mbps = packageMbps,
+                })),
+                Status = jinomResult.pass ? TestStatus.Pass : TestStatus.Fail,
+            });
+        }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "Failed to save Jinom speedtest result"); }
 
         panel.Dispatcher.Invoke(() => panel.Children.Add(BuildSpeedCard(
             "Jinom Speedtest", jinomResult.downloadMbps, jinomResult.uploadMbps, jinomResult.pass)));
@@ -56,19 +60,23 @@ public class SpeedtestService
         total++;
         var ooklaResult = await RunOoklaSpeedtestAsync();
 
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = TestTypes.SpeedtestOokla,
-            Target = "speedtest.net",
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new
+            await _api.SaveTestResultAsync(new FoTestResult
             {
-                download_mbps = ooklaResult.downloadMbps,
-                upload_mbps = ooklaResult.uploadMbps,
-                error = ooklaResult.error,
-            })),
-            Status = ooklaResult.downloadMbps > 0 ? TestStatus.Pass : TestStatus.Fail,
-        });
+                SessionId = _sessionId,
+                TestType = TestTypes.SpeedtestOokla,
+                Target = "speedtest.net",
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new
+                {
+                    download_mbps = ooklaResult.downloadMbps,
+                    upload_mbps = ooklaResult.uploadMbps,
+                    error = ooklaResult.error,
+                })),
+                Status = ooklaResult.downloadMbps > 0 ? TestStatus.Pass : TestStatus.Fail,
+            });
+        }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "Failed to save Ookla speedtest result"); }
 
         panel.Dispatcher.Invoke(() => panel.Children.Add(BuildSpeedCard(
             "Ookla Speedtest", ooklaResult.downloadMbps, ooklaResult.uploadMbps,

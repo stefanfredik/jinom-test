@@ -47,7 +47,6 @@ C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-wi
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\FoTestingApp.runtimeconfig.json
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\FoTestingApp.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\FoTestingApp.pdb
-C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\BCrypt.Net-Next.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\CommunityToolkit.Mvvm.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\MaterialDesignColors.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\MaterialDesignThemes.Wpf.dll
@@ -56,14 +55,11 @@ C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-wi
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Binder.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.FileExtensions.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Json.dll
-C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.FileProviders.Abstractions.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.FileProviders.Physical.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
-C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Extensions.Primitives.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Microsoft.Xaml.Behaviors.dll
-C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\MySqlConnector.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\QuestPDF.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Serilog.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\bin\Debug\net8.0-windows\Serilog.Sinks.File.dll

@@ -133,14 +133,21 @@ public class NetworkTestService
         var resultData = new { ping_count = count, avg_ms = avg, max_ms = max, min_ms = min, rto = rtoCount, threshold_ms = thresholdMs };
 
         // Simpan ke API
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = testType,
-            Target = target,
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
-            Status = status,
-        });
+            await _api.SaveTestResultAsync(new FoTestResult
+            {
+                SessionId = _sessionId,
+                TestType = testType,
+                Target = target,
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
+                Status = status,
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to save {TestType} result", testType);
+        }
 
         // Tampilkan di UI
         panel.Dispatcher.Invoke(() =>
@@ -173,14 +180,21 @@ public class NetworkTestService
 
         var resultData = new { domains = domainResults };
 
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = testType,
-            Target = string.Join(", ", domains),
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
-            Status = status,
-        });
+            await _api.SaveTestResultAsync(new FoTestResult
+            {
+                SessionId = _sessionId,
+                TestType = testType,
+                Target = string.Join(", ", domains),
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
+                Status = status,
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to save {TestType} result", testType);
+        }
 
         panel.Dispatcher.Invoke(() =>
             panel.Children.Add(BuildNslookupCard(testType, domainResults, status)));

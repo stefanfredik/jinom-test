@@ -118,7 +118,11 @@ public class ApiService
     {
         SetAuthorizationHeader();
         var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/reseller-certification/fo-test/customers/upsert", customer);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Error("UpsertCustomerAsync failed: {Status}", response.StatusCode);
+            throw new HttpRequestException($"Gagal menyimpan data pelanggan (HTTP {(int)response.StatusCode})");
+        }
         var savedCustomer = await response.Content.ReadFromJsonAsync<FoCustomer>();
         return savedCustomer?.Id ?? 0;
     }
@@ -136,7 +140,11 @@ public class ApiService
             notes = session.Notes
         };
         var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/reseller-certification/fo-test/sessions", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Error("CreateTestSessionAsync failed: {Status}", response.StatusCode);
+            throw new HttpRequestException($"Gagal membuat sesi pengujian (HTTP {(int)response.StatusCode})");
+        }
         var savedSession = await response.Content.ReadFromJsonAsync<FoTestSession>();
         return savedSession?.Id ?? 0;
     }
@@ -151,7 +159,10 @@ public class ApiService
         };
         
         var response = await _httpClient.SendAsync(requestMessage);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Error("UpdateSessionStatusAsync failed: {Status} for session {SessionId}", response.StatusCode, sessionId);
+        }
     }
 
     public async Task SaveTestResultAsync(FoTestResult result)
@@ -166,7 +177,10 @@ public class ApiService
             status = result.Status.ToString().ToUpper()
         };
         var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/reseller-certification/fo-test/results", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Warning("SaveTestResultAsync failed: {Status} for test {TestType}", response.StatusCode, result.TestType);
+        }
     }
 
     public async Task<List<FoTestSession>> GetSessionsAsync(DateTime? fromDate = null, DateTime? toDate = null, int? technicianId = null, string? status = null)

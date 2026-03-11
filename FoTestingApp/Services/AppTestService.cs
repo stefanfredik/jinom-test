@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
+using Serilog;
 
 namespace FoTestingApp.Services;
 
@@ -46,14 +47,18 @@ public class AppTestService
         var browsingPass = browsingResults.Values.All(t => t <= thresholdSec && t >= 0);
         if (browsingPass) { pass++; }
 
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = TestTypes.BrowsingTest,
-            Target = string.Join(", ", browsingUrls),
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = browsingResults, threshold_sec = thresholdSec })),
-            Status = browsingPass ? TestStatus.Pass : TestStatus.Fail,
-        });
+            await _api.SaveTestResultAsync(new FoTestResult
+            {
+                SessionId = _sessionId,
+                TestType = TestTypes.BrowsingTest,
+                Target = string.Join(", ", browsingUrls),
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = browsingResults, threshold_sec = thresholdSec })),
+                Status = browsingPass ? TestStatus.Pass : TestStatus.Fail,
+            });
+        }
+        catch (Exception ex) { Log.Warning(ex, "Failed to save browsing result"); }
 
         panel.Dispatcher.Invoke(() => panel.Children.Add(BuildHttpCard("Browsing", browsingResults.ToDictionary(
             k => k.Key, v => v.Value >= 0 ? $"{v.Value:F1}s" : "Error"), browsingPass)));
@@ -65,14 +70,18 @@ public class AppTestService
         var streamingPass = streamingResults.Values.All(v => v == "Loaded");
         if (streamingPass) { pass++; }
 
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = TestTypes.StreamingTest,
-            Target = string.Join(", ", streamingUrls),
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = streamingResults })),
-            Status = streamingPass ? TestStatus.Pass : TestStatus.Fail,
-        });
+            await _api.SaveTestResultAsync(new FoTestResult
+            {
+                SessionId = _sessionId,
+                TestType = TestTypes.StreamingTest,
+                Target = string.Join(", ", streamingUrls),
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = streamingResults })),
+                Status = streamingPass ? TestStatus.Pass : TestStatus.Fail,
+            });
+        }
+        catch (Exception ex) { Log.Warning(ex, "Failed to save streaming result"); }
 
         panel.Dispatcher.Invoke(() => panel.Children.Add(BuildHttpCard("Streaming", streamingResults, streamingPass)));
 
@@ -83,14 +92,18 @@ public class AppTestService
         var socialPass = socialResults.Values.All(v => v == "Loaded");
         if (socialPass) { pass++; }
 
-        await _api.SaveTestResultAsync(new FoTestResult
+        try
         {
-            SessionId = _sessionId,
-            TestType = TestTypes.SocialMediaTest,
-            Target = string.Join(", ", socialUrls),
-            ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = socialResults })),
-            Status = socialPass ? TestStatus.Pass : TestStatus.Fail,
-        });
+            await _api.SaveTestResultAsync(new FoTestResult
+            {
+                SessionId = _sessionId,
+                TestType = TestTypes.SocialMediaTest,
+                Target = string.Join(", ", socialUrls),
+                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = socialResults })),
+                Status = socialPass ? TestStatus.Pass : TestStatus.Fail,
+            });
+        }
+        catch (Exception ex) { Log.Warning(ex, "Failed to save social media result"); }
 
         panel.Dispatcher.Invoke(() => panel.Children.Add(BuildHttpCard("Social Media", socialResults, socialPass)));
 

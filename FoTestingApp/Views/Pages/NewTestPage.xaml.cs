@@ -71,37 +71,49 @@ public partial class NewTestPage : Page
         ResultsPanel.Children.Clear();
         TestProgressBar.Value = 0;
 
-        // Simpan/update data pelanggan
-        var customer = new FoCustomer
+        try
         {
-            CustomerNumber = CustomerNumberBox.Text.Trim(),
-            FullName = FullNameBox.Text.Trim(),
-            Address = AddressBox.Text.Trim(),
-            PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
-            Phone = string.IsNullOrWhiteSpace(PhoneBox.Text) ? null : PhoneBox.Text.Trim(),
-            TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
-        };
+            // Simpan/update data pelanggan
+            var customer = new FoCustomer
+            {
+                CustomerNumber = CustomerNumberBox.Text.Trim(),
+                FullName = FullNameBox.Text.Trim(),
+                Address = AddressBox.Text.Trim(),
+                PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
+                Phone = string.IsNullOrWhiteSpace(PhoneBox.Text) ? null : PhoneBox.Text.Trim(),
+                TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
+            };
 
-        var customerId = await _api.UpsertCustomerAsync(customer);
+            var customerId = await _api.UpsertCustomerAsync(customer);
 
-        // Buat sesi pengujian baru
-        var certId = $"CERT-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
-        var session = new FoTestSession
+            // Buat sesi pengujian baru
+            var certId = $"CERT-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
+            var session = new FoTestSession
+            {
+                CertificationId = certId,
+                CustomerId = customerId,
+                TechnicianId = SessionManager.CurrentUser?.Id ?? 0,
+                TestDate = DateTime.Now,
+                OverallStatus = TestOverallStatus.Fail,
+            };
+
+            _currentSessionId = await _api.CreateTestSessionAsync(session);
+
+            // Jalankan semua network tests berurutan
+            await RunAllTestsAsync(_currentSessionId.Value, customer.PackageMbps);
+
+            SaveReportBtn.IsEnabled = true;
+        }
+        catch (Exception ex)
         {
-            CertificationId = certId,
-            CustomerId = customerId,
-            TechnicianId = SessionManager.CurrentUser!.Id,
-            TestDate = DateTime.Now,
-            OverallStatus = TestOverallStatus.Fail,
-        };
-
-        _currentSessionId = await _api.CreateTestSessionAsync(session);
-
-        // Jalankan semua network tests berurutan (akan diimplementasi Sprint 1)
-        await RunAllTestsAsync(_currentSessionId.Value, customer.PackageMbps);
-
-        StartTestBtn.IsEnabled = true;
-        SaveReportBtn.IsEnabled = true;
+            Serilog.Log.Error(ex, "Test execution failed");
+            MessageBox.Show($"Pengujian gagal: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            StatusLabel.Text = "❌ Pengujian gagal. Silakan coba lagi.";
+        }
+        finally
+        {
+            StartTestBtn.IsEnabled = true;
+        }
     }
 
     private async System.Threading.Tasks.Task RunAllTestsAsync(int sessionId, int packageMbps)
@@ -114,7 +126,15 @@ public partial class NewTestPage : Page
         });
 
         await networkSvc.RunAllAsync(ResultsPanel, progress, packageMbps);
-        await _api.UpdateSessionStatusAsync(sessionId, networkSvc.OverallStatus);
+
+        try
+        {
+            await _api.UpdateSessionStatusAsync(sessionId, networkSvc.OverallStatus);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Failed to update session status");
+        }
     }
 
     private bool ValidateForm()
