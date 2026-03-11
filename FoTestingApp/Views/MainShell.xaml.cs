@@ -78,7 +78,7 @@ public partial class MainShell : Window
                 break;
             case "NewTest":
                 BtnNewTest.Style = activeStyle;
-                ContentFrame.Navigate(new LocationSelectionPage());
+                ContentFrame.Navigate(new NewTestPage());
                 break;
             case "History":
                 BtnHistory.Style = activeStyle;

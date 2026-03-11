@@ -234,7 +234,7 @@ public class ReportService
         TestTypes.BrowsingTest => "Pengujian Browsing",
         TestTypes.StreamingTest => "Pengujian Streaming",
         TestTypes.SocialMediaTest => "Pengujian Social Media",
-        TestTypes.SpeedtestJinom => "Speedtest Jinom",
+        TestTypes.SpeedtestFast => "Speedtest Fast.com",
         TestTypes.SpeedtestOokla => "Speedtest Ookla",
         _ => testType,
     };
@@ -264,7 +264,10 @@ public class ReportService
                     string.Join(" | ", root.GetProperty("results").EnumerateObject()
                         .Select(r => $"{new Uri(r.Name).Host}: {r.Value.GetString()}")),
 
-                TestTypes.SpeedtestJinom or TestTypes.SpeedtestOokla =>
+                TestTypes.SpeedtestFast =>
+                    $"\u2193 {root.GetProperty("download_mbps").GetDouble()} Mbps",
+
+                TestTypes.SpeedtestOokla =>
                     $"↓ {root.GetProperty("download_mbps").GetDouble()} Mbps | ↑ {root.GetProperty("upload_mbps").GetDouble()} Mbps",
 
                 _ => "-",

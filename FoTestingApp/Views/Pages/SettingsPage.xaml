@@ -24,7 +24,7 @@
                         <StackPanel Margin="8,0,0,0">
                             <TextBox x:Name="NslookupNasionalBox" materialDesign:HintAssist.Hint="Domain NSLookup Nasional (koma)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
                             <TextBox x:Name="NslookupInternasionalBox" materialDesign:HintAssist.Hint="Domain NSLookup Internasional (koma)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
-                            <TextBox x:Name="SpeedtestThresholdBox" materialDesign:HintAssist.Hint="Threshold Speedtest (%)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
+
                             <TextBox x:Name="SessionTimeoutBox" materialDesign:HintAssist.Hint="Timeout Sesi (menit)" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                         </StackPanel>
                     </UniformGrid>

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
@@ -12,13 +13,59 @@ public partial class NewTestPage : Page
     private int? _currentSessionId;
     private CancellationTokenSource? _searchCts;
 
-    private readonly string _testMode;
+    private string _testMode = "customer";
 
-    public NewTestPage(string testMode = "customer")
+    public NewTestPage()
     {
         InitializeComponent();
-        _testMode = testMode;
+    }
+
+    // ── Stage Navigation ──────────────────────────────────────────────────────
+
+    private void StartLandingBtn_Click(object sender, RoutedEventArgs e)
+    {
+        LandingContainer.Visibility = Visibility.Collapsed;
+        LocationContainer.Visibility = Visibility.Visible;
+    }
+
+    private void PopCard_Click(object sender, RoutedEventArgs e)
+    {
+        SelectTestMode("pop");
+    }
+
+    private void PopCard_Click(object sender, MouseButtonEventArgs e)
+    {
+        SelectTestMode("pop");
+    }
+
+    private void CpeCard_Click(object sender, RoutedEventArgs e)
+    {
+        SelectTestMode("customer");
+    }
+
+    private void CpeCard_Click(object sender, MouseButtonEventArgs e)
+    {
+        SelectTestMode("customer");
+    }
+
+    private void SelectTestMode(string mode)
+    {
+        _testMode = mode;
+        LocationContainer.Visibility = Visibility.Collapsed;
+        FormContainer.Visibility = Visibility.Visible;
         ApplyTestMode();
+    }
+
+    private void BackToLanding_Click(object sender, RoutedEventArgs e)
+    {
+        LocationContainer.Visibility = Visibility.Collapsed;
+        LandingContainer.Visibility = Visibility.Visible;
+    }
+
+    private void BackToLocation_Click(object sender, RoutedEventArgs e)
+    {
+        FormContainer.Visibility = Visibility.Collapsed;
+        LocationContainer.Visibility = Visibility.Visible;
     }
 
     private void ApplyTestMode()
@@ -26,11 +73,15 @@ public partial class NewTestPage : Page
         if (_testMode == "pop")
         {
             SiteIdBox.Visibility = Visibility.Collapsed;
+            FormTitle.Text = "POP Network Test";
+            FormSubtitle.Text = "DIAGNOSTIC SUITE FOR POP VERIFICATION";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Langganan JNIX (Mbps) *");
         }
         else
         {
             SiteIdBox.Visibility = Visibility.Visible;
+            FormTitle.Text = "Customer Network Test";
+            FormSubtitle.Text = "DIAGNOSTIC SUITE FOR CPE VERIFICATION";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Layanan (Mbps) *");
         }
     }
@@ -205,8 +256,7 @@ public partial class NewTestPage : Page
 
     private void EndTestBtn_Click(object sender, RoutedEventArgs e)
     {
-        // Cancel or close the view
         ProgressContainer.Visibility = Visibility.Collapsed;
-        FormContainer.Visibility = Visibility.Visible;
+        LandingContainer.Visibility = Visibility.Visible;
     }
 }

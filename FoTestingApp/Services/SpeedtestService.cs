@@ -12,7 +12,7 @@ using FoTestingApp.Models;
 namespace FoTestingApp.Services;
 
 /// <summary>
-/// Pengujian kecepatan internet: Jinom Speedtest (custom) dan Ookla Speedtest CLI.
+/// Pengujian kecepatan internet: Fast.com Speedtest dan Ookla Speedtest CLI.
 /// </summary>
 public class SpeedtestService
 {
@@ -31,34 +31,33 @@ public class SpeedtestService
         var pass = 0;
         var total = 0;
 
-        // Jinom Speedtest
+        // Fast.com Speedtest
         total++;
-        var jinomResult = await RunJinomSpeedtestAsync(packageMbps);
-        if (jinomResult.pass) { pass++; }
+        var fastResult = await RunFastSpeedtestAsync();
 
         try
         {
             await _api.SaveTestResultAsync(new FoTestResult
             {
                 SessionId = _sessionId,
-                TestType = TestTypes.SpeedtestJinom,
-                Target = ConfigManager.GetJinomSpeedtestServer(),
+                TestType = TestTypes.SpeedtestFast,
+                Target = "fast.com",
                 ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new
                 {
-                    download_mbps = jinomResult.downloadMbps,
-                    upload_mbps = jinomResult.uploadMbps,
-                    threshold_pct = ConfigManager.GetSpeedtestThresholdPercentage(),
-                    package_mbps = packageMbps,
+                    download_mbps = fastResult.downloadMbps,
+                    error = fastResult.error,
                 })),
-                Status = jinomResult.pass ? TestStatus.Pass : TestStatus.Fail,
+                Status = fastResult.downloadMbps > 0 ? TestStatus.Pass : TestStatus.Fail,
             });
         }
-        catch (Exception ex) { Serilog.Log.Warning(ex, "Failed to save Jinom speedtest result"); }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "Failed to save Fast.com speedtest result"); }
 
         panel.Dispatcher.Invoke(() => panel.Children.Add(BuildSpeedCard(
-            "Jinom Speedtest", jinomResult.downloadMbps, jinomResult.uploadMbps, jinomResult.pass)));
+            "Fast.com Speedtest", fastResult.downloadMbps, 0, fastResult.downloadMbps > 0, fastResult.error)));
 
-        // Ookla Speedtest (via CLI jika tersedia)
+        if (fastResult.downloadMbps > 0) { pass++; }
+
+        // Ookla Speedtest (via CLI, auto-download jika belum ada)
         total++;
         var ooklaResult = await RunOoklaSpeedtestAsync();
 
@@ -90,56 +89,109 @@ public class SpeedtestService
     }
 
     /// <summary>
-    /// Jinom Speedtest: download file besar dari server Jinom, ukur throughput.
+    /// Fast.com Speedtest: download dari server Netflix untuk ukur kecepatan.
     /// </summary>
-    private async Task<(double downloadMbps, double uploadMbps, bool pass)> RunJinomSpeedtestAsync(int packageMbps)
+    private async Task<(double downloadMbps, string? error)> RunFastSpeedtestAsync()
     {
         try
         {
-            var server = ConfigManager.GetJinomSpeedtestServer();
-            var threshold = ConfigManager.GetSpeedtestThresholdPercentage();
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
 
-            // Download test: ukur throughput download 10MB file
-            var stopwatch = Stopwatch.StartNew();
-            var data = await _client.GetByteArrayAsync($"{server}/download?size=10485760");
-            stopwatch.Stop();
+            // 1. Ambil token dari halaman Fast.com
+            var html = await client.GetStringAsync("https://fast.com");
+            var tokenMatch = System.Text.RegularExpressions.Regex.Match(html, @"/app-([a-f0-9]+)\.js");
+            if (!tokenMatch.Success)
+                return (0, "Gagal mendapatkan script Fast.com");
 
-            var downloadMbps = data.Length * 8.0 / 1_000_000 / stopwatch.Elapsed.TotalSeconds;
+            var scriptUrl = $"https://fast.com{tokenMatch.Value}";
+            var script = await client.GetStringAsync(scriptUrl);
+            var apiTokenMatch = System.Text.RegularExpressions.Regex.Match(script, @"token:\s*[""']([^""']+)[""']");
+            if (!apiTokenMatch.Success)
+                return (0, "Gagal mendapatkan API token Fast.com");
 
-            // Upload test: POST 5MB data
-            stopwatch.Restart();
-            var uploadData = new byte[5 * 1024 * 1024];
-            var content = new ByteArrayContent(uploadData);
-            await _client.PostAsync($"{server}/upload", content);
-            stopwatch.Stop();
+            var token = apiTokenMatch.Groups[1].Value;
 
-            var uploadMbps = uploadData.Length * 8.0 / 1_000_000 / stopwatch.Elapsed.TotalSeconds;
+            // 2. Dapatkan URL download dari API Fast.com
+            var apiUrl = $"https://api.fast.com/netflix/speedtest/v2?https=true&token={Uri.EscapeDataString(token)}&urlCount=3";
+            var apiResponse = await client.GetStringAsync(apiUrl);
+            var apiJson = JsonDocument.Parse(apiResponse);
+            var targets = apiJson.RootElement.GetProperty("targets");
 
-            var minRequired = packageMbps * threshold / 100.0;
-            var pass = downloadMbps >= minRequired;
+            if (targets.GetArrayLength() == 0)
+                return (0, "Tidak ada server Fast.com yang tersedia");
 
-            return (Math.Round(downloadMbps, 2), Math.Round(uploadMbps, 2), pass);
+            // 3. Download paralel dari semua target URL, ukur throughput
+            var downloadTasks = new List<Task<long>>();
+            var sw = Stopwatch.StartNew();
+
+            foreach (var target in targets.EnumerateArray())
+            {
+                var url = target.GetProperty("url").GetString();
+                if (url == null) continue;
+
+                var downloadUrl = url.Contains('?') ? $"{url}&size=26214400" : $"{url}?size=26214400";
+                downloadTasks.Add(DownloadAndCountBytesAsync(client, downloadUrl));
+            }
+
+            var results = await Task.WhenAll(downloadTasks);
+            sw.Stop();
+
+            var totalBytes = results.Sum();
+            if (totalBytes == 0)
+                return (0, "Gagal mengunduh data dari Fast.com");
+
+            var downloadMbps = totalBytes * 8.0 / 1_000_000 / sw.Elapsed.TotalSeconds;
+
+            return (Math.Round(downloadMbps, 2), null);
         }
         catch (Exception ex)
         {
-            Serilog.Log.Warning(ex, "Jinom speedtest error");
-            return (0, 0, false);
+            Serilog.Log.Warning(ex, "Fast.com speedtest error");
+            return (0, ex.Message);
+        }
+    }
+
+    /// <summary>Download URL dan hitung total bytes yang diterima.</summary>
+    private static async Task<long> DownloadAndCountBytesAsync(HttpClient client, string url)
+    {
+        try
+        {
+            using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            using var stream = await response.Content.ReadAsStreamAsync();
+            var buffer = new byte[81920];
+            long totalRead = 0;
+            int bytesRead;
+            while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+            {
+                totalRead += bytesRead;
+            }
+            return totalRead;
+        }
+        catch
+        {
+            return 0;
         }
     }
 
     /// <summary>
-    /// Ookla Speedtest via CLI (speedtest.exe harus ada di PATH atau folder app).
+    /// Ookla Speedtest via CLI (otomatis download jika belum ada).
     /// </summary>
     private async Task<(double downloadMbps, double uploadMbps, string? error)> RunOoklaSpeedtestAsync()
     {
-        var exePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "speedtest.exe");
-
         try
         {
+            var exePath = await EnsureSpeedtestCliAsync();
+            if (exePath == null)
+                return (0, 0, "Speedtest CLI tidak ditemukan dan gagal diunduh otomatis");
+
+            Serilog.Log.Information("Menjalankan Ookla Speedtest CLI: {Path}", exePath);
+
             var psi = new ProcessStartInfo
             {
-                FileName = "speedtest",
-                Arguments = "--format=json --accept-license --accept-gdpr",
+                FileName = exePath,
+                Arguments = "--format=json --accept-license --accept-gdpr --progress=no",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -147,14 +199,35 @@ public class SpeedtestService
             };
 
             using var process = Process.Start(psi);
-            if (process is null) { return (0, 0, "Speedtest CLI tidak ditemukan"); }
+            if (process is null) return (0, 0, "Gagal menjalankan Speedtest CLI");
 
-            var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            var exited = await Task.Run(() => process.WaitForExit(120_000));
+            if (!exited)
+            {
+                try { process.Kill(true); } catch { }
+                return (0, 0, "Speedtest timeout (120 detik)");
+            }
+
+            var output = await outputTask;
+            var stderr = await errorTask;
+
+            if (process.ExitCode != 0)
+            {
+                Serilog.Log.Warning("Speedtest CLI exit code {Code}: {Stderr}", process.ExitCode, stderr);
+                return (0, 0, $"Speedtest error (exit {process.ExitCode})");
+            }
+
+            if (string.IsNullOrWhiteSpace(output))
+                return (0, 0, "Speedtest CLI tidak menghasilkan output");
 
             var json = JsonDocument.Parse(output);
-            var download = json.RootElement.GetProperty("download").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
-            var upload = json.RootElement.GetProperty("upload").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+            var root = json.RootElement;
+
+            var download = root.GetProperty("download").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+            var upload = root.GetProperty("upload").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
 
             return (Math.Round(download, 2), Math.Round(upload, 2), null);
         }
@@ -163,6 +236,71 @@ public class SpeedtestService
             Serilog.Log.Warning(ex, "Ookla speedtest error");
             return (0, 0, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Pastikan speedtest CLI tersedia: cek folder tools, PATH, atau auto-download.
+    /// </summary>
+    private static async Task<string?> EnsureSpeedtestCliAsync()
+    {
+        // 1. Cek di folder tools (prioritas utama)
+        var toolsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools");
+        var exePath = Path.Combine(toolsDir, "speedtest.exe");
+        if (File.Exists(exePath))
+            return exePath;
+
+        // 2. Cek di PATH
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "speedtest.exe",
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var p = Process.Start(psi);
+            if (p != null)
+            {
+                p.WaitForExit(5000);
+                if (p.ExitCode == 0)
+                    return "speedtest.exe";
+            }
+        }
+        catch { /* Tidak ada di PATH */ }
+
+        // 3. Auto-download dari Ookla
+        try
+        {
+            Serilog.Log.Information("Mengunduh Ookla Speedtest CLI...");
+            Directory.CreateDirectory(toolsDir);
+
+            var downloadUrl = ConfigManager.GetOoklaCliUrl();
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+            var zipBytes = await client.GetByteArrayAsync(downloadUrl);
+
+            var zipPath = Path.Combine(toolsDir, "speedtest.zip");
+            await File.WriteAllBytesAsync(zipPath, zipBytes);
+
+            ZipFile.ExtractToDirectory(zipPath, toolsDir, overwriteFiles: true);
+            File.Delete(zipPath);
+
+            if (File.Exists(exePath))
+            {
+                Serilog.Log.Information("Speedtest CLI berhasil diunduh ke {Path}", exePath);
+                return exePath;
+            }
+
+            Serilog.Log.Warning("speedtest.exe tidak ditemukan setelah ekstrak zip");
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Gagal mengunduh Speedtest CLI");
+        }
+
+        return null;
     }
 
     private static Border BuildSpeedCard(string label, double download, double upload, bool pass, string? error = null)

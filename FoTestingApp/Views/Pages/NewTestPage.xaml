@@ -5,19 +5,125 @@
       Title="Pengujian Baru">
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
-        <!-- Form Area (Visible by default) -->
-        <ScrollViewer x:Name="FormContainer" VerticalScrollBarVisibility="Auto">
+
+        <!-- ═══ Stage 1: Landing — Big circular start button ═══ -->
+        <Grid x:Name="LandingContainer" Visibility="Visible">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- Title -->
+                <TextBlock Text="Network Diagnostic" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Mulai pengujian jaringan fiber optik" FontSize="16" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,48"/>
+
+                <!-- Big Circular Start Button -->
+                <Grid HorizontalAlignment="Center" Margin="0,0,0,48">
+                    <!-- Outer glow ring -->
+                    <Ellipse Width="220" Height="220" StrokeThickness="3">
+                        <Ellipse.Stroke>
+                            <SolidColorBrush Color="#30ec5b13"/>
+                        </Ellipse.Stroke>
+                    </Ellipse>
+                    <!-- Middle ring -->
+                    <Ellipse Width="200" Height="200" StrokeThickness="2">
+                        <Ellipse.Stroke>
+                            <SolidColorBrush Color="#20ec5b13"/>
+                        </Ellipse.Stroke>
+                    </Ellipse>
+                    <!-- Main button -->
+                    <Button x:Name="StartLandingBtn" Width="180" Height="180" Click="StartLandingBtn_Click"
+                            Style="{StaticResource MaterialDesignFloatingActionButton}"
+                            Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
+                            Foreground="White" Cursor="Hand">
+                        <StackPanel>
+                            <materialDesign:PackIcon Kind="Play" Width="56" Height="56" HorizontalAlignment="Center"/>
+                            <TextBlock Text="MULAI" FontSize="16" FontWeight="Black" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <TextBlock Text="Klik tombol di atas untuk memulai pengujian" FontSize="13" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══ Stage 2: Location Selection — POP or CPE ═══ -->
+        <Grid x:Name="LocationContainer" Visibility="Collapsed">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="700">
+                <!-- Title -->
+                <TextBlock Text="Pilih Lokasi Pengujian" FontSize="32" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Tentukan lokasi pengujian yang akan dilakukan" FontSize="16" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,48"/>
+
+                <!-- POP and CPE Cards -->
+                <Grid HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="280"/>
+                        <ColumnDefinition Width="32"/>
+                        <ColumnDefinition Width="280"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- POP Card -->
+                    <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16"
+                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Cursor="Hand"
+                            MouseLeftButtonUp="PopCard_Click">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="Black" Opacity="0.06"/>
+                        </Border.Effect>
+                        <StackPanel HorizontalAlignment="Center" Margin="32">
+                            <!-- Icon Circle -->
+                            <Border Width="80" Height="80" CornerRadius="40" Background="{DynamicResource PrimaryLightBrush}" Margin="0,0,0,20" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="ServerNetwork" Width="36" Height="36" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="POP" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBlock Text="Point of Presence" FontSize="13" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                            <TextBlock Text="Pengujian di sisi infrastruktur backbone jaringan" FontSize="12" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,20"/>
+                            <Button Content="Pilih POP" Click="PopCard_Click"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    materialDesign:ButtonAssist.CornerRadius="8"
+                                    Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
+                                    Foreground="White" FontWeight="Bold" Height="40" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CPE Card -->
+                    <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16"
+                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Cursor="Hand"
+                            MouseLeftButtonUp="CpeCard_Click">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="Black" Opacity="0.06"/>
+                        </Border.Effect>
+                        <StackPanel HorizontalAlignment="Center" Margin="32">
+                            <!-- Icon Circle -->
+                            <Border Width="80" Height="80" CornerRadius="40" Background="{DynamicResource PrimaryLightBrush}" Margin="0,0,0,20" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="RouterWireless" Width="36" Height="36" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="CPE" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBlock Text="Customer Premises Equipment" FontSize="13" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                            <TextBlock Text="Pengujian di sisi pelanggan dan perangkat akhir" FontSize="12" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,20"/>
+                            <Button Content="Pilih CPE" Click="CpeCard_Click"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    materialDesign:ButtonAssist.CornerRadius="8"
+                                    Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
+                                    Foreground="White" FontWeight="Bold" Height="40" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Back button -->
+                <Button Content="Kembali" Click="BackToLanding_Click" Margin="0,32,0,0"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource TextLightBrush}"
+                        HorizontalAlignment="Center" Height="40"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══ Stage 3: Form Area — Customer data input ═══ -->
+        <ScrollViewer x:Name="FormContainer" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
             <StackPanel Margin="32">
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,32">
-                    <TextBlock Text="Customer Network Test" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
-                    <TextBlock Text="DIAGNOSTIC SUITE FOR CPE VERIFICATION" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="FormTitle" Text="Customer Network Test" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                    <TextBlock x:Name="FormSubtitle" Text="DIAGNOSTIC SUITE FOR CPE VERIFICATION" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
 
                 <!-- Customer Configuration Panel -->
                 <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="32" Margin="0,0,0,32"
                         BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
-                    <!-- Same content as before -->
                     <StackPanel>
                         <!-- Section Title -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
@@ -153,6 +259,18 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Button x:Name="BackToLocationBtn" Margin="0,0,12,0"
+                                    Height="52" Padding="16,0"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    materialDesign:ButtonAssist.CornerRadius="12"
+                                    BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextLightBrush}"
+                                    Click="BackToLocation_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ArrowLeft" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Kembali" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
                             <Button x:Name="StartTestBtn"
                                     Height="52" Padding="24,0"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
@@ -161,7 +279,7 @@
                                     Click="StartTestBtn_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Play" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Initialize Full Diagnostics" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Mulai Pengujian" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -170,7 +288,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Progress Overlay (Hidden by default) -->
+        <!-- ═══ Stage 4: Progress Overlay ═══ -->
         <Grid x:Name="ProgressContainer" Visibility="Collapsed" Background="#F8F6F6">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel HorizontalAlignment="Center" MaxWidth="640" Margin="24,48,24,48" Width="640">

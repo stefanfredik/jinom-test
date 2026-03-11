@@ -13,12 +13,12 @@ namespace FoTestingApp.Views.Pages
 
         private void BtnSelectPop_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new NewTestPage("pop"));
+            NavigationService?.Navigate(new NewTestPage());
         }
 
         private void BtnSelectCustomer_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new NewTestPage("customer"));
+            NavigationService?.Navigate(new NewTestPage());
         }
     }
 }

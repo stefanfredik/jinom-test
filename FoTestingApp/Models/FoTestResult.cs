@@ -33,7 +33,6 @@ public static class TestTypes
     public const string BrowsingTest = "browsing_test";
     public const string StreamingTest = "streaming_test";
     public const string SocialMediaTest = "social_media_test";
-    public const string SpeedtestJinom = "speedtest_jinom";
     public const string SpeedtestOokla = "speedtest_ookla";
     public const string SpeedtestFast = "speedtest_fast";
 }

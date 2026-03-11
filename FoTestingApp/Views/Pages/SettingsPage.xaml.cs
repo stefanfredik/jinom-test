@@ -20,7 +20,6 @@ public partial class SettingsPage : Page
         PingLocalTargetBox.Text = string.Join(", ", ConfigManager.GetPingDomainLokalDomains());
         NslookupNasionalBox.Text = string.Join(", ", ConfigManager.GetNslookupNasionalDomains());
         NslookupInternasionalBox.Text = string.Join(", ", ConfigManager.GetNslookupInternasionalDomains());
-        SpeedtestThresholdBox.Text = ConfigManager.GetSpeedtestThresholdPercentage().ToString();
         SessionTimeoutBox.Text = ConfigManager.GetSessionTimeoutMinutes().ToString();
     }
 
@@ -43,7 +42,6 @@ public partial class SettingsPage : Page
                 ["NetworkTest:PingDomainLokal:Domains"] = lokalDomains,
                 ["NetworkTest:NslookupNasional:Domains"] = nasionalDomains,
                 ["NetworkTest:NslookupInternasional:Domains"] = internasionalDomains,
-                ["Speedtest:ThresholdPercentage"] = int.TryParse(SpeedtestThresholdBox.Text, out var spd) ? spd : 99,
                 ["App:SessionTimeoutMinutes"] = int.TryParse(SessionTimeoutBox.Text, out var to) ? to : 30,
             };
 
