@@ -10,44 +10,89 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Riwayat Pengujian" FontSize="24" FontWeight="Bold"
-                   Foreground="#1E5AA0" Margin="0,0,0,20"/>
+        <TextBlock Grid.Row="0" Text="Riwayat Pengujian" FontSize="28" FontWeight="Bold"
+                   Foreground="{DynamicResource JinomDarkBlueBrush}" Margin="0,0,0,24"/>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16"
-                Effect="{DynamicResource MaterialDesignShadowDepth1}" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal">
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="20"
+                Effect="{DynamicResource MaterialDesignShadowDepth2}" Margin="0,0,0,24">
+            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Margin="0,0,16,8"/>
                 <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Margin="12,0,0,0"/>
-                <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="120" Margin="12,0,0,0">
-                    <ComboBoxItem Content="Semua"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Margin="0,0,16,8"/>
+                <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status Pengujian"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="160" Margin="0,0,16,8">
+                    <ComboBoxItem Content="Semua Status"/>
                     <ComboBoxItem Content="PASS"/>
                     <ComboBoxItem Content="FAIL"/>
                     <ComboBoxItem Content="PARTIAL"/>
                 </ComboBox>
-                <Button Content="🔍 Filter" Style="{StaticResource MaterialDesignRaisedButton}"
-                        Background="#1E5AA0" Foreground="White" Click="FilterBtn_Click" Margin="12,0,0,0"/>
-            </StackPanel>
+                <Button Content="Terapkan Filter" Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="{DynamicResource JinomBlueBrush}" BorderBrush="{DynamicResource JinomBlueBrush}"
+                        Foreground="White" Click="FilterBtn_Click" Margin="0,4,0,8" Height="48"
+                        materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}">
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Terapkan" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+            </WrapPanel>
         </Border>
 
         <!-- Sessions DataGrid -->
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="16"
-                Effect="{DynamicResource MaterialDesignShadowDepth1}">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="24"
+                Effect="{DynamicResource MaterialDesignShadowDepth2}">
             <DataGrid x:Name="SessionsGrid"
                       AutoGenerateColumns="False" IsReadOnly="True"
                       Style="{StaticResource MaterialDesignDataGrid}"
-                      BorderThickness="0" GridLinesVisibility="Horizontal">
+                      BorderThickness="0" GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#E2E8F0" RowHeight="56" FontSize="14">
+                      
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                        <Setter Property="Foreground" Value="#64748B"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Padding" Value="16,12"/>
+                    </Style>
+                    <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                        <Setter Property="Padding" Value="16,0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                    <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                        <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.Resources>
+
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID Sertifikasi" Binding="{Binding CertificationId}" Width="180"/>
+                    <DataGridTextColumn Header="ID Sertifikasi" Binding="{Binding CertificationId}" Width="200"/>
                     <DataGridTextColumn Header="Pelanggan" Binding="{Binding Customer.FullName}" Width="*"/>
-                    <DataGridTextColumn Header="No. Pelanggan" Binding="{Binding Customer.CustomerNumber}" Width="120"/>
-                    <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="90"/>
-                    <DataGridTextColumn Header="Teknisi" Binding="{Binding Technician.Name}" Width="130"/>
-                    <DataGridTextColumn Header="Tanggal" Binding="{Binding TestDate, StringFormat='dd/MM/yyyy HH:mm'}" Width="140"/>
-                    <DataGridTextColumn Header="Status" Binding="{Binding OverallStatus}" Width="80"/>
+                    <DataGridTextColumn Header="Tipe Site" Binding="{Binding Customer.SiteType}" Width="110"/>
+                    <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="100"/>
+                    <DataGridTextColumn Header="Teknisi" Binding="{Binding Technician.Name}" Width="140"/>
+                    <DataGridTextColumn Header="Waktu Dibuat" Binding="{Binding TestDate, StringFormat='dd MMM yyyy, HH:mm'}" Width="200"/>
+                    
+                    <DataGridTemplateColumn Header="Status" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="12" Padding="12,4" HorizontalAlignment="Left"
+                                        Background="{Binding OverallStatus, Converter={StaticResource StatusToBackgroundConverter}}">
+                                    <TextBlock Text="{Binding OverallStatus}" FontSize="12" FontWeight="Bold"
+                                               Foreground="{Binding OverallStatus, Converter={StaticResource StatusToForegroundConverter}}"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

@@ -2,23 +2,37 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:helpers="clr-namespace:FoTestingApp.Helpers"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Light"
                                              PrimaryColor="Blue"
-                                             SecondaryColor="LightBlue" />
+                                             SecondaryColor="Teal" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Primary Brand Color - Jinom Blue -->
-            <Color x:Key="JinomBlue">#1E5AA0</Color>
-            <SolidColorBrush x:Key="JinomBlueBrush" Color="#1E5AA0" />
-            <SolidColorBrush x:Key="JinomLightBlueBrush" Color="#E8F0FB" />
-            <SolidColorBrush x:Key="PassGreenBrush" Color="#27AE60" />
-            <SolidColorBrush x:Key="FailRedBrush" Color="#E74C3C" />
-            <SolidColorBrush x:Key="WarnYellowBrush" Color="#F39C12" />
+            <!-- Primary Brand Color - Jinom Blue Modern -->
+            <Color x:Key="JinomBlue">#2563EB</Color>
+            <Color x:Key="JinomDarkBlue">#1E3A8A</Color>
+            
+            <SolidColorBrush x:Key="JinomBlueBrush" Color="#2563EB" />
+            <SolidColorBrush x:Key="JinomDarkBlueBrush" Color="#1E3A8A" />
+            <SolidColorBrush x:Key="JinomLightBlueBrush" Color="#EEF2FF" />
+            <SolidColorBrush x:Key="PassGreenBrush" Color="#10B981" />
+            <SolidColorBrush x:Key="FailRedBrush" Color="#EF4444" />
+            <SolidColorBrush x:Key="WarnYellowBrush" Color="#F59E0B" />
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F8FAFC" />
+
+            <!-- Global Shadow Depth and Corners -->
+            <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
+            <CornerRadius x:Key="ButtonCornerRadius">8</CornerRadius>
+            
+            <!-- Value Converters -->
+            <helpers:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
+            <helpers:StatusToForegroundConverter x:Key="StatusToForegroundConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
