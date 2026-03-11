@@ -3,87 +3,101 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Title="Dashboard">
-    <ScrollViewer>
-        <StackPanel Margin="32">
-            <!-- Header Section -->
-            <Grid Margin="0,0,0,32">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Dashboard Pertumbuhan" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
-                    <TextBlock Text="Ringkasan aktivitas pengujian jaringan fiber optik hari ini." FontSize="15" Foreground="#64748B"/>
-                </StackPanel>
-                
-                <materialDesign:PackIcon Grid.Column="1" Kind="ViewDashboardOutline" Width="48" Height="48" Foreground="#CBD5E1" VerticalAlignment="Center"/>
-            </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition x:Name="DetailColumn" Width="0"/>
+        </Grid.ColumnDefinitions>
 
-            <!-- Stats Cards -->
-            <UniformGrid Columns="3" Margin="0,0,0,32">
-                <!-- Pass Card -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="0,0,12,0" Padding="24"
-                        Effect="{DynamicResource MaterialDesignShadowDepth2}">
-                    <Grid>
-                        <StackPanel>
-                            <TextBlock Text="Sesi PASS" Foreground="#64748B" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <TextBlock x:Name="TotalPassCount" Text="0" FontSize="36" FontWeight="Black" Foreground="{DynamicResource PassGreenBrush}"/>
-                        </StackPanel>
-                        <materialDesign:PackIcon Kind="CheckCircleOutline" Width="48" Height="48" Foreground="{DynamicResource PassGreenBrush}" Opacity="0.2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-                
-                <!-- Fail Card -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="8,0,8,0" Padding="24"
-                        Effect="{DynamicResource MaterialDesignShadowDepth2}">
-                    <Grid>
-                        <StackPanel>
-                            <TextBlock Text="Sesi FAIL" Foreground="#64748B" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <TextBlock x:Name="TotalFailCount" Text="0" FontSize="36" FontWeight="Black" Foreground="{DynamicResource FailRedBrush}"/>
-                        </StackPanel>
-                        <materialDesign:PackIcon Kind="CloseCircleOutline" Width="48" Height="48" Foreground="{DynamicResource FailRedBrush}" Opacity="0.2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-                
-                <!-- Total Card -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="12,0,0,0" Padding="24"
-                        Effect="{DynamicResource MaterialDesignShadowDepth2}">
-                    <Grid>
-                        <StackPanel>
-                            <TextBlock Text="Total Pengujian" Foreground="#64748B" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="36" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}"/>
-                        </StackPanel>
-                        <materialDesign:PackIcon Kind="ChartLineVariant" Width="48" Height="48" Foreground="{DynamicResource PrimaryBrush}" Opacity="0.2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-            </UniformGrid>
+        <!-- ═══ Main Content ═══ -->
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Margin="32">
+                <!-- Header -->
+                <Grid Margin="0,0,0,24">
+                    <StackPanel>
+                        <TextBlock Text="Dashboard" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Ringkasan dan riwayat pengujian jaringan" FontSize="14" Foreground="{DynamicResource TextLightBrush}"/>
+                    </StackPanel>
+                    <materialDesign:PackIcon Kind="ViewDashboardOutline" Width="40" Height="40" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
 
-            <!-- Recent Sessions Table -->
-            <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="24"
-                    Effect="{DynamicResource MaterialDesignShadowDepth2}">
-                <StackPanel>
-                    <Grid Margin="0,0,0,20">
-                        <TextBlock Text="Riwayat Pengujian Terakhir" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" VerticalAlignment="Center"/>
-                    </Grid>
-                    
-                    <DataGrid x:Name="RecentSessionsGrid"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#E2E8F0"
-                              BorderThickness="0"
-                              RowHeight="56"
-                              FontSize="14"
-                              Style="{StaticResource MaterialDesignDataGrid}">
-                        <!-- Custom Column Header Style inside DataGrid resources -->
+                <!-- Stats Cards -->
+                <UniformGrid Columns="3" Margin="0,0,0,24">
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="0,0,8,0" Padding="20"
+                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="PASS" Foreground="{DynamicResource TextLightBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TotalPassCount" Text="0" FontSize="32" FontWeight="Black" Foreground="{DynamicResource PassGreenBrush}"/>
+                            </StackPanel>
+                            <materialDesign:PackIcon Kind="CheckCircleOutline" Width="36" Height="36" Foreground="{DynamicResource PassGreenBrush}" Opacity="0.15" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="4,0" Padding="20"
+                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="FAIL" Foreground="{DynamicResource TextLightBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TotalFailCount" Text="0" FontSize="32" FontWeight="Black" Foreground="{DynamicResource FailRedBrush}"/>
+                            </StackPanel>
+                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="36" Height="36" Foreground="{DynamicResource FailRedBrush}" Opacity="0.15" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="8,0,0,0" Padding="20"
+                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="TOTAL" Foreground="{DynamicResource TextLightBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="32" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}"/>
+                            </StackPanel>
+                            <materialDesign:PackIcon Kind="ChartLineVariant" Width="36" Height="36" Foreground="{DynamicResource PrimaryBrush}" Opacity="0.15" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Filters -->
+                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="16"
+                        BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Margin="0,0,0,16">
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Margin="0,0,12,0"/>
+                        <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Margin="0,0,12,0"/>
+                        <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Margin="0,0,12,0">
+                            <ComboBoxItem Content="Semua" IsSelected="True"/>
+                            <ComboBoxItem Content="PASS"/>
+                            <ComboBoxItem Content="FAIL"/>
+                            <ComboBoxItem Content="PARTIAL"/>
+                        </ComboBox>
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
+                                Foreground="White" Click="FilterBtn_Click" Height="40"
+                                materialDesign:ButtonAssist.CornerRadius="8" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilterVariant" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Filter" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                </Border>
+
+                <!-- Sessions Table -->
+                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="0"
+                        BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                    <DataGrid x:Name="SessionsGrid"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Style="{StaticResource MaterialDesignDataGrid}"
+                              BorderThickness="0" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E2E8F0" RowHeight="52" FontSize="13"
+                              SelectionChanged="SessionsGrid_SelectionChanged"
+                              Cursor="Hand">
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
                                 <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize" Value="13"/>
+                                <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Padding" Value="16,12"/>
+                                <Setter Property="Padding" Value="16,10"/>
                             </Style>
                             <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
                                 <Setter Property="Padding" Value="16,0"/>
@@ -98,20 +112,19 @@
                                 </Setter>
                             </Style>
                         </DataGrid.Resources>
-                        
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID Sertifikasi" Binding="{Binding CertificationId}" Width="200"/>
-                            <DataGridTextColumn Header="Pelanggan" Binding="{Binding Customer.FullName}" Width="*"/>
-                            <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="120"/>
-                            <DataGridTextColumn Header="Tanggal &amp; Waktu" Binding="{Binding TestDate, StringFormat='dd MMM yyyy, HH:mm'}" Width="200"/>
-                            
-                            <!-- Custom Status Template using Material Design Chips -->
-                            <DataGridTemplateColumn Header="Status" Width="120">
+                            <DataGridTextColumn Header="ID" Binding="{Binding CertificationId}" Width="180"/>
+                            <DataGridTextColumn Header="Nama" Binding="{Binding Customer.FullName}" Width="*"/>
+                            <DataGridTextColumn Header="Tipe" Binding="{Binding Customer.SiteType}" Width="80"/>
+                            <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="90"/>
+                            <DataGridTextColumn Header="Tanggal" Binding="{Binding TestDate, StringFormat='dd MMM yyyy HH:mm'}" Width="150"/>
+                            <DataGridTemplateColumn Header="Status" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="12" Padding="12,4" HorizontalAlignment="Left"
+                                        <Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left"
                                                 Background="{Binding OverallStatus, Converter={StaticResource StatusToBackgroundConverter}}">
-                                            <TextBlock Text="{Binding OverallStatus}" FontSize="12" FontWeight="Bold"
+                                            <TextBlock Text="{Binding OverallStatus}" FontSize="11" FontWeight="Bold"
                                                        Foreground="{Binding OverallStatus, Converter={StaticResource StatusToForegroundConverter}}"/>
                                         </Border>
                                     </DataTemplate>
@@ -119,8 +132,40 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ Detail Side Panel ═══ -->
+        <Border Grid.Column="1" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1,0,0,0">
+            <Grid x:Name="DetailPanel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Detail Header -->
+                <Border Grid.Row="0" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,0,0,1" Padding="20,16">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock x:Name="DetailTitle" Text="Detail Pengujian" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                            <TextBlock x:Name="DetailSubtitle" Text="" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource MaterialDesignIconButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Width="32" Height="32" Click="CloseDetail_Click" Foreground="{DynamicResource TextLightBrush}">
+                            <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Detail Content -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="DetailResultsPanel" Margin="20,12,20,20">
+                        <!-- Filled dynamically -->
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
 </Page>

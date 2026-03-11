@@ -123,10 +123,10 @@ public partial class NewTestPage : Page
 
             var customerId = await _api.UpsertCustomerAsync(customer);
 
-            var certId = $"CERT-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
+            var testId = $"TEST-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
             var session = new FoTestSession
             {
-                CertificationId = certId,
+                CertificationId = testId,
                 CustomerId = customerId,
                 TechnicianId = SessionManager.CurrentUser?.Id ?? 0,
                 TestDate = DateTime.Now,

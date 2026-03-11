@@ -75,7 +75,7 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID Sertifikasi" Binding="{Binding CertificationId}" Width="200"/>
+                    <DataGridTextColumn Header="ID Pengujian" Binding="{Binding CertificationId}" Width="200"/>
                     <DataGridTextColumn Header="Pelanggan" Binding="{Binding Customer.FullName}" Width="*"/>
                     <DataGridTextColumn Header="Tipe Site" Binding="{Binding Customer.SiteType}" Width="110"/>
                     <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="100"/>

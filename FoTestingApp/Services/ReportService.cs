@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace FoTestingApp.Services;
 
 /// <summary>
-/// Menghasilkan laporan PDF sertifikasi FO menggunakan QuestPDF.
+/// Menghasilkan laporan PDF pengujian FO menggunakan QuestPDF.
 /// </summary>
 public class ReportService
 {
@@ -60,7 +60,7 @@ public class ReportService
             row.RelativeItem().Column(col =>
             {
                 col.Item().Text("JINOM TEST").FontSize(18).Bold().FontColor(Color.FromHex("#16a34a"));
-                col.Item().Text("Laporan Hasil Pengujian & Sertifikasi Jaringan Fiber Optik")
+                col.Item().Text("Laporan Hasil Pengujian Jaringan Fiber Optik")
                    .FontSize(11).FontColor(Colors.Grey.Darken2);
             });
 
@@ -78,10 +78,10 @@ public class ReportService
     {
         container.PaddingTop(10).Column(col =>
         {
-            // Certification ID badge
+            // Test ID badge
             col.Item().Background(Color.FromHex("#16a34a")).Padding(8).Row(row =>
             {
-                row.RelativeItem().Text($"ID SERTIFIKASI: {session.CertificationId}")
+                row.RelativeItem().Text($"ID PENGUJIAN: {session.CertificationId}")
                    .FontColor(Colors.White).Bold().FontSize(11);
                 row.ConstantItem(80).AlignRight().Text($"Status: {session.OverallStatus}")
                    .FontColor(session.OverallStatus == TestOverallStatus.Pass ? Colors.Green.Lighten3 : Colors.Red.Lighten3)
@@ -210,7 +210,7 @@ public class ReportService
     {
         container.PaddingTop(6).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(row =>
         {
-            row.RelativeItem().Text("Jinom Test | Dokumen Sertifikasi Pengujian Jaringan | Rahasia")
+            row.RelativeItem().Text("Jinom Test | Laporan Pengujian Jaringan | Rahasia")
                .FontSize(8).FontColor(Colors.Grey.Darken1);
             row.ConstantItem(80).AlignRight().Text(text =>
             {
