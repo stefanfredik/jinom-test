@@ -5,7 +5,7 @@ namespace FoTestingApp.Views.Pages;
 
 public partial class DashboardPage : Page
 {
-    private readonly DatabaseService _db = new();
+    private readonly ApiService _api = new();
 
     public DashboardPage()
     {
@@ -15,7 +15,7 @@ public partial class DashboardPage : Page
 
     private async System.Threading.Tasks.Task LoadDashboardAsync()
     {
-        var sessions = await _db.GetSessionsAsync();
+        var sessions = await _api.GetSessionsAsync();
         RecentSessionsGrid.ItemsSource = sessions;
 
         TotalSessionCount.Text = sessions.Count.ToString();

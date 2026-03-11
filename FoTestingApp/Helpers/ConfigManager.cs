@@ -65,11 +65,7 @@ public static class ConfigManager
         Reload();
     }
 
-    public static string GetConnectionString()
-    {
-        var db = _config!.GetSection("Database");
-        return $"Server={db["Host"]};Port={db["Port"]};Database={db["Database"]};User={db["Username"]};Password={db["Password"]};Connect Timeout={db["ConnectionTimeout"]};";
-    }
+    public static string? GetSetting(string key) => _config?[key];
 
     public static int GetSessionTimeoutMinutes() =>
         int.TryParse(_config!["App:SessionTimeoutMinutes"], out var v) ? v : 30;
