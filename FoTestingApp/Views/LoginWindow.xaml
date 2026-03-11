@@ -3,89 +3,182 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="FO Testing &amp; Commissioning — Login"
-        Height="560" Width="520"
+        Height="700" Width="1200"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <!-- Background Grid -->
+        <Grid Background="{DynamicResource AppBackgroundBrush}">
+            <!-- Main Content Card -->
+            <Border Width="1100" Height="600" 
+                    Background="{DynamicResource CardBackgroundBrush}" 
+                    CornerRadius="16" 
+                    Margin="40"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+                
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="10" Color="Black" Opacity="0.1" />
+                </Border.Effect>
 
-        <!-- Left Side: Branding -->
-        <Border Grid.Column="0" Background="{DynamicResource JinomBlueBrush}" CornerRadius="0,0,0,0">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16">
-                <!-- Plug Icon -->
-                <TextBlock Text="🔌" FontSize="56" HorizontalAlignment="Center" Margin="0,0,0,16"/>
-                <TextBlock Text="Jinom AI" FontSize="26" FontWeight="Bold"
-                           Foreground="White" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
-                <!-- Line Separator -->
-                <Border Height="2" Width="40" Background="#60A5FA" Margin="0,16,0,16"/>
-                <TextBlock Text="FO Testing &amp; Commissioning" FontSize="14"
-                           Foreground="{DynamicResource JinomLightBlueBrush}" HorizontalAlignment="Center"
-                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,8"/>
-            </StackPanel>
-        </Border>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-        <!-- Right Side: Login Form -->
-        <Border Grid.Column="1" Background="{DynamicResource CardBackgroundBrush}" Margin="0"
-                Padding="32,48" CornerRadius="0">
-            <StackPanel VerticalAlignment="Center" MaxWidth="320" HorizontalAlignment="Left">
+                    <!-- Left Side: Branding & Visual -->
+                    <Border Grid.Column="0" Background="{DynamicResource PrimaryLightBrush}" 
+                            CornerRadius="16,0,0,16" ClipToBounds="True">
+                        <!-- Simulated border-r border-primary/5 -->
+                        <Border BorderBrush="#10ec5b13" BorderThickness="0,0,1,0">
+                            <Grid Margin="48">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                <TextBlock Text="Selamat Datang 👋" FontSize="22" FontWeight="Bold"
-                           Foreground="{DynamicResource JinomDarkBlueBrush}" Margin="0,0,0,4"/>
-                <TextBlock Text="Silakan login untuk memulai pengujian." FontSize="14"
-                           Foreground="#64748B" Margin="0,0,0,28"/>
+                                <!-- Logo and Name -->
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,48">
+                                    <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="8" Padding="8">
+                                        <materialDesign:PackIcon Kind="ChartNetwork" Foreground="White" Width="24" Height="24"/>
+                                    </Border>
+                                    <TextBlock Text="NetPulse" FontSize="24" FontWeight="Black" 
+                                               Foreground="{DynamicResource PrimaryBrush}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
 
-                <!-- Email -->
-                <TextBox x:Name="EmailTextBox"
-                         materialDesign:HintAssist.Hint="Email / ID Teknisi"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,0,0,20"
-                         Height="48"
-                         FontSize="14"
-                         VerticalContentAlignment="Center"
-                         materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
-                         materialDesign:TextFieldAssist.LeadingIconSize="20"/>
+                                <!-- Headline text -->
+                                <StackPanel Grid.Row="1" VerticalAlignment="Top">
+                                    <TextBlock Text="Master your network&#x0a;performance." 
+                                               FontSize="36" FontWeight="Bold" LineHeight="42"
+                                               Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,24">
+                                        <!-- Inline coloring for the word 'performance' is tricky in simple textblock without inline runs, we'll keep it simple for now -->
+                                    </TextBlock>
+                                    <TextBlock Text="Access your real-time diagnostics, traffic analysis, and global infrastructure health in one unified dashboard."
+                                               FontSize="18" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" MaxWidth="320" HorizontalAlignment="Left"/>
+                                </StackPanel>
 
-                <!-- Password -->
-                <PasswordBox x:Name="PasswordBox"
-                             materialDesign:HintAssist.Hint="Password"
-                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
-                             Margin="0,0,0,16"
-                             Height="48"
-                             FontSize="14"
-                             VerticalContentAlignment="Center"
-                             materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
-                             materialDesign:TextFieldAssist.LeadingIconSize="20"
-                             KeyDown="PasswordBox_KeyDown"/>
+                                <!-- Footer element -->
+                                <Border Grid.Row="2" Background="#80FFFFFF" BorderBrush="#10ec5b13" BorderThickness="1" 
+                                        CornerRadius="12" Padding="16">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- Avatars (mocked with simple circles) -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                            <Ellipse Width="32" Height="32" Fill="#33ec5b13" Stroke="White" StrokeThickness="2" Margin="0,0,-12,0" Panel.ZIndex="3"/>
+                                            <Ellipse Width="32" Height="32" Fill="#66ec5b13" Stroke="White" StrokeThickness="2" Margin="0,0,-12,0" Panel.ZIndex="2"/>
+                                            <Ellipse Width="32" Height="32" Fill="#99ec5b13" Stroke="White" StrokeThickness="2" Panel.ZIndex="1"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Joined by 2,000+ network engineers" FontSize="14" FontWeight="Medium" 
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource TextDarkBrush}"/>
+                                    </StackPanel>
+                                </Border>
 
-                <!-- Error Message -->
-                <TextBlock x:Name="ErrorMessage" Foreground="{DynamicResource FailRedBrush}" FontSize="12"
-                           Visibility="Collapsed" Margin="0,0,0,16" TextWrapping="Wrap"/>
+                                <!-- Abstract Background Elements (Circles) -->
+                                <!-- These need to be placed absolute within the Grid or in a Canvas to mimic the top-[-10%] logic -->
+                            </Grid>
+                        </Border>
+                    </Border>
 
-                <!-- Login Button -->
-                <Button x:Name="LoginButton"
-                        Content="MASUK"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
-                        Background="{DynamicResource JinomBlueBrush}"
-                        BorderBrush="{DynamicResource JinomBlueBrush}"
-                        Foreground="White"
-                        FontSize="15" FontWeight="Bold"
-                        Height="48"
-                        Click="LoginButton_Click"
-                        Margin="0,8,0,0"/>
+                    <!-- Right Side: Login Form -->
+                    <Grid Grid.Column="1" Margin="64">
+                        <StackPanel VerticalAlignment="Center">
+                            
+                            <TextBlock Text="Welcome Back" FontSize="30" FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
+                            <TextBlock Text="Enter your credentials to access the console" FontSize="16" 
+                                       Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,40"/>
 
-                <!-- Loading Indicator -->
-                <ProgressBar x:Name="LoadingBar"
-                             Style="{StaticResource MaterialDesignLinearProgressBar}"
-                             IsIndeterminate="True"
-                             Visibility="Collapsed"
-                             Margin="0,16,0,0"/>
-            </StackPanel>
-        </Border>
+                            <!-- Email Input -->
+                            <StackPanel Margin="0,0,0,24">
+                                <TextBlock Text="Email Address" FontWeight="SemiBold" FontSize="14" 
+                                           Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
+                                <TextBox x:Name="EmailTextBox"
+                                         materialDesign:HintAssist.Hint="name@company.com"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Height="52" FontSize="15"
+                                         VerticalContentAlignment="Center"
+                                         materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
+                                         materialDesign:TextFieldAssist.LeadingIconSize="20"
+                                         materialDesign:TextFieldAssist.CornerRadius="12"
+                                         BorderBrush="{DynamicResource BorderLightBrush}"
+                                         Background="#F8FAFC"
+                                         materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryBrush}"/>
+                            </StackPanel>
+
+                            <!-- Password Input -->
+                            <StackPanel Margin="0,0,0,24">
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="Password" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Left"/>
+                                    <TextBlock Text="Forgot password?" FontWeight="Medium" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Right" Cursor="Hand"/>
+                                </Grid>
+                                
+                                <PasswordBox x:Name="PasswordBox"
+                                             materialDesign:HintAssist.Hint="••••••••"
+                                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                             Height="52" FontSize="15"
+                                             VerticalContentAlignment="Center"
+                                             materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
+                                             materialDesign:TextFieldAssist.LeadingIconSize="20"
+                                             materialDesign:TextFieldAssist.CornerRadius="12"
+                                             BorderBrush="{DynamicResource BorderLightBrush}"
+                                             Background="#F8FAFC"
+                                             materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryBrush}"
+                                             KeyDown="PasswordBox_KeyDown"/>
+                            </StackPanel>
+
+                            <!-- Remember Me -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                                <CheckBox x:Name="RememberMeCheckBox" Content="Remember this device for 30 days" FontSize="14" Foreground="{DynamicResource TextLightBrush}" BorderBrush="{DynamicResource BorderLightBrush}" />
+                            </StackPanel>
+
+                            <!-- Error Message -->
+                            <TextBlock x:Name="ErrorMessage" Foreground="{DynamicResource FailRedBrush}" FontSize="12"
+                                       Visibility="Collapsed" Margin="0,0,0,16" TextWrapping="Wrap"/>
+
+                            <!-- Submit Button -->
+                            <Button x:Name="LoginButton"
+                                    Height="56"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    materialDesign:ButtonAssist.CornerRadius="12"
+                                    Background="{DynamicResource PrimaryBrush}"
+                                    BorderBrush="{DynamicResource PrimaryBrush}"
+                                    Foreground="White"
+                                    Click="LoginButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Sign In to Console" FontSize="16" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <materialDesign:PackIcon Kind="Login" Width="20" Height="20" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Loading Indicator -->
+                            <ProgressBar x:Name="LoadingBar"
+                                         Style="{StaticResource MaterialDesignLinearProgressBar}"
+                                         IsIndeterminate="True"
+                                         Visibility="Collapsed"
+                                         Foreground="{DynamicResource PrimaryBrush}"
+                                         Margin="0,16,0,0"/>
+
+                            <!-- Footer Links -->
+                            <StackPanel Margin="0,48,0,0">
+                                <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderLightBrush}" Padding="0,32,0,0">
+                                    <TextBlock HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource TextLightBrush}">
+                                        <Run Text="Don't have an account yet?" />
+                                        <Run Text=" Request Access" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Cursor="Hand"/>
+                                    </TextBlock>
+                                </Border>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0" Opacity="0.5">
+                                    <TextBlock Text="SECURE INFRASTRUCTURE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,16,0"/>
+                                    <TextBlock Text="ISO 27001" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,16,0"/>
+                                    <TextBlock Text="SOC 2 TYPE II" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

@@ -13,22 +13,27 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Primary Brand Color - Jinom Blue Modern -->
-            <Color x:Key="JinomBlue">#2563EB</Color>
-            <Color x:Key="JinomDarkBlue">#1E3A8A</Color>
+            <!-- Primary Brand Color - NetPulse Orange -->
+            <Color x:Key="NetPulsePrimary">#ec5b13</Color>
+            <Color x:Key="NetPulseDark">#1a0d07</Color>
             
-            <SolidColorBrush x:Key="JinomBlueBrush" Color="#2563EB" />
-            <SolidColorBrush x:Key="JinomDarkBlueBrush" Color="#1E3A8A" />
-            <SolidColorBrush x:Key="JinomLightBlueBrush" Color="#EEF2FF" />
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#ec5b13" />
+            <SolidColorBrush x:Key="PrimaryLightBrush" Color="#FCEde5" /> <!-- Simulated primary/10 -->
+            <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#d04e0f" />
+            <SolidColorBrush x:Key="DarkOverlayBrush" Color="#221610" />
             <SolidColorBrush x:Key="PassGreenBrush" Color="#10B981" />
             <SolidColorBrush x:Key="FailRedBrush" Color="#EF4444" />
             <SolidColorBrush x:Key="WarnYellowBrush" Color="#F59E0B" />
             <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
-            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F8FAFC" />
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#f8f6f6" />
+            <SolidColorBrush x:Key="TextDarkBrush" Color="#0f172a" /> <!-- slate-900 -->
+            <SolidColorBrush x:Key="TextLightBrush" Color="#64748b" /> <!-- slate-500 -->
+            <SolidColorBrush x:Key="BorderLightBrush" Color="#e2e8f0" /> <!-- slate-200 -->
 
             <!-- Global Shadow Depth and Corners -->
             <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
-            <CornerRadius x:Key="ButtonCornerRadius">8</CornerRadius>
+            <CornerRadius x:Key="InputCornerRadius">12</CornerRadius>
+            <CornerRadius x:Key="ButtonCornerRadius">12</CornerRadius>
             
             <!-- Value Converters -->
             <helpers:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>

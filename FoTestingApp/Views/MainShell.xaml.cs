@@ -38,7 +38,7 @@ public partial class MainShell : Window
         KeyDown += (_, _) => SessionManager.RecordActivity();
 
         // Navigate ke Dashboard sebagai halaman awal
-        NavigateTo("Dashboard");
+        NavigateTo("Location");
     }
 
     private void SessionTimer_Tick(object? sender, EventArgs e)
@@ -91,6 +91,11 @@ public partial class MainShell : Window
             case "Settings":
                 BtnSettings.Style = activeStyle;
                 ContentFrame.Navigate(new SettingsPage());
+                break;
+            case "Location":
+                // If Location doesn't have a button, we can just navigate or handle button state differently. 
+                // For now, we just navigate without highlighting a button if there isn't one yet.
+                ContentFrame.Navigate(new LocationSelectionPage());
                 break;
         }
     }

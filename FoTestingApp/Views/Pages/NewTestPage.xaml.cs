@@ -15,23 +15,6 @@ public partial class NewTestPage : Page
     public NewTestPage()
     {
         InitializeComponent();
-        TestMode_Changed(null!, null!);
-    }
-
-    private void TestMode_Changed(object sender, RoutedEventArgs e)
-    {
-        if (SiteIdBox == null) return;
-
-        if (PopModeBtn.IsChecked == true)
-        {
-            SiteIdBox.Visibility = Visibility.Collapsed;
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Langganan JNIX (Mbps) *");
-        }
-        else
-        {
-            SiteIdBox.Visibility = Visibility.Visible;
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Layanan (Mbps) *");
-        }
     }
 
     // ── Customer Search ───────────────────────────────────────────────────────
@@ -69,10 +52,7 @@ public partial class NewTestPage : Page
         if (SearchDropdown.SelectedItem is not FoCustomer customer) { return; }
 
         // Auto-fill semua field dari pelanggan yang dipilih
-        if (PopModeBtn.IsChecked != true)
-        {
-            SiteIdBox.Text = customer.SiteId ?? string.Empty;
-        }
+        SiteIdBox.Text = customer.SiteId ?? string.Empty;
         FullNameBox.Text = customer.FullName;
         AddressBox.Text = customer.Address;
         PackageMbpsBox.Text = customer.PackageMbps.ToString();
@@ -93,11 +73,10 @@ public partial class NewTestPage : Page
         try
         {
             // Simpan/update data pelanggan
-            var isPopMode = PopModeBtn.IsChecked == true;
             var customer = new FoCustomer
             {
-                SiteType = isPopMode ? "pop" : "customer",
-                SiteId = isPopMode ? null : string.IsNullOrWhiteSpace(SiteIdBox.Text) ? null : SiteIdBox.Text.Trim(),
+                SiteType = "customer",
+                SiteId = string.IsNullOrWhiteSpace(SiteIdBox.Text) ? null : SiteIdBox.Text.Trim(),
                 FullName = FullNameBox.Text.Trim(),
                 Address = AddressBox.Text.Trim(),
                 PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
@@ -160,8 +139,7 @@ public partial class NewTestPage : Page
 
     private bool ValidateForm()
     {
-        var isPopMode = PopModeBtn.IsChecked == true;
-        if ((!isPopMode && string.IsNullOrWhiteSpace(SiteIdBox.Text)) ||
+        if (string.IsNullOrWhiteSpace(SiteIdBox.Text) ||
             string.IsNullOrWhiteSpace(FullNameBox.Text) ||
             string.IsNullOrWhiteSpace(AddressBox.Text) ||
             string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
