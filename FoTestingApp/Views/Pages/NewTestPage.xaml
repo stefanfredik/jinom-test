@@ -62,7 +62,7 @@
                              HorizontalAlignment="Left">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Padding="4">
+                                <StackPanel Margin="4">
                                     <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="14" Foreground="#1E293B"/>
                                     <TextBlock Text="{Binding CustomerNumber}" FontSize="12" Foreground="#64748B"/>
                                 </StackPanel>
