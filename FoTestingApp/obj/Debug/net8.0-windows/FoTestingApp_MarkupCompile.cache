@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\App.xaml
-7-260212624
+8861159565
 
-231923343773
+24233519790
 214-690326772
-Views\LoginWindow.xaml;Views\MainShell.xaml;Views\Pages\DashboardPage.xaml;Views\Pages\HistoryPage.xaml;Views\Pages\NewTestPage.xaml;Views\Pages\ReportPage.xaml;Views\Pages\SettingsPage.xaml;
+Views\LoginWindow.xaml;Views\MainShell.xaml;Views\Pages\DashboardPage.xaml;Views\Pages\HistoryPage.xaml;Views\Pages\LocationSelectionPage.xaml;Views\Pages\NewTestPage.xaml;Views\Pages\ReportPage.xaml;Views\Pages\SettingsPage.xaml;
 
 False
 

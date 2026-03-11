@@ -33,7 +33,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ChartNetwork" Foreground="{DynamicResource PrimaryBrush}" Width="32" Height="32" />
+                    <materialDesign:PackIcon Kind="LanConnect" Foreground="{DynamicResource PrimaryBrush}" Width="32" Height="32" />
                     <TextBlock Text="NetPulse" FontSize="20" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextDarkBrush}" />
                 </StackPanel>
 
@@ -176,7 +176,7 @@
                 </Grid>
 
                 <!-- Footer Summary -->
-                <Border Background="{DynamicResource PrimaryLightBrush}" BorderBrush="#40ec5b13" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,48,0,48" StrokeDashArray="4 2">
+                <Border Background="{DynamicResource PrimaryLightBrush}" BorderBrush="#40ec5b13" BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,48,0,48">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />

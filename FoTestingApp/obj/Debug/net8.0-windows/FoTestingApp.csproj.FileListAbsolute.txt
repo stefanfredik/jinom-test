@@ -91,3 +91,5 @@ C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\obj\Debug\net8.0-wi
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\obj\Debug\net8.0-windows\ref\FoTestingApp.dll
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
 C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\obj\Debug\net8.0-windows\FoTestingApp_MarkupCompile.lref
+C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\obj\Debug\net8.0-windows\Views\Pages\LocationSelectionPage.baml
+C:\Users\fred\Documents\JinomTesting\jinom-test\FoTestingApp\obj\Debug\net8.0-windows\Views\Pages\LocationSelectionPage.g.cs

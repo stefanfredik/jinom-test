@@ -43,7 +43,7 @@
                                 <!-- Logo and Name -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,48">
                                     <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="8" Padding="8">
-                                        <materialDesign:PackIcon Kind="ChartNetwork" Foreground="White" Width="24" Height="24"/>
+                                        <materialDesign:PackIcon Kind="LanConnect" Foreground="White" Width="24" Height="24"/>
                                     </Border>
                                     <TextBlock Text="NetPulse" FontSize="24" FontWeight="Black" 
                                                Foreground="{DynamicResource PrimaryBrush}" Margin="12,0,0,0" VerticalAlignment="Center"/>
@@ -101,7 +101,6 @@
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
                                          materialDesign:TextFieldAssist.LeadingIconSize="20"
-                                         materialDesign:TextFieldAssist.CornerRadius="12"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
                                          Background="#F8FAFC"
                                          materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryBrush}"/>
@@ -121,7 +120,6 @@
                                              VerticalContentAlignment="Center"
                                              materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
                                              materialDesign:TextFieldAssist.LeadingIconSize="20"
-                                             materialDesign:TextFieldAssist.CornerRadius="12"
                                              BorderBrush="{DynamicResource BorderLightBrush}"
                                              Background="#F8FAFC"
                                              materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource PrimaryBrush}"
