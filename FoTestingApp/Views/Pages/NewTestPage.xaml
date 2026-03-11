@@ -37,6 +37,13 @@
                 <TextBlock Grid.ColumnSpan="3" Text="Data Pelanggan" FontSize="15" FontWeight="SemiBold"
                            Foreground="#333" Margin="0,0,0,8" Grid.Row="0"/>
 
+                <!-- Mode Selection -->
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
+                    <TextBlock Text="Mode Uji:" VerticalAlignment="Center" Margin="0,0,16,0" FontWeight="SemiBold" Foreground="#555"/>
+                    <RadioButton x:Name="PopModeBtn" Content="POP" GroupName="TestMode" Checked="TestMode_Changed"/>
+                    <RadioButton x:Name="CustomerModeBtn" Content="Pelanggan" GroupName="TestMode" IsChecked="True" Checked="TestMode_Changed" Margin="16,0,0,0"/>
+                </StackPanel>
+
                 <!-- Customer Search -->
                 <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal"
                             HorizontalAlignment="Right" Margin="0,0,0,8">
@@ -66,8 +73,8 @@
 
 
                 <TextBox Grid.Row="1" Grid.Column="0"
-                         x:Name="CustomerNumberBox"
-                         materialDesign:HintAssist.Hint="Nomor Pelanggan *"
+                         x:Name="SiteIdBox"
+                         materialDesign:HintAssist.Hint="Site ID *"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Margin="0,0,0,12"/>
 
@@ -83,15 +90,9 @@
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Margin="0,0,0,12"/>
 
-                <TextBox Grid.Row="3" Grid.Column="0"
+                <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
                          x:Name="PackageMbpsBox"
                          materialDesign:HintAssist.Hint="Paket Layanan (Mbps) *"
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                         Margin="0,0,0,12"/>
-
-                <TextBox Grid.Row="3" Grid.Column="2"
-                         x:Name="PhoneBox"
-                         materialDesign:HintAssist.Hint="Nomor Telepon (opsional)"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Margin="0,0,0,12"/>
 

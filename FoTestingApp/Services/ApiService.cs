@@ -149,6 +149,8 @@ public class ApiService
             customer_id = session.CustomerId,
             technician_id = session.TechnicianId,
             test_date = session.TestDate.ToString("yyyy-MM-dd HH:mm:ss"),
+            start_time = session.StartTime?.ToString("yyyy-MM-dd HH:mm:ss"),
+            end_time = session.EndTime?.ToString("yyyy-MM-dd HH:mm:ss"),
             overall_status = session.OverallStatus.ToString().ToUpper(),
             notes = session.Notes
         };
@@ -163,10 +165,14 @@ public class ApiService
         return savedSession?.Id ?? 0;
     }
 
-    public async Task UpdateSessionStatusAsync(int sessionId, TestOverallStatus status, string? notes = null)
+    public async Task UpdateSessionStatusAsync(int sessionId, TestOverallStatus status, DateTime? endTime = null, string? notes = null)
     {
         SetAuthorizationHeader();
-        var request = new { overall_status = status.ToString().ToUpper(), notes = notes };
+        var request = new { 
+            overall_status = status.ToString().ToUpper(), 
+            notes = notes,
+            end_time = endTime?.ToString("yyyy-MM-dd HH:mm:ss")
+        };
         var requestMessage = new HttpRequestMessage(new HttpMethod("PATCH"), $"{_baseUrl}/reseller-certification/fo-test/sessions/{sessionId}/status")
         {
             Content = JsonContent.Create(request)

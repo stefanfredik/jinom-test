@@ -6,11 +6,11 @@ namespace FoTestingApp.Models;
 public class FoCustomer
 {
     public int Id { get; set; }
-    public string CustomerNumber { get; set; } = string.Empty;
+    public string SiteType { get; set; } = "customer";
+    public string? SiteId { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public int PackageMbps { get; set; }
-    public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? TechnicalNotes { get; set; }
     public DateTime CreatedAt { get; set; }
