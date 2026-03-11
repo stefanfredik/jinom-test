@@ -10,6 +10,8 @@ public class FoTestSession
     public int CustomerId { get; set; }
     public int TechnicianId { get; set; }
     public DateTime TestDate { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
     public TestOverallStatus OverallStatus { get; set; } = TestOverallStatus.Fail;
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }

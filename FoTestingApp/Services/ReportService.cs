@@ -101,12 +101,11 @@ public class ReportService
                        c.Item().PaddingTop(4);
                        if (session.Customer is not null)
                        {
-                           c.Item().Row(r => InfoRow(r, "Nama", session.Customer.FullName));
-                           c.Item().Row(r => InfoRow(r, "No. Pelanggan", session.Customer.CustomerNumber));
+                           c.Item().Row(r => InfoRow(r, "Tipe Site", session.Customer.SiteType.ToUpper()));
+                           if (!string.IsNullOrEmpty(session.Customer.SiteId))
+                               c.Item().Row(r => InfoRow(r, "Site ID", session.Customer.SiteId));
                            c.Item().Row(r => InfoRow(r, "Alamat", session.Customer.Address));
-                           c.Item().Row(r => InfoRow(r, "Paket Layanan", $"{session.Customer.PackageMbps} Mbps"));
-                           if (!string.IsNullOrEmpty(session.Customer.Phone))
-                               c.Item().Row(r => InfoRow(r, "Telepon", session.Customer.Phone));
+                           c.Item().Row(r => InfoRow(r, "Paket", $"{session.Customer.PackageMbps} Mbps"));
                        }
                    });
 
