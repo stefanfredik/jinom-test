@@ -64,7 +64,7 @@ public partial class MainShell : Window
     private void NavigateTo(string page)
     {
         // Reset all nav button styles
-        var navButtons = new[] { BtnDashboard, BtnNewTest, BtnReport, BtnSettings };
+        var navButtons = new[] { BtnDashboard, BtnNewTest, BtnSettings };
         var normalStyle = (Style)FindResource("NavButtonStyle");
         var activeStyle = (Style)FindResource("NavButtonActiveStyle");
 
@@ -79,10 +79,6 @@ public partial class MainShell : Window
             case "NewTest":
                 BtnNewTest.Style = activeStyle;
                 ContentFrame.Navigate(new NewTestPage());
-                break;
-            case "Report":
-                BtnReport.Style = activeStyle;
-                ContentFrame.Navigate(new ReportPage());
                 break;
             case "Settings":
                 BtnSettings.Style = activeStyle;
