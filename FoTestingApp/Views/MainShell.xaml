@@ -89,14 +89,6 @@
                         </StackPanel>
                     </Button>
 
-                    <Button x:Name="BtnLocation" Style="{StaticResource NavButtonStyle}"
-                            Click="NavButton_Click" Tag="Location">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="MapMarker" Width="18" Height="18" VerticalAlignment="Center"/>
-                            <TextBlock Text="Lokasi Pengujian" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                        </StackPanel>
-                    </Button>
-
                     <Button x:Name="BtnHistory" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="History">
                         <StackPanel Orientation="Horizontal">

@@ -12,9 +12,27 @@ public partial class NewTestPage : Page
     private int? _currentSessionId;
     private CancellationTokenSource? _searchCts;
 
-    public NewTestPage()
+    private readonly string _testMode;
+
+    public NewTestPage(string testMode = "customer")
     {
         InitializeComponent();
+        _testMode = testMode;
+        ApplyTestMode();
+    }
+
+    private void ApplyTestMode()
+    {
+        if (_testMode == "pop")
+        {
+            SiteIdBox.Visibility = Visibility.Collapsed;
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Langganan JNIX (Mbps) *");
+        }
+        else
+        {
+            SiteIdBox.Visibility = Visibility.Visible;
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Paket Layanan (Mbps) *");
+        }
     }
 
     // ── Customer Search ───────────────────────────────────────────────────────
@@ -73,10 +91,11 @@ public partial class NewTestPage : Page
         try
         {
             // Simpan/update data pelanggan
+            var isPopMode = _testMode == "pop";
             var customer = new FoCustomer
             {
-                SiteType = "customer",
-                SiteId = string.IsNullOrWhiteSpace(SiteIdBox.Text) ? null : SiteIdBox.Text.Trim(),
+                SiteType = isPopMode ? "pop" : "customer",
+                SiteId = isPopMode ? null : string.IsNullOrWhiteSpace(SiteIdBox.Text) ? null : SiteIdBox.Text.Trim(),
                 FullName = FullNameBox.Text.Trim(),
                 Address = AddressBox.Text.Trim(),
                 PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
@@ -139,7 +158,8 @@ public partial class NewTestPage : Page
 
     private bool ValidateForm()
     {
-        if (string.IsNullOrWhiteSpace(SiteIdBox.Text) ||
+        var isPopMode = _testMode == "pop";
+        if ((!isPopMode && string.IsNullOrWhiteSpace(SiteIdBox.Text)) ||
             string.IsNullOrWhiteSpace(FullNameBox.Text) ||
             string.IsNullOrWhiteSpace(AddressBox.Text) ||
             string.IsNullOrWhiteSpace(PackageMbpsBox.Text))

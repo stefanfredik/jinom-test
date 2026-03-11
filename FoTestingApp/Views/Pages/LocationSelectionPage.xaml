@@ -131,7 +131,7 @@
                                 <Border BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
                                     <Grid>
                                         <TextBlock Text="INFRASTRUCTURE FOCUS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" />
-                                        <Button Content="Select POP" HorizontalAlignment="Right" Height="40" 
+                                        <Button x:Name="BtnSelectPop" Content="Select POP" Click="BtnSelectPop_Click" HorizontalAlignment="Right" Height="40" 
                                                 Style="{StaticResource MaterialDesignRaisedButton}" 
                                                 materialDesign:ButtonAssist.CornerRadius="8" 
                                                 Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" 
@@ -163,7 +163,7 @@
                                 <Border BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
                                     <Grid>
                                         <TextBlock Text="EDGE PERFORMANCE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" />
-                                        <Button Content="Select Customer" HorizontalAlignment="Right" Height="40"
+                                        <Button x:Name="BtnSelectCustomer" Content="Select Customer" Click="BtnSelectCustomer_Click" HorizontalAlignment="Right" Height="40"
                                                 Style="{StaticResource MaterialDesignRaisedButton}" 
                                                 materialDesign:ButtonAssist.CornerRadius="8" 
                                                 Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" 
