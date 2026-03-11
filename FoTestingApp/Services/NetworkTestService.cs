@@ -223,7 +223,7 @@ public class NetworkTestService
         
         var descText = $"Avg: {parsed.RootElement.GetProperty("avg_ms").GetInt64()}ms | RTO: {parsed.RootElement.GetProperty("rto").GetInt32()}";
 
-        return CreateLogCard(label, descText, primaryColor, bgColor, iconKind, statusText);
+        return UIHelper.CreateLogCard(label, descText, primaryColor, bgColor, iconKind, statusText);
     }
 
     private static Border BuildNslookupCard(string testType, Dictionary<string, string> domains, TestStatus status)

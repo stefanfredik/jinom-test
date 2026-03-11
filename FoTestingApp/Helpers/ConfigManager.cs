@@ -102,4 +102,5 @@ public static class ConfigManager
     // Speedtest
     public static string GetJinomSpeedtestServer() => _config!["Speedtest:JinomServer"] ?? "https://speedtest.jinom.net";
     public static int GetSpeedtestThresholdPercentage() => int.TryParse(_config!["Speedtest:ThresholdPercentage"], out var v) ? v : 99;
+    public static string GetOoklaCliUrl() => _config!["Speedtest:OoklaCliUrl"] ?? "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-win64.zip";
 }

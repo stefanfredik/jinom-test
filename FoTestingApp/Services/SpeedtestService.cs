@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Text.Json;
 using System.Windows.Controls;
@@ -126,37 +128,130 @@ public class SpeedtestService
     }
 
     /// <summary>
-    /// Ookla Speedtest via CLI (speedtest.exe harus ada di PATH atau folder app).
+    /// Ookla Speedtest via CLI (otomatis download jika belum ada).
     /// </summary>
     private async Task<(double downloadMbps, double uploadMbps, string? error)> RunOoklaSpeedtestAsync()
     {
         try
         {
+            var exePath = await EnsureSpeedtestCliAsync();
+            if (exePath == null)
+                return (0, 0, "Speedtest CLI tidak ditemukan dan gagal diunduh otomatis");
+
             var psi = new ProcessStartInfo
             {
-                FileName = "speedtest",
-                Arguments = "--format=json --accept-license --accept-gdpr",
+                FileName = exePath,
+                Arguments = "--format=json --accept-license --accept-gdpr --progress=no",
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
 
             using var process = Process.Start(psi);
-            if (process is null) { return (0, 0, "Speedtest CLI tidak ditemukan"); }
+            if (process is null) return (0, 0, "Gagal menjalankan Speedtest CLI");
 
-            var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            // Timeout 120 detik
+            var exited = await Task.Run(() => process.WaitForExit(120_000));
+            if (!exited)
+            {
+                try { process.Kill(true); } catch { }
+                return (0, 0, "Speedtest timeout (120 detik)");
+            }
+
+            var output = await outputTask;
+            var stderr = await errorTask;
+
+            if (process.ExitCode != 0)
+            {
+                Serilog.Log.Warning("Speedtest CLI exit code {Code}: {Stderr}", process.ExitCode, stderr);
+                return (0, 0, $"Speedtest error: {stderr.Trim()}");
+            }
+
+            if (string.IsNullOrWhiteSpace(output))
+                return (0, 0, "Speedtest CLI tidak menghasilkan output");
 
             var json = JsonDocument.Parse(output);
-            var download = json.RootElement.GetProperty("download").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
-            var upload = json.RootElement.GetProperty("upload").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+            var root = json.RootElement;
+
+            var download = root.GetProperty("download").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
+            var upload = root.GetProperty("upload").GetProperty("bandwidth").GetDouble() * 8 / 1_000_000;
 
             return (Math.Round(download, 2), Math.Round(upload, 2), null);
         }
         catch (Exception ex)
         {
+            Serilog.Log.Warning(ex, "Ookla speedtest error");
             return (0, 0, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Pastikan speedtest CLI tersedia: cek PATH, folder tools, atau auto-download.
+    /// </summary>
+    private static async Task<string?> EnsureSpeedtestCliAsync()
+    {
+        // 1. Cek di PATH
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "speedtest",
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var p = Process.Start(psi);
+            if (p != null)
+            {
+                p.WaitForExit(5000);
+                if (p.ExitCode == 0)
+                    return "speedtest";
+            }
+        }
+        catch { /* Tidak ada di PATH */ }
+
+        // 2. Cek di folder tools
+        var toolsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools");
+        var exePath = Path.Combine(toolsDir, "speedtest.exe");
+        if (File.Exists(exePath))
+            return exePath;
+
+        // 3. Auto-download dari Ookla
+        try
+        {
+            Serilog.Log.Information("Mengunduh Ookla Speedtest CLI...");
+            Directory.CreateDirectory(toolsDir);
+
+            var downloadUrl = ConfigManager.GetOoklaCliUrl();
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+            var zipBytes = await client.GetByteArrayAsync(downloadUrl);
+
+            var zipPath = Path.Combine(toolsDir, "speedtest.zip");
+            await File.WriteAllBytesAsync(zipPath, zipBytes);
+
+            ZipFile.ExtractToDirectory(zipPath, toolsDir, overwriteFiles: true);
+            File.Delete(zipPath);
+
+            if (File.Exists(exePath))
+            {
+                Serilog.Log.Information("Speedtest CLI berhasil diunduh");
+                return exePath;
+            }
+
+            Serilog.Log.Warning("speedtest.exe tidak ditemukan setelah ekstrak zip");
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Gagal mengunduh Speedtest CLI");
+        }
+
+        return null;
     }
 
     private static Border BuildSpeedCard(string label, double download, double upload, bool pass, string? error = null)

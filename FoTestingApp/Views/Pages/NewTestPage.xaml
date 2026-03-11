@@ -198,7 +198,7 @@
                                 <TextBlock x:Name="ProgressPercentText" Text="0" FontSize="64" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
                                 <TextBlock Text="%" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Bottom" Margin="4,0,0,4"/>
                             </StackPanel>
-                            <TextBlock Text="OVERALL" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" LetterSpacing="2"/>
+                            <TextBlock Text="OVERALL" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Grid>
 
@@ -207,11 +207,11 @@
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="{DynamicResource PrimaryColor}" Opacity="0.05"/>
                         </Border.Effect>
-                        <StackPanel Padding="24">
+                        <StackPanel Margin="24">
                             <!-- Header -->
                             <Grid Margin="0,0,0,24">
                                 <StackPanel HorizontalAlignment="Left">
-                                    <TextBlock Text="CURRENT ACTIVITY" FontSize="10" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8" LetterSpacing="2"/>
+                                    <TextBlock Text="CURRENT ACTIVITY" FontSize="10" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8"/>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Name="CurrentActivityText" Text="Preparing Tests..." FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
                                         <!-- Ping dot simulation -->
@@ -235,7 +235,7 @@
                     <!-- Diagnostic Log List -->
                     <StackPanel>
                         <Grid Margin="4,0,4,8">
-                            <TextBlock Text="DIAGNOSTIC LOG" FontSize="12" FontWeight="Black" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Left" LetterSpacing="2"/>
+                            <TextBlock Text="DIAGNOSTIC LOG" FontSize="12" FontWeight="Black" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Left"/>
                             <TextBlock Text="Real-time updates" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                         
