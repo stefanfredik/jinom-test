@@ -1,0 +1,21 @@
+# Build results
+**/bin/Debug/
+**/bin/Release/
+**/obj/
+
+# Logs
+**/Logs/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
