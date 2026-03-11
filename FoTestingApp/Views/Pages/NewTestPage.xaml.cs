@@ -8,7 +8,7 @@ namespace FoTestingApp.Views.Pages;
 
 public partial class NewTestPage : Page
 {
-    private readonly DatabaseService _db = new();
+    private readonly ApiService _api = new();
     private int? _currentSessionId;
     private CancellationTokenSource? _searchCts;
 
@@ -36,7 +36,7 @@ public partial class NewTestPage : Page
         {
             // Debounce 300ms
             await Task.Delay(300, cts.Token);
-            var results = await _db.SearchCustomersAsync(query);
+            var results = await _api.SearchCustomersAsync(query);
 
             if (!cts.IsCancellationRequested)
             {
@@ -82,7 +82,7 @@ public partial class NewTestPage : Page
             TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
         };
 
-        var customerId = await _db.UpsertCustomerAsync(customer);
+        var customerId = await _api.UpsertCustomerAsync(customer);
 
         // Buat sesi pengujian baru
         var certId = $"CERT-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
@@ -95,7 +95,7 @@ public partial class NewTestPage : Page
             OverallStatus = TestOverallStatus.Fail,
         };
 
-        _currentSessionId = await _db.CreateTestSessionAsync(session);
+        _currentSessionId = await _api.CreateTestSessionAsync(session);
 
         // Jalankan semua network tests berurutan (akan diimplementasi Sprint 1)
         await RunAllTestsAsync(_currentSessionId.Value, customer.PackageMbps);
@@ -106,7 +106,7 @@ public partial class NewTestPage : Page
 
     private async System.Threading.Tasks.Task RunAllTestsAsync(int sessionId, int packageMbps)
     {
-        var networkSvc = new NetworkTestService(_db, sessionId);
+        var networkSvc = new NetworkTestService(_api, sessionId);
         var progress = new Progress<(int percent, string status)>(p =>
         {
             TestProgressBar.Value = p.percent;
@@ -114,7 +114,7 @@ public partial class NewTestPage : Page
         });
 
         await networkSvc.RunAllAsync(ResultsPanel, progress, packageMbps);
-        await _db.UpdateSessionStatusAsync(sessionId, networkSvc.OverallStatus);
+        await _api.UpdateSessionStatusAsync(sessionId, networkSvc.OverallStatus);
     }
 
     private bool ValidateForm()

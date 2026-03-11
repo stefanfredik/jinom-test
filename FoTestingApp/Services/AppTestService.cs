@@ -13,16 +13,16 @@ namespace FoTestingApp.Services;
 /// </summary>
 public class AppTestService
 {
-    private readonly DatabaseService _db;
+    private readonly ApiService _api;
     private readonly int _sessionId;
     private static readonly HttpClient _client = new(new HttpClientHandler { AllowAutoRedirect = true })
     {
         Timeout = TimeSpan.FromSeconds(15),
     };
 
-    public AppTestService(DatabaseService db, int sessionId)
+    public AppTestService(ApiService api, int sessionId)
     {
-        _db = db;
+        _api = api;
         _sessionId = sessionId;
     }
 
@@ -46,7 +46,7 @@ public class AppTestService
         var browsingPass = browsingResults.Values.All(t => t <= thresholdSec && t >= 0);
         if (browsingPass) { pass++; }
 
-        await _db.SaveTestResultAsync(new FoTestResult
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = TestTypes.BrowsingTest,
@@ -65,7 +65,7 @@ public class AppTestService
         var streamingPass = streamingResults.Values.All(v => v == "Loaded");
         if (streamingPass) { pass++; }
 
-        await _db.SaveTestResultAsync(new FoTestResult
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = TestTypes.StreamingTest,
@@ -83,7 +83,7 @@ public class AppTestService
         var socialPass = socialResults.Values.All(v => v == "Loaded");
         if (socialPass) { pass++; }
 
-        await _db.SaveTestResultAsync(new FoTestResult
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = TestTypes.SocialMediaTest,

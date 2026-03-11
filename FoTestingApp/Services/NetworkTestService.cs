@@ -17,14 +17,14 @@ namespace FoTestingApp.Services;
 /// </summary>
 public class NetworkTestService
 {
-    private readonly DatabaseService _db;
+    private readonly ApiService _api;
     private readonly int _sessionId;
     private int _passCount;
     private int _totalCount;
 
-    public NetworkTestService(DatabaseService db, int sessionId)
+    public NetworkTestService(ApiService api, int sessionId)
     {
-        _db = db;
+        _api = api;
         _sessionId = sessionId;
     }
 
@@ -78,7 +78,7 @@ public class NetworkTestService
 
         // 6. App Tests
         progress.Report((82, "⏳ Pengujian Aplikasi (Browsing, Streaming, Social Media)..."));
-        var appSvc = new AppTestService(_db, _sessionId);
+        var appSvc = new AppTestService(_api, _sessionId);
         var appResults = await appSvc.RunAllAsync(resultsPanel, progress);
         _passCount += appResults.passCount;
         _totalCount += appResults.totalCount;
@@ -86,7 +86,7 @@ public class NetworkTestService
 
         // 7. Speedtest
         progress.Report((93, "⏳ Speedtest..."));
-        var speedSvc = new SpeedtestService(_db, _sessionId);
+        var speedSvc = new SpeedtestService(_api, _sessionId);
         var speedResults = await speedSvc.RunAllAsync(resultsPanel, packageMbps);
         _passCount += speedResults.passCount;
         _totalCount += speedResults.totalCount;
@@ -132,8 +132,8 @@ public class NetworkTestService
 
         var resultData = new { ping_count = count, avg_ms = avg, max_ms = max, min_ms = min, rto = rtoCount, threshold_ms = thresholdMs };
 
-        // Simpan ke DB
-        await _db.SaveTestResultAsync(new FoTestResult
+        // Simpan ke API
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = testType,
@@ -173,7 +173,7 @@ public class NetworkTestService
 
         var resultData = new { domains = domainResults };
 
-        await _db.SaveTestResultAsync(new FoTestResult
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = testType,

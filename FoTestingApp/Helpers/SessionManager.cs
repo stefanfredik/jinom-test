@@ -8,21 +8,25 @@ namespace FoTestingApp.Helpers;
 public static class SessionManager
 {
     private static User? _currentUser;
+    private static string? _token;
     private static DateTime _lastActivityAt;
 
     public static User? CurrentUser => _currentUser;
+    public static string? GetToken() => _token;
 
-    public static bool IsLoggedIn => _currentUser is not null;
+    public static bool IsLoggedIn => _currentUser is not null && !string.IsNullOrEmpty(_token);
 
-    public static void Login(User user)
+    public static void Login(User user, string token)
     {
         _currentUser = user;
+        _token = token;
         _lastActivityAt = DateTime.Now;
     }
 
     public static void Logout()
     {
         _currentUser = null;
+        _token = null;
     }
 
     /// <summary>

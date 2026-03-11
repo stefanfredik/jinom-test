@@ -14,13 +14,13 @@ namespace FoTestingApp.Services;
 /// </summary>
 public class SpeedtestService
 {
-    private readonly DatabaseService _db;
+    private readonly ApiService _api;
     private readonly int _sessionId;
     private static readonly HttpClient _client = new() { Timeout = TimeSpan.FromSeconds(60) };
 
-    public SpeedtestService(DatabaseService db, int sessionId)
+    public SpeedtestService(ApiService api, int sessionId)
     {
-        _db = db;
+        _api = api;
         _sessionId = sessionId;
     }
 
@@ -34,7 +34,7 @@ public class SpeedtestService
         var jinomResult = await RunJinomSpeedtestAsync(packageMbps);
         if (jinomResult.pass) { pass++; }
 
-        await _db.SaveTestResultAsync(new FoTestResult
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = TestTypes.SpeedtestJinom,
@@ -56,7 +56,7 @@ public class SpeedtestService
         total++;
         var ooklaResult = await RunOoklaSpeedtestAsync();
 
-        await _db.SaveTestResultAsync(new FoTestResult
+        await _api.SaveTestResultAsync(new FoTestResult
         {
             SessionId = _sessionId,
             TestType = TestTypes.SpeedtestOokla,

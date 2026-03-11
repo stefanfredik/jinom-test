@@ -18,7 +18,7 @@ public partial class MainShell : Window
     public MainShell()
     {
         InitializeComponent();
-        _auth = new AuthService(new DatabaseService());
+        _auth = new AuthService(new ApiService());
 
         // Tampilkan info user di sidebar
         var user = SessionManager.CurrentUser;

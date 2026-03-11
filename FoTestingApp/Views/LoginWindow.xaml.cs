@@ -15,7 +15,7 @@ public partial class LoginWindow : Window
     public LoginWindow()
     {
         InitializeComponent();
-        _auth = new AuthService(new DatabaseService());
+        _auth = new AuthService(new ApiService());
         EmailTextBox.Focus();
     }
 

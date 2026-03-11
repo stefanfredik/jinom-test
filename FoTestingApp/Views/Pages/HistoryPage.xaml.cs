@@ -6,7 +6,7 @@ namespace FoTestingApp.Views.Pages;
 
 public partial class HistoryPage : Page
 {
-    private readonly DatabaseService _db = new();
+    private readonly ApiService _api = new();
 
     public HistoryPage()
     {
@@ -22,7 +22,7 @@ public partial class HistoryPage : Page
         var statusItem = StatusFilter.SelectedItem as ComboBoxItem;
         string? status = statusItem?.Content?.ToString() == "Semua" ? null : statusItem?.Content?.ToString();
 
-        var sessions = await _db.GetSessionsAsync(from, to, null, status);
+        var sessions = await _api.GetSessionsAsync(from, to, null, status);
         SessionsGrid.ItemsSource = sessions;
     }
 

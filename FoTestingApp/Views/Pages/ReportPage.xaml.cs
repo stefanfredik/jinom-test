@@ -13,7 +13,7 @@ namespace FoTestingApp.Views.Pages;
 
 public partial class ReportPage : Page
 {
-    private readonly DatabaseService _db = new();
+    private readonly ApiService _api = new();
     private readonly ReportService _report = new();
     private int? _sessionId;
 
@@ -31,7 +31,7 @@ public partial class ReportPage : Page
 
     private async Task LoadSessionsAsync()
     {
-        var sessions = await _db.GetSessionsAsync();
+        var sessions = await _api.GetSessionsAsync();
         SessionComboBox.ItemsSource = sessions;
         SessionComboBox.DisplayMemberPath = "CertificationId";
 
@@ -134,12 +134,12 @@ public partial class ReportPage : Page
         }
 
         // Load hasil test untuk sesi ini
-        session.Results = await _db.GetResultsBySessionAsync(session.Id);
+        session.Results = await _api.GetResultsBySessionAsync(session.Id);
 
         // Load customer & technician jika belum ada
         if (session.Customer is null || session.Technician is null)
         {
-            var sessions = await _db.GetSessionsAsync();
+            var sessions = await _api.GetSessionsAsync();
             var full = sessions.FirstOrDefault(s => s.Id == session.Id);
             if (full is not null)
             {
