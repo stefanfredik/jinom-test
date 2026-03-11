@@ -5,8 +5,8 @@
       Title="Pengujian Baru">
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
-        <!-- Scrollable Content Area -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <!-- Form Area (Visible by default) -->
+        <ScrollViewer x:Name="FormContainer" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="32">
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,32">
@@ -17,6 +17,7 @@
                 <!-- Customer Configuration Panel -->
                 <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="32" Margin="0,0,0,32"
                         BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                    <!-- Same content as before -->
                     <StackPanel>
                         <!-- Section Title -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
@@ -106,7 +107,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Additional Info (Address/Notes) matching old layout functionality -->
+                        <!-- Additional Info -->
                         <Grid Margin="0,24,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -138,12 +139,6 @@
                                          Background="#F8FAFC"/>
                             </StackPanel>
                         </Grid>
-                        
-                        <!-- Hidden old mode buttons to keep codebehind happy -->
-                        <StackPanel Visibility="Collapsed">
-                            <RadioButton x:Name="PopModeBtn" Content="POP" GroupName="TestMode"/>
-                            <RadioButton x:Name="CustomerModeBtn" Content="Pelanggan" GroupName="TestMode" IsChecked="True"/>
-                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -169,40 +164,112 @@
                                     <TextBlock Text="Initialize Full Diagnostics" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-
-                            <Button x:Name="SaveReportBtn"
-                                    Height="52" Padding="24,0" Margin="16,0,0,0"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="12"
-                                    BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextDarkBrush}"
-                                    Click="SaveReportBtn_Click" IsEnabled="False">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ContentSaveOutline" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Save Report" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                        
-                        <!-- Progress Status Area -->
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                            <ProgressBar x:Name="TestProgressBar" 
-                                         Style="{StaticResource MaterialDesignLinearProgressBar}"
-                                         IsIndeterminate="False" Value="0" Maximum="100"
-                                         Height="8" materialDesign:BottomDashedLineAdorner.Brush="{DynamicResource PrimaryBrush}"
-                                         Margin="0,0,0,8" Visibility="Visible" Width="200"/>
-                            <TextBlock x:Name="StatusLabel" Text="Standing by." FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Right"/>
                         </StackPanel>
                     </Grid>
                 </Border>
-
-                <!-- Results Area -->
-                <ScrollViewer x:Name="ResultsScrollViewer" VerticalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="ResultsPanel">
-                        <!-- Dynamic content will be injected here by code-behind, but we can structure the container -->
-                    </StackPanel>
-                </ScrollViewer>
-
             </StackPanel>
         </ScrollViewer>
+
+        <!-- Progress Overlay (Hidden by default) -->
+        <Grid x:Name="ProgressContainer" Visibility="Collapsed" Background="#F8F6F6">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel HorizontalAlignment="Center" MaxWidth="640" Margin="24,48,24,48" Width="640">
+                    
+                    <!-- Title Section -->
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,48">
+                        <TextBlock Text="Testing in Progress" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                        <TextBlock Text="Analyzing your network performance and security" FontSize="18" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Central Progress Visualization -->
+                    <Grid Width="256" Height="256" HorizontalAlignment="Center" Margin="0,0,0,64">
+                        <!-- Outer Glow (Simulated) -->
+                        <Ellipse Fill="#1AEc5b13" Margin="-32"/>
+                        
+                        <!-- Progress Ring -->
+                        <ProgressBar x:Name="MainCircularProgress" 
+                                     Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                                     Value="0" Maximum="100" Width="256" Height="256" 
+                                     Foreground="{DynamicResource PrimaryBrush}" Background="#E2E8F0"/>
+                        
+                        <!-- Inner Text -->
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock x:Name="ProgressPercentText" Text="0" FontSize="64" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+                                <TextBlock Text="%" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Bottom" Margin="4,0,0,4"/>
+                            </StackPanel>
+                            <TextBlock Text="OVERALL" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" LetterSpacing="2"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Current Task Card -->
+                    <Border Background="White" CornerRadius="16" BorderBrush="#1AEc5b13" BorderThickness="1" Margin="0,0,0,40">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="{DynamicResource PrimaryColor}" Opacity="0.05"/>
+                        </Border.Effect>
+                        <StackPanel Padding="24">
+                            <!-- Header -->
+                            <Grid Margin="0,0,0,24">
+                                <StackPanel HorizontalAlignment="Left">
+                                    <TextBlock Text="CURRENT ACTIVITY" FontSize="10" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8" LetterSpacing="2"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="CurrentActivityText" Text="Preparing Tests..." FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                                        <!-- Ping dot simulation -->
+                                        <Ellipse Width="6" Height="6" Fill="{DynamicResource PrimaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Border Background="#F1F5F9" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="12,4">
+                                    <TextBlock x:Name="TaskCountText" Text="Task 1 of 7" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
+                                </Border>
+                            </Grid>
+                            
+                            <!-- Internal Progress bar -->
+                            <ProgressBar x:Name="SubTaskProgressBar" Value="0" Maximum="100" Height="16" materialDesign:ButtonAssist.CornerRadius="8" Foreground="{DynamicResource PrimaryBrush}" Background="#F1F5F9" Margin="0,0,0,12"/>
+                            
+                            <Grid>
+                                <TextBlock x:Name="SubTaskDetailText" Text="Initializing diagnostic engine..." FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" FontStyle="Italic" HorizontalAlignment="Left"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Diagnostic Log List -->
+                    <StackPanel>
+                        <Grid Margin="4,0,4,8">
+                            <TextBlock Text="DIAGNOSTIC LOG" FontSize="12" FontWeight="Black" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Left" LetterSpacing="2"/>
+                            <TextBlock Text="Real-time updates" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                        
+                        <StackPanel x:Name="DiagnosticLogsPanel">
+                            <!-- Logs injected here dynamically by code-->
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Action Area -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,48,0,0">
+                        <!-- Save Report Button (Hidden during test) -->
+                        <Button x:Name="SaveReportBtn"
+                                Height="48" Padding="24,0" Margin="0,0,16,0"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="12"
+                                BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextDarkBrush}"
+                                Click="SaveReportBtn_Click" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSaveOutline" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Save PDF Report" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- End/Cancel Button -->
+                        <Button x:Name="EndTestBtn" Foreground="{DynamicResource FailRedBrush}" Background="Transparent" BorderThickness="0"
+                                Style="{StaticResource MaterialDesignFlatButton}" Height="48" Padding="24,0" Click="EndTestBtn_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Close" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="EndTestBtnText" Text="CANCEL DIAGNOSTICS" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Page>

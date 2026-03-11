@@ -161,27 +161,13 @@ public class SpeedtestService
 
     private static Border BuildSpeedCard(string label, double download, double upload, bool pass, string? error = null)
     {
-        var icon = pass ? "✅" : "❌";
-        var color = pass ? Brushes.Green : Brushes.Red;
-        var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Text = $"{icon} {label}", FontWeight = FontWeights.SemiBold, Foreground = color });
+        var primaryColor = pass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
+        var bgColor = pass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
+        var iconKind = pass ? MaterialDesignThemes.Wpf.PackIconKind.Speedometer : MaterialDesignThemes.Wpf.PackIconKind.SpeedometerSlow;
+        var statusText = pass ? "COMPLETED" : "FAILED";
+        
+        var subtitle = error ?? $"↓ {download} Mbps   ↑ {upload} Mbps";
 
-        if (error is not null)
-        {
-            panel.Children.Add(new TextBlock { Text = $"  {error}", FontSize = 12, Foreground = Brushes.Red, Margin = new Thickness(0, 2, 0, 0) });
-        }
-        else
-        {
-            panel.Children.Add(new TextBlock { Text = $"  ↓ Download: {download} Mbps   ↑ Upload: {upload} Mbps", FontSize = 12, Foreground = Brushes.DimGray, Margin = new Thickness(0, 4, 0, 0) });
-        }
-
-        return new Border
-        {
-            Background = Brushes.White,
-            CornerRadius = new CornerRadius(6),
-            Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12, 16, 12),
-            Child = panel,
-        };
+        return FoTestingApp.Helpers.UIHelper.CreateLogCard(label, subtitle, primaryColor, bgColor, iconKind, statusText);
     }
 }

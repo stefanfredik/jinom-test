@@ -146,28 +146,14 @@ public class AppTestService
 
     private static Border BuildHttpCard(string label, Dictionary<string, string> results, bool pass)
     {
-        var icon = pass ? "✅" : "❌";
-        var color = pass ? Brushes.Green : Brushes.Red;
-        var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Text = $"{icon} {label}", FontWeight = FontWeights.SemiBold, Foreground = color });
-        foreach (var (url, result) in results)
-        {
-            panel.Children.Add(new TextBlock
-            {
-                Text = $"  • {url}: {result}",
-                FontSize = 12,
-                Foreground = result is "Loaded" || !result.StartsWith("Error") ? Brushes.DimGray : Brushes.Red,
-                Margin = new Thickness(0, 2, 0, 0),
-            });
-        }
+        var primaryColor = pass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
+        var bgColor = pass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
+        var iconKind = pass ? MaterialDesignThemes.Wpf.PackIconKind.CheckCircle : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
+        var statusText = pass ? "COMPLETED" : "FAILED";
+        
+        var failedUrls = results.Where(r => r.Value == "Failed" || r.Value.StartsWith("Error")).Select(r => r.Key).ToList();
+        var subtitle = failedUrls.Count > 0 ? $"Gagal di: {string.Join(", ", failedUrls)}" : "Semua akses berhasil";
 
-        return new Border
-        {
-            Background = Brushes.White,
-            CornerRadius = new CornerRadius(6),
-            Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12, 16, 12),
-            Child = panel,
-        };
+        return FoTestingApp.Helpers.UIHelper.CreateLogCard(label, subtitle, primaryColor, bgColor, iconKind, statusText);
     }
 }

@@ -83,14 +83,20 @@ public partial class NewTestPage : Page
     {
         if (!ValidateForm()) { return; }
 
-        StartTestBtn.IsEnabled = false;
-        SaveReportBtn.IsEnabled = false;
-        ResultsPanel.Children.Clear();
-        TestProgressBar.Value = 0;
+        FormContainer.Visibility = Visibility.Collapsed;
+        ProgressContainer.Visibility = Visibility.Visible;
+        DiagnosticLogsPanel.Children.Clear();
+        MainCircularProgress.Value = 0;
+        ProgressPercentText.Text = "0";
+        CurrentActivityText.Text = "Preparing Tests...";
+        TaskCountText.Text = "Task 1 of 7";
+        SubTaskProgressBar.Value = 0;
+        SubTaskDetailText.Text = "Initializing diagnostic engine...";
+        SaveReportBtn.Visibility = Visibility.Collapsed;
+        EndTestBtnText.Text = "CANCEL DIAGNOSTICS";
 
         try
         {
-            // Simpan/update data pelanggan
             var isPopMode = _testMode == "pop";
             var customer = new FoCustomer
             {
@@ -104,7 +110,6 @@ public partial class NewTestPage : Page
 
             var customerId = await _api.UpsertCustomerAsync(customer);
 
-            // Buat sesi pengujian baru
             var certId = $"CERT-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
             var session = new FoTestSession
             {
@@ -118,20 +123,17 @@ public partial class NewTestPage : Page
 
             _currentSessionId = await _api.CreateTestSessionAsync(session);
 
-            // Jalankan semua network tests berurutan
             await RunAllTestsAsync(_currentSessionId.Value, customer.PackageMbps);
 
-            SaveReportBtn.IsEnabled = true;
+            SaveReportBtn.Visibility = Visibility.Visible;
+            EndTestBtnText.Text = "CLOSE DIAGNOSTICS";
+            EndTestBtn.Foreground = (System.Windows.Media.Brush)FindResource("TextDarkBrush");
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Test execution failed");
-            MessageBox.Show($"Pengujian gagal: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            StatusLabel.Text = "❌ Pengujian gagal. Silakan coba lagi.";
-        }
-        finally
-        {
-            StartTestBtn.IsEnabled = true;
+            CurrentActivityText.Text = "Diagnostics Failed";
+            EndTestBtnText.Text = "CLOSE DIAGNOSTICS";
         }
     }
 
@@ -140,11 +142,27 @@ public partial class NewTestPage : Page
         var networkSvc = new NetworkTestService(_api, sessionId);
         var progress = new Progress<(int percent, string status)>(p =>
         {
-            TestProgressBar.Value = p.percent;
-            StatusLabel.Text = p.status;
+            MainCircularProgress.Value = p.percent;
+            ProgressPercentText.Text = p.percent.ToString();
+            
+            // Extract task count and subtask from the status string if passed in a specific format
+            // like "Task 1 of 7|Running Speedtest|Downloading..."
+            var parts = p.status.Split('|');
+            if (parts.Length == 3)
+            {
+                TaskCountText.Text = parts[0];
+                CurrentActivityText.Text = parts[1];
+                SubTaskDetailText.Text = parts[2];
+                SubTaskProgressBar.Value = p.percent; // Keep it simple by syncing to overall percent for now
+            }
+            else
+            {
+                SubTaskDetailText.Text = p.status;
+            }
         });
 
-        await networkSvc.RunAllAsync(ResultsPanel, progress, packageMbps);
+        // Pass DiagnosticLogsPanel instead of ResultsPanel so services can append their UI logs
+        await networkSvc.RunAllAsync(DiagnosticLogsPanel, progress, packageMbps);
 
         try
         {
@@ -181,8 +199,14 @@ public partial class NewTestPage : Page
     {
         if (_currentSessionId.HasValue)
         {
-            // Navigasi ke halaman laporan dengan session ID
             NavigationService?.Navigate(new ReportPage(_currentSessionId.Value));
         }
+    }
+
+    private void EndTestBtn_Click(object sender, RoutedEventArgs e)
+    {
+        // Cancel or close the view
+        ProgressContainer.Visibility = Visibility.Collapsed;
+        FormContainer.Visibility = Visibility.Visible;
     }
 }

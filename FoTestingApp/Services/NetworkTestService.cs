@@ -204,8 +204,12 @@ public class NetworkTestService
 
     private static Border BuildResultCard(string testType, string target, TestStatus status, object data)
     {
-        var color = status == TestStatus.Pass ? Brushes.Green : Brushes.Red;
-        var icon = status == TestStatus.Pass ? "✅" : "❌";
+        var isPass = status == TestStatus.Pass;
+        var primaryColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
+        var bgColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
+        var iconKind = isPass ? MaterialDesignThemes.Wpf.PackIconKind.CheckCircle : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
+        var statusText = isPass ? "COMPLETED" : "FAILED";
+        
         var json = JsonSerializer.Serialize(data);
         var parsed = JsonDocument.Parse(json);
 
@@ -216,50 +220,25 @@ public class NetworkTestService
             TestTypes.PingDomainLokal => "Ping Domain Lokal",
             _ => testType,
         };
+        
+        var descText = $"Avg: {parsed.RootElement.GetProperty("avg_ms").GetInt64()}ms | RTO: {parsed.RootElement.GetProperty("rto").GetInt32()}";
 
-        return new Border
-        {
-            Background = Brushes.White,
-            CornerRadius = new CornerRadius(6),
-            Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12, 16, 12),
-            Child = new StackPanel
-            {
-                Children =
-                {
-                    new TextBlock { Text = $"{icon} {label} — {target}", FontWeight = FontWeights.SemiBold, Foreground = color },
-                    new TextBlock { Text = $"Avg: {parsed.RootElement.GetProperty("avg_ms").GetInt64()}ms | Max: {parsed.RootElement.GetProperty("max_ms").GetInt64()}ms | Min: {parsed.RootElement.GetProperty("min_ms").GetInt64()}ms | RTO: {parsed.RootElement.GetProperty("rto").GetInt32()}", Foreground = Brushes.DimGray, FontSize = 12, Margin = new Thickness(0, 4, 0, 0) },
-                },
-            },
-        };
+        return CreateLogCard(label, descText, primaryColor, bgColor, iconKind, statusText);
     }
 
     private static Border BuildNslookupCard(string testType, Dictionary<string, string> domains, TestStatus status)
     {
-        var color = status == TestStatus.Pass ? Brushes.Green : Brushes.Red;
-        var icon = status == TestStatus.Pass ? "✅" : "❌";
+        var isPass = status == TestStatus.Pass;
+        var primaryColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
+        var bgColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
+        var iconKind = isPass ? MaterialDesignThemes.Wpf.PackIconKind.Dns : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
+        var statusText = isPass ? "COMPLETED" : "FAILED";
+        
         var label = testType == TestTypes.NslookupNasional ? "NSLookup Nasional" : "NSLookup Internasional";
+        
+        var failedDomains = domains.Where(d => d.Value != "Resolved").Select(d => d.Key).ToList();
+        var descText = failedDomains.Count > 0 ? $"Gagal di: {string.Join(", ", failedDomains)}" : "Semua domain berhasil di-resolve";
 
-        var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Text = $"{icon} {label}", FontWeight = FontWeights.SemiBold, Foreground = color });
-        foreach (var (domain, result) in domains)
-        {
-            panel.Children.Add(new TextBlock
-            {
-                Text = $"  • {domain}: {result}",
-                FontSize = 12,
-                Foreground = result == "Resolved" ? Brushes.ForestGreen : Brushes.Red,
-                Margin = new Thickness(0, 2, 0, 0),
-            });
-        }
-
-        return new Border
-        {
-            Background = Brushes.White,
-            CornerRadius = new CornerRadius(6),
-            Margin = new Thickness(0, 0, 0, 8),
-            Padding = new Thickness(16, 12, 16, 12),
-            Child = panel,
-        };
+        return UIHelper.CreateLogCard(label, descText, primaryColor, bgColor, iconKind, statusText);
     }
 }
