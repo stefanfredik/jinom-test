@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using Serilog;
@@ -16,6 +17,11 @@ public class ApiService
 {
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
+    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
     public ApiService()
     {
@@ -28,6 +34,7 @@ public class ApiService
         {
             BaseAddress = new Uri(_baseUrl)
         };
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     private void SetAuthorizationHeader()
@@ -36,6 +43,10 @@ public class ApiService
         if (!string.IsNullOrEmpty(token))
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        else
+        {
+            Log.Warning("SetAuthorizationHeader: Token is null or empty");
         }
     }
 
@@ -117,10 +128,12 @@ public class ApiService
     public async Task<int> UpsertCustomerAsync(FoCustomer customer)
     {
         SetAuthorizationHeader();
-        var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/reseller-certification/fo-test/customers/upsert", customer);
+        var content = JsonContent.Create(customer, options: _snakeCaseOptions);
+        var response = await _httpClient.PostAsync($"{_baseUrl}/reseller-certification/fo-test/customers/upsert", content);
         if (!response.IsSuccessStatusCode)
         {
-            Log.Error("UpsertCustomerAsync failed: {Status}", response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            Log.Error("UpsertCustomerAsync failed: {Status} - {Body}", response.StatusCode, body);
             throw new HttpRequestException($"Gagal menyimpan data pelanggan (HTTP {(int)response.StatusCode})");
         }
         var savedCustomer = await response.Content.ReadFromJsonAsync<FoCustomer>();
@@ -142,7 +155,8 @@ public class ApiService
         var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/reseller-certification/fo-test/sessions", request);
         if (!response.IsSuccessStatusCode)
         {
-            Log.Error("CreateTestSessionAsync failed: {Status}", response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            Log.Error("CreateTestSessionAsync failed: {Status} - {Body}", response.StatusCode, body);
             throw new HttpRequestException($"Gagal membuat sesi pengujian (HTTP {(int)response.StatusCode})");
         }
         var savedSession = await response.Content.ReadFromJsonAsync<FoTestSession>();
