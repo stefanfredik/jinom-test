@@ -13,7 +13,7 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Dashboard Pertumbuhan" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource JinomDarkBlueBrush}" Margin="0,0,0,8"/>
+                    <TextBlock Text="Dashboard Pertumbuhan" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
                     <TextBlock Text="Ringkasan aktivitas pengujian jaringan fiber optik hari ini." FontSize="15" Foreground="#64748B"/>
                 </StackPanel>
                 
@@ -52,9 +52,9 @@
                     <Grid>
                         <StackPanel>
                             <TextBlock Text="Total Pengujian" Foreground="#64748B" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="36" FontWeight="Black" Foreground="{DynamicResource JinomBlueBrush}"/>
+                            <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="36" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}"/>
                         </StackPanel>
-                        <materialDesign:PackIcon Kind="ChartLineVariant" Width="48" Height="48" Foreground="{DynamicResource JinomBlueBrush}" Opacity="0.2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="ChartLineVariant" Width="48" Height="48" Foreground="{DynamicResource PrimaryBrush}" Opacity="0.2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </UniformGrid>
@@ -64,7 +64,7 @@
                     Effect="{DynamicResource MaterialDesignShadowDepth2}">
                 <StackPanel>
                     <Grid Margin="0,0,0,20">
-                        <TextBlock Text="Riwayat Pengujian Terakhir" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource JinomDarkBlueBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="Riwayat Pengujian Terakhir" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" VerticalAlignment="Center"/>
                     </Grid>
                     
                     <DataGrid x:Name="RecentSessionsGrid"

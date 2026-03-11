@@ -4,8 +4,8 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Title="Laporan">
     <StackPanel Margin="32">
-        <TextBlock Text="Laporan Sertifikasi FO" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource JinomDarkBlueBrush}" Margin="0,0,0,8"/>
-        <TextBlock Text="Generate dan download laporan hasil pengujian dalam format PDF." FontSize="15" Foreground="#64748B" Margin="0,0,0,32"/>
+        <TextBlock Text="Laporan Sertifikasi FO" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
+        <TextBlock Text="Generate dan download laporan hasil pengujian dalam format PDF." FontSize="15" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,32"/>
 
         <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="28"
                 Effect="{DynamicResource MaterialDesignShadowDepth2}">
@@ -24,7 +24,7 @@
                             Background="{DynamicResource PassGreenBrush}" BorderBrush="{DynamicResource PassGreenBrush}" Foreground="White" Height="44" Padding="20,0" Click="ExportBtn_Click" Margin="16,0,0,0"/>
                     <Button Content="🖨️ Cetak" Style="{StaticResource MaterialDesignRaisedButton}"
                             materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
-                            Background="{DynamicResource JinomDarkBlueBrush}" BorderBrush="{DynamicResource JinomDarkBlueBrush}" Foreground="White" Height="44" Padding="20,0" Click="PrintBtn_Click" Margin="16,0,0,0"/>
+                            Background="{DynamicResource PrimaryDarkBrush}" BorderBrush="{DynamicResource PrimaryDarkBrush}" Foreground="White" Height="44" Padding="20,0" Click="PrintBtn_Click" Margin="16,0,0,0"/>
                 </StackPanel>
                 <TextBlock x:Name="ReportStatus" Foreground="#64748B" FontWeight="SemiBold" FontSize="13" Margin="0,20,0,0"/>
             </StackPanel>

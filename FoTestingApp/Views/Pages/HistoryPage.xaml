@@ -11,7 +11,7 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="Riwayat Pengujian" FontSize="28" FontWeight="Bold"
-                   Foreground="{DynamicResource JinomDarkBlueBrush}" Margin="0,0,0,24"/>
+                   Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,24"/>
 
         <!-- Filters -->
         <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="20"
@@ -29,7 +29,7 @@
                     <ComboBoxItem Content="PARTIAL"/>
                 </ComboBox>
                 <Button Content="Terapkan Filter" Style="{StaticResource MaterialDesignRaisedButton}"
-                        Background="{DynamicResource JinomBlueBrush}" BorderBrush="{DynamicResource JinomBlueBrush}"
+                        Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
                         Foreground="White" Click="FilterBtn_Click" Margin="0,4,0,8" Height="48"
                         materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}">
                     <Button.ContentTemplate>
