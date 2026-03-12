@@ -299,25 +299,77 @@
 
                     <!-- Action Area -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,48,0,0">
-                        <!-- Save Report Button (Hidden during test) -->
-                        <Button x:Name="SaveReportBtn"
-                                Height="48" Padding="24,0" Margin="0,0,16,0"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"
-                                BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextDarkBrush}"
-                                Click="SaveReportBtn_Click" Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ContentSaveOutline" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Save PDF Report" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
                         <!-- End/Cancel Button -->
                         <Button x:Name="EndTestBtn" Foreground="{DynamicResource FailRedBrush}" Background="Transparent" BorderThickness="0"
                                 Style="{StaticResource MaterialDesignFlatButton}" Height="48" Padding="24,0" Click="EndTestBtn_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Close" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock x:Name="EndTestBtnText" Text="CANCEL DIAGNOSTICS" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ═══ Stage 5: Results Detail ═══ -->
+        <Grid x:Name="ResultsContainer" Visibility="Collapsed" Background="{DynamicResource AppBackgroundBrush}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel HorizontalAlignment="Center" MaxWidth="720" Margin="24,32,24,48" Width="720">
+
+                    <!-- Summary Header -->
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="28" Margin="0,0,0,24"
+                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Pengujian Selesai" FontSize="28" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="ResultSummaryText" Text="" FontSize="14" Foreground="{DynamicResource TextLightBrush}"/>
+                            </StackPanel>
+
+                            <!-- Overall Status Badge -->
+                            <Border x:Name="ResultStatusBadge" Grid.Column="1" CornerRadius="16" Padding="20,10" VerticalAlignment="Center"
+                                    Background="{DynamicResource PrimaryLightBrush}">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock x:Name="ResultStatusText" Text="PASS" FontSize="22" FontWeight="Black" HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource PassGreenBrush}"/>
+                                    <TextBlock x:Name="ResultScoreText" Text="7/7 test passed" FontSize="11" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Results Cards -->
+                    <StackPanel x:Name="ResultCardsPanel">
+                        <!-- Filled dynamically -->
+                    </StackPanel>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
+                        <Button Height="48" Padding="24,0" Margin="0,0,12,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="12"
+                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="White"
+                                Click="NewTestFromResults_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Pengujian Baru" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="SaveReportBtn"
+                                Height="48" Padding="24,0"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="12"
+                                BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextDarkBrush}"
+                                Click="SaveReportBtn_Click" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Simpan PDF" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
