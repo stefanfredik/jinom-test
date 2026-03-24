@@ -289,10 +289,11 @@ public partial class NewTestPage : Page
 
         var outerStack = new StackPanel();
 
-        // ── Header row: icon + name + status badge
-        var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 12) };
+        // ── Header row: icon + name + status badge + chevron
+        var headerGrid = new Grid { Cursor = System.Windows.Input.Cursors.Hand };
         headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         // Icon
@@ -344,16 +345,33 @@ public partial class NewTestPage : Page
         Grid.SetColumn(statusChip, 2);
         headerGrid.Children.Add(statusChip);
 
+        // Chevron toggle icon
+        var chevron = new PackIcon
+        {
+            Kind = PackIconKind.ChevronDown,
+            Width = 22, Height = 22,
+            Foreground = (Brush)FindResource("TextLightBrush"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10, 0, 0, 0),
+            RenderTransformOrigin = new Point(0.5, 0.5),
+            RenderTransform = new RotateTransform(0),
+        };
+        Grid.SetColumn(chevron, 3);
+        headerGrid.Children.Add(chevron);
+
         outerStack.Children.Add(headerGrid);
 
-        // ── Detail data rows
+        // ── Detail data rows (collapsed by default)
+        Border? detailBorder = null;
         if (result.ResultData is not null)
         {
-            var detailBorder = new Border
+            detailBorder = new Border
             {
                 Background = (Brush)FindResource("AppBackgroundBrush"),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(16, 12, 16, 12),
+                Margin = new Thickness(0, 12, 0, 0),
+                Visibility = Visibility.Collapsed,
             };
 
             var detailPanel = new StackPanel();
@@ -361,6 +379,24 @@ public partial class NewTestPage : Page
             detailBorder.Child = detailPanel;
             outerStack.Children.Add(detailBorder);
         }
+
+        // ── Click handler to toggle detail visibility
+        var detail = detailBorder;
+        headerGrid.MouseLeftButtonDown += (_, _) =>
+        {
+            if (detail is null) return;
+            var rt = (RotateTransform)chevron.RenderTransform;
+            if (detail.Visibility == Visibility.Collapsed)
+            {
+                detail.Visibility = Visibility.Visible;
+                rt.Angle = 180;
+            }
+            else
+            {
+                detail.Visibility = Visibility.Collapsed;
+                rt.Angle = 0;
+            }
+        };
 
         card.Child = outerStack;
         return card;
