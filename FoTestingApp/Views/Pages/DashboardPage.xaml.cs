@@ -224,6 +224,16 @@ public partial class DashboardPage : Page
                 root = doc.RootElement;
             }
 
+            // Jika status Fail dan terdapat pesan "error", prioritaskan tampilkan errornya
+            if (result.Status == TestStatus.Fail && root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind != JsonValueKind.Null)
+            {
+                var errMsg = errorElement.GetString();
+                if (!string.IsNullOrWhiteSpace(errMsg))
+                {
+                    return $"Gagal: {errMsg}";
+                }
+            }
+
             return result.TestType switch
             {
                 TestTypes.PingGateway or TestTypes.PingDns or TestTypes.PingDomainLokal =>

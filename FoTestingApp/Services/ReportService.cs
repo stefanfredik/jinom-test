@@ -246,6 +246,20 @@ public class ReportService
         try
         {
             var root = result.ResultData.RootElement;
+            if (root.ValueKind == JsonValueKind.String)
+            {
+                var doc = JsonDocument.Parse(root.GetString() ?? "{}");
+                root = doc.RootElement;
+            }
+
+            if (result.Status == TestStatus.Fail && root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind != JsonValueKind.Null)
+            {
+                var errMsg = errorElement.GetString();
+                if (!string.IsNullOrWhiteSpace(errMsg))
+                {
+                    return $"Gagal: {errMsg}";
+                }
+            }
 
             return result.TestType switch
             {
