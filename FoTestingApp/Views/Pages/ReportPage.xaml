@@ -4,30 +4,93 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Title="Laporan">
     <StackPanel Margin="32">
-        <TextBlock Text="Laporan Sertifikasi FO" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
-        <TextBlock Text="Generate dan download laporan hasil pengujian dalam format PDF." FontSize="15" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,32"/>
+        <TextBlock Text="Cetak Laporan" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
+        <TextBlock Text="Pilih sesi riwayat pengujian untuk men-generate dokumen laporan PDF Sertifikasi FO." FontSize="15" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,32"/>
 
-        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="28"
-                Effect="{DynamicResource MaterialDesignShadowDepth2}">
-            <StackPanel>
-                <TextBlock Text="Pilih sesi pengujian untuk dibuat laporannya:" Foreground="#1E293B" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,16"/>
-                <ComboBox x:Name="SessionComboBox"
-                          materialDesign:HintAssist.Hint="Pilih ID Sertifikasi"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Height="48" Width="360" HorizontalAlignment="Left" Margin="0,0,0,24" VerticalContentAlignment="Center"/>
-                <StackPanel Orientation="Horizontal">
-                    <Button Content="📄 Preview PDF" Style="{StaticResource MaterialDesignRaisedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
-                            Background="#F1F5F9" BorderBrush="#E2E8F0" Foreground="#0F172A" Height="44" Padding="20,0" Click="PreviewBtn_Click"/>
-                    <Button Content="💾 Export PDF" Style="{StaticResource MaterialDesignRaisedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
-                            Background="{DynamicResource PassGreenBrush}" BorderBrush="{DynamicResource PassGreenBrush}" Foreground="White" Height="44" Padding="20,0" Click="ExportBtn_Click" Margin="16,0,0,0"/>
-                    <Button Content="🖨️ Cetak" Style="{StaticResource MaterialDesignRaisedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}"
-                            Background="{DynamicResource PrimaryDarkBrush}" BorderBrush="{DynamicResource PrimaryDarkBrush}" Foreground="White" Height="44" Padding="20,0" Click="PrintBtn_Click" Margin="16,0,0,0"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MaxWidth="600"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="28"
+                    BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                <StackPanel>
+                    <!-- Icon Header inside Card -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <Border Background="#F1F5F9" CornerRadius="8" Padding="12">
+                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="32" Height="32" Foreground="#3B82F6"/>
+                        </Border>
+                        <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Konfigurasi Cetak" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextDarkBrush}"/>
+                            <TextBlock Text="Pilih ID dari dropdown di bawah" FontSize="13" Foreground="{DynamicResource TextLightBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Input Section -->
+                    <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="#475569" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="SessionComboBox"
+                              materialDesign:HintAssist.Hint="Cari atau pilih sesi..."
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="48" Margin="0,0,0,32" VerticalContentAlignment="Center"
+                              IsEditable="True"/>
+                    
+                    <!-- Actions -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Button Grid.Column="0" Content="Preview PDF" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="8"
+                                Foreground="{DynamicResource TextDarkBrush}" BorderBrush="{DynamicResource BorderLightBrush}" Height="46" Margin="0,0,6,0" Click="PreviewBtn_Click">
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="EyeOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Preview" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+                        
+                        <Button Grid.Column="1" Content="Export PDF" Style="{StaticResource MaterialDesignFlatButton}"
+                                materialDesign:ButtonAssist.CornerRadius="8"
+                                Background="#E0F2FE" Foreground="#0284C7" Height="46" Margin="6,0,6,0" Click="ExportBtn_Click">
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Download" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Simpan" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+                        
+                        <Button Grid.Column="2" Content="Cetak" Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="8"
+                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="White" Height="46" Margin="6,0,0,0" Click="PrintBtn_Click">
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="PrinterOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Cetak" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+                    </Grid>
+                    
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,24,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="ReportStatus" Text="Siap untuk men-generate laporan." Foreground="#64748B" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
-                <TextBlock x:Name="ReportStatus" Foreground="#64748B" FontWeight="SemiBold" FontSize="13" Margin="0,20,0,0"/>
-            </StackPanel>
-        </Border>
+            </Border>
+        </Grid>
     </StackPanel>
 </Page>

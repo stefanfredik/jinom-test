@@ -18,42 +18,29 @@
                         <TextBlock Text="Riwayat Pengujian" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,4"/>
                         <TextBlock Text="Data rekapitulasi dan riwayat pengujian diagnostik jaringan" FontSize="14" Foreground="{DynamicResource TextLightBrush}"/>
                     </StackPanel>
-                    <materialDesign:PackIcon Kind="History" Width="40" Height="40" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Border Background="#10B981" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Lulus (PASS)">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="TotalPassCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#EF4444" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Gagal (FAIL)">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="TotalFailCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#3B82F6" CornerRadius="8" Padding="12,6" ToolTip="Total Sesi">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ViewList" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Total:" FontSize="13" Foreground="White" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                 </Grid>
-
-                <!-- Stats Cards -->
-                <UniformGrid Columns="3" Margin="0,0,0,24">
-                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="0,0,8,0" Padding="20"
-                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
-                        <Grid>
-                            <StackPanel>
-                                <TextBlock Text="PASS" Foreground="{DynamicResource TextLightBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="TotalPassCount" Text="0" FontSize="32" FontWeight="Black" Foreground="{DynamicResource PassGreenBrush}"/>
-                            </StackPanel>
-                            <materialDesign:PackIcon Kind="CheckCircleOutline" Width="36" Height="36" Foreground="{DynamicResource PassGreenBrush}" Opacity="0.15" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="4,0" Padding="20"
-                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
-                        <Grid>
-                            <StackPanel>
-                                <TextBlock Text="FAIL" Foreground="{DynamicResource TextLightBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="TotalFailCount" Text="0" FontSize="32" FontWeight="Black" Foreground="{DynamicResource FailRedBrush}"/>
-                            </StackPanel>
-                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="36" Height="36" Foreground="{DynamicResource FailRedBrush}" Opacity="0.15" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Margin="8,0,0,0" Padding="20"
-                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
-                        <Grid>
-                            <StackPanel>
-                                <TextBlock Text="TOTAL" Foreground="{DynamicResource TextLightBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="32" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}"/>
-                            </StackPanel>
-                            <materialDesign:PackIcon Kind="ChartLineVariant" Width="36" Height="36" Foreground="{DynamicResource PrimaryBrush}" Opacity="0.15" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                </UniformGrid>
 
                 <!-- Filters -->
                 <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="16"
