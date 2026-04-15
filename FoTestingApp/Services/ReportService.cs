@@ -264,11 +264,8 @@ public class ReportService
                     string.Join(" | ", root.GetProperty("results").EnumerateObject()
                         .Select(r => $"{new Uri(r.Name).Host}: {r.Value.GetString()}")),
 
-                TestTypes.SpeedtestFast =>
-                    $"\u2193 {root.GetProperty("download_mbps").GetDouble()} Mbps",
-
-                TestTypes.SpeedtestOokla =>
-                    $"↓ {root.GetProperty("download_mbps").GetDouble()} Mbps | ↑ {root.GetProperty("upload_mbps").GetDouble()} Mbps",
+                TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla =>
+                    $"↓ {root.GetProperty("download_mbps").GetDouble():F1} Mbps | ↑ {(root.TryGetProperty("upload_mbps", out var uElement) ? uElement.GetDouble() : 0.0):F1} Mbps",
 
                 _ => "-",
             };
