@@ -66,8 +66,8 @@ public class AppTestService
         // Streaming
         total++;
         var streamingUrls = ConfigManager.GetStreamingUrls();
-        var streamingResults = await CheckAccessibilityAsync(streamingUrls);
-        var streamingPass = streamingResults.Values.All(v => v == "Loaded");
+        var streamingResults = await SimulateStreamingAsync(streamingUrls);
+        var streamingPass = streamingResults.Values.All(v => !v.StartsWith("Failed") && !v.StartsWith("Error"));
         if (streamingPass) { pass++; }
 
         try
@@ -123,6 +123,76 @@ public class AppTestService
         {
             return -1;
         }
+    }
+
+    private async Task<Dictionary<string, string>> SimulateStreamingAsync(string[] urls)
+    {
+        var results = new Dictionary<string, string>();
+        
+        // 1. Pastikan situs utamanya bisa diakses terlebih dahulu
+        foreach (var url in urls)
+        {
+            try
+            {
+                var response = await _client.GetAsync(url);
+                results[url] = response.IsSuccessStatusCode ? "Akses Web OK" : "Failed";
+            }
+            catch
+            {
+                results[url] = "Failed (Timeout)";
+            }
+        }
+
+        // 2. Simulasi Throughput Streaming dengan CDN Dummy (Cloudflare 25MB chunk)
+        var dummyUrl = "https://speed.cloudflare.com/__down?bytes=25000000";
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Batasi 5 detik
+            using var response = await _client.GetAsync(dummyUrl, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
+                var buffer = new byte[81920];
+                long totalBytesRead = 0;
+                var start = DateTime.UtcNow;
+                
+                try 
+                {
+                    int bytesRead;
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cts.Token)) > 0)
+                    {
+                        totalBytesRead += bytesRead;
+                    }
+                }
+                catch (OperationCanceledException) { /* Diabaikan, waktu 5 detik habis (normal) */ }
+
+                var duration = (DateTime.UtcNow - start).TotalSeconds;
+                if (duration <= 0) duration = 0.1;
+
+                var mbps = (totalBytesRead * 8.0) / (1_000_000.0) / duration;
+                
+                // Standar 1080p butuh setidaknya ~5 Mbps stabil
+                if (mbps >= 5.0)
+                {
+                    results["Video_Throughput"] = $"{mbps:F1} Mbps (Lancar untuk 1080p)";
+                }
+                else
+                {
+                    results["Video_Throughput"] = $"Failed (Terlalu lambat: {mbps:F1} Mbps)";
+                }
+            }
+            else
+            {
+                results["Video_Throughput"] = "Failed (Server CDN lambat/Mati)";
+            }
+        }
+        catch (Exception)
+        {
+            results["Video_Throughput"] = "Failed (Koneksi ke CDN Video gagal)";
+        }
+
+        return results;
     }
 
     private async Task<Dictionary<string, string>> CheckAccessibilityAsync(string[] urls)

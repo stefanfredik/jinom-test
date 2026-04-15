@@ -272,11 +272,11 @@ public class ReportService
 
                 TestTypes.BrowsingTest =>
                     string.Join(" | ", root.GetProperty("results").EnumerateObject()
-                        .Select(r => $"{new Uri(r.Name).Host}: {r.Value.GetDouble():F1}s")),
+                        .Select(r => $"{(r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " "))}: {r.Value.GetDouble():F1}s")),
 
                 TestTypes.StreamingTest or TestTypes.SocialMediaTest =>
                     string.Join(" | ", root.GetProperty("results").EnumerateObject()
-                        .Select(r => $"{new Uri(r.Name).Host}: {r.Value.GetString()}")),
+                        .Select(r => $"{(r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " "))}: {r.Value.GetString()}")),
 
                 TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla =>
                     $"↓ {root.GetProperty("download_mbps").GetDouble():F1} Mbps | ↑ {(root.TryGetProperty("upload_mbps", out var uElement) ? uElement.GetDouble() : 0.0):F1} Mbps",

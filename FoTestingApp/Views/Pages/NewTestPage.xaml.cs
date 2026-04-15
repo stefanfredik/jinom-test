@@ -429,16 +429,16 @@ public partial class NewTestPage : Page
                 case TestTypes.BrowsingTest:
                     foreach (var r in root.GetProperty("results").EnumerateObject())
                     {
-                        var host = new Uri(r.Name).Host;
-                        AddDetailRow(panel, host, $"{r.Value.GetDouble():F2} detik");
+                        var keyName = r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " ");
+                        AddDetailRow(panel, keyName, $"{r.Value.GetDouble():F2} detik");
                     }
                     break;
 
                 case TestTypes.StreamingTest or TestTypes.SocialMediaTest:
                     foreach (var r in root.GetProperty("results").EnumerateObject())
                     {
-                        var host = new Uri(r.Name).Host;
-                        AddDetailRow(panel, host, r.Value.GetString() ?? "-");
+                        var keyName = r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " ");
+                        AddDetailRow(panel, keyName, r.Value.GetString() ?? "-");
                     }
                     break;
 
