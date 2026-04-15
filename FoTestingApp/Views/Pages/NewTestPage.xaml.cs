@@ -84,8 +84,8 @@ public partial class NewTestPage : Page
             FormSubtitle.Text = "PENGUJIAN JARINGAN POP";
             FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.ServerNetwork;
             FormSectionTitle.Text = "Data POP";
-            NameFieldLabel.Text = "NAMA POP";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Nama POP terisi dari pilihan di atas");
+            NameFieldLabel.Text = "POP TERPILIH";
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Field ini mengikuti POP yang dipilih");
             PackageFieldLabel.Text = "PAKET JNIX";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
             PopSelectionPanel.Visibility = Visibility.Visible;
@@ -126,6 +126,7 @@ public partial class NewTestPage : Page
             PopComboBox.ItemsSource = pops;
             PopComboBox.SelectedItem = null;
             FullNameBox.Text = string.Empty;
+            NotesBox.Text = string.Empty;
 
             PopStatusText.Text = pops.Count > 0
                 ? $"{pops.Count} POP tersedia."
@@ -152,9 +153,9 @@ public partial class NewTestPage : Page
             return;
         }
 
-        FullNameBox.Text = selectedPop.Name;
+        FullNameBox.Text = selectedPop.DisplayName;
 
-        if (string.IsNullOrWhiteSpace(NotesBox.Text) && !string.IsNullOrWhiteSpace(selectedPop.Address))
+        if (!string.IsNullOrWhiteSpace(selectedPop.Address))
         {
             NotesBox.Text = $"Alamat POP: {selectedPop.Address}";
         }
@@ -191,13 +192,14 @@ public partial class NewTestPage : Page
         try
         {
             var isPopMode = _testMode == "pop";
+            var selectedPop = isPopMode ? PopComboBox.SelectedItem as PopOption : null;
             var customer = new FoCustomer
             {
                 SiteType = isPopMode ? "pop" : "customer",
-                SiteId = isPopMode ? (PopComboBox.SelectedItem as PopOption)?.SiteId : null,
-                FullName = FullNameBox.Text.Trim(),
+                SiteId = selectedPop?.SiteId,
+                FullName = isPopMode ? selectedPop?.DisplayName ?? string.Empty : FullNameBox.Text.Trim(),
                 Address = isPopMode
-                    ? (PopComboBox.SelectedItem as PopOption)?.Address ?? "-"
+                    ? selectedPop?.Address ?? "-"
                     : "-",
                 PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
                 TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
@@ -744,4 +746,3 @@ public partial class NewTestPage : Page
         _ => PackIconKind.TestTube,
     };
 }
-

@@ -131,17 +131,23 @@ public class ApiService
         SetAuthorizationHeader();
         try
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/customers/search?q={Uri.EscapeDataString(query)}&type=pop");
+            var requestUrl = $"{_baseUrl}/infrastructure/pops?per_page=1000";
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                requestUrl += $"&search={Uri.EscapeDataString(query)}";
+            }
+
+            var response = await _httpClient.GetAsync(requestUrl);
             if (response.IsSuccessStatusCode)
             {
-                var pops = await response.Content.ReadFromJsonAsync<List<FoCustomer>>(_snakeCaseOptions);
+                var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<ApiPop>>(_snakeCaseOptions);
 
-                return pops?
-                    .Where(pop => !string.IsNullOrWhiteSpace(pop.SiteId) && !string.IsNullOrWhiteSpace(pop.FullName))
+                return result?.Data?
+                    .Where(pop => !string.IsNullOrWhiteSpace(pop.Code) && !string.IsNullOrWhiteSpace(pop.Name))
                     .Select(pop => new PopOption
                     {
-                        SiteId = pop.SiteId ?? string.Empty,
-                        Name = pop.FullName,
+                        SiteId = pop.Code ?? string.Empty,
+                        Name = pop.Name ?? string.Empty,
                         Address = pop.Address,
                     })
                     .OrderBy(pop => pop.Name)
@@ -290,6 +296,19 @@ public class PopOption
     public string? Address { get; set; }
 
     public string DisplayName => string.IsNullOrWhiteSpace(SiteId) ? Name : $"{Name} ({SiteId})";
+}
+
+public class ApiPop
+{
+    public int Id { get; set; }
+    public string? Code { get; set; }
+    public string? Name { get; set; }
+    public string? Address { get; set; }
+}
+
+public class PaginatedResponse<T>
+{
+    public List<T>? Data { get; set; }
 }
 
 public class DateTimeConverter : JsonConverter<DateTime>
