@@ -69,19 +69,19 @@
 
                 <!-- Center Navigation Menu -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Button x:Name="BtnDashboard" Style="{StaticResource NavButtonActiveStyle}"
-                            Click="NavButton_Click" Tag="Dashboard">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewDashboard" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="BtnNewTest" Style="{StaticResource NavButtonStyle}"
+                    <Button x:Name="BtnNewTest" Style="{StaticResource NavButtonActiveStyle}"
                             Click="NavButton_Click" Tag="NewTest">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="TestTube" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="Pengujian Baru" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnDashboard" Style="{StaticResource NavButtonStyle}"
+                            Click="NavButton_Click" Tag="Dashboard">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="History" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Riwayat" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 

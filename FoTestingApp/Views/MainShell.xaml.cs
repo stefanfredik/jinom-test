@@ -38,8 +38,8 @@ public partial class MainShell : Window
         MouseMove += (_, _) => SessionManager.RecordActivity();
         KeyDown += (_, _) => SessionManager.RecordActivity();
 
-        // Navigate ke Dashboard sebagai halaman awal
-        NavigateTo("Dashboard");
+        // Navigate ke Pengujian Baru (NewTest) sebagai halaman awal
+        NavigateTo("NewTest");
     }
 
     private void SessionTimer_Tick(object? sender, EventArgs e)

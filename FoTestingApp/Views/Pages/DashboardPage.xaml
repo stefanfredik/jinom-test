@@ -15,10 +15,10 @@
                 <!-- Header -->
                 <Grid Margin="0,0,0,24">
                     <StackPanel>
-                        <TextBlock Text="Dashboard" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,4"/>
-                        <TextBlock Text="Ringkasan dan riwayat pengujian jaringan" FontSize="14" Foreground="{DynamicResource TextLightBrush}"/>
+                        <TextBlock Text="Riwayat Pengujian" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Data rekapitulasi dan riwayat pengujian diagnostik jaringan" FontSize="14" Foreground="{DynamicResource TextLightBrush}"/>
                     </StackPanel>
-                    <materialDesign:PackIcon Kind="ViewDashboardOutline" Width="40" Height="40" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="History" Width="40" Height="40" Foreground="#CBD5E1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                 </Grid>
 
                 <!-- Stats Cards -->
