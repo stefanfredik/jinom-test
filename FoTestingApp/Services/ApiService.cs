@@ -140,18 +140,26 @@ public class ApiService
             var response = await _httpClient.GetAsync(requestUrl);
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<ApiPop>>(_snakeCaseOptions);
+                var body = await response.Content.ReadAsStringAsync();
+                Log.Information("GetAvailablePopsAsync Success! Body: {Body}", body);
+
+                var result = JsonSerializer.Deserialize<PaginatedResponse<ApiPop>>(body, _snakeCaseOptions);
 
                 return result?.Data?
-                    .Where(pop => !string.IsNullOrWhiteSpace(pop.Code) && !string.IsNullOrWhiteSpace(pop.Name))
+                    .Where(pop => !string.IsNullOrWhiteSpace(pop.Name))
                     .Select(pop => new PopOption
                     {
-                        SiteId = pop.Code ?? string.Empty,
+                        SiteId = pop.Id.ToString(),
                         Name = pop.Name ?? string.Empty,
                         Address = pop.Address,
                     })
                     .OrderBy(pop => pop.Name)
                     .ToList() ?? new List<PopOption>();
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Log.Warning("GetAvailablePopsAsync returned non-success. URL: {Url}, Status: {Status}, Body: {Body}", requestUrl, response.StatusCode, body);
             }
         }
         catch (Exception ex)
