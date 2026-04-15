@@ -1124,19 +1124,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\fred\\.nuget\\packages\\": {}
+    "/home/homenet/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\fred\\Documents\\JinomTesting\\jinom-test\\FoTestingApp\\FoTestingApp.csproj",
+      "projectUniqueName": "/home/homenet/dev/jinom-project/jinom-test/FoTestingApp/FoTestingApp.csproj",
       "projectName": "FoTestingApp",
-      "projectPath": "C:\\Users\\fred\\Documents\\JinomTesting\\jinom-test\\FoTestingApp\\FoTestingApp.csproj",
-      "packagesPath": "C:\\Users\\fred\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\fred\\Documents\\JinomTesting\\jinom-test\\FoTestingApp\\obj\\",
+      "projectPath": "/home/homenet/dev/jinom-project/jinom-test/FoTestingApp/FoTestingApp.csproj",
+      "packagesPath": "/home/homenet/.nuget/packages/",
+      "outputPath": "/home/homenet/dev/jinom-project/jinom-test/FoTestingApp/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\fred\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/homenet/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0-windows"
@@ -1154,11 +1154,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -1216,12 +1211,9 @@
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
-          },
-          "Microsoft.WindowsDesktop.App.WPF": {
-            "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.418/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.125/PortableRuntimeIdentifierGraph.json"
       }
     }
   },

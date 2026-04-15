@@ -126,6 +126,36 @@ public class ApiService
         return new List<FoCustomer>();
     }
 
+    public async Task<List<PopOption>> GetAvailablePopsAsync(string query = "")
+    {
+        SetAuthorizationHeader();
+        try
+        {
+            var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/customers/search?q={Uri.EscapeDataString(query)}&type=pop");
+            if (response.IsSuccessStatusCode)
+            {
+                var pops = await response.Content.ReadFromJsonAsync<List<FoCustomer>>(_snakeCaseOptions);
+
+                return pops?
+                    .Where(pop => !string.IsNullOrWhiteSpace(pop.SiteId) && !string.IsNullOrWhiteSpace(pop.FullName))
+                    .Select(pop => new PopOption
+                    {
+                        SiteId = pop.SiteId ?? string.Empty,
+                        Name = pop.FullName,
+                        Address = pop.Address,
+                    })
+                    .OrderBy(pop => pop.Name)
+                    .ToList() ?? new List<PopOption>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "GetAvailablePopsAsync failed for query: {Query}", query);
+        }
+
+        return new List<PopOption>();
+    }
+
     public async Task<int> UpsertCustomerAsync(FoCustomer customer)
     {
         SetAuthorizationHeader();
@@ -251,6 +281,15 @@ public class OpenAccessUser
     public string? Name { get; set; }
     public string? Email { get; set; }
     public int? CompanyId { get; set; }
+}
+
+public class PopOption
+{
+    public string SiteId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Address { get; set; }
+
+    public string DisplayName => string.IsNullOrWhiteSpace(SiteId) ? Name : $"{Name} ({SiteId})";
 }
 
 public class DateTimeConverter : JsonConverter<DateTime>

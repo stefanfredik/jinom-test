@@ -14,6 +14,7 @@ public partial class NewTestPage : Page
 {
     private readonly ApiService _api = new();
     private int? _currentSessionId;
+    private bool _isLoadingPops;
 
     private string _testMode = "customer";
 
@@ -30,32 +31,37 @@ public partial class NewTestPage : Page
         LocationContainer.Visibility = Visibility.Visible;
     }
 
-    private void PopCard_Click(object sender, RoutedEventArgs e)
+    private async void PopCard_Click(object sender, RoutedEventArgs e)
     {
-        SelectTestMode("pop");
+        await SelectTestModeAsync("pop");
     }
 
-    private void PopCard_Click(object sender, MouseButtonEventArgs e)
+    private async void PopCard_Click(object sender, MouseButtonEventArgs e)
     {
-        SelectTestMode("pop");
+        await SelectTestModeAsync("pop");
     }
 
-    private void CpeCard_Click(object sender, RoutedEventArgs e)
+    private async void CpeCard_Click(object sender, RoutedEventArgs e)
     {
-        SelectTestMode("customer");
+        await SelectTestModeAsync("customer");
     }
 
-    private void CpeCard_Click(object sender, MouseButtonEventArgs e)
+    private async void CpeCard_Click(object sender, MouseButtonEventArgs e)
     {
-        SelectTestMode("customer");
+        await SelectTestModeAsync("customer");
     }
 
-    private void SelectTestMode(string mode)
+    private async Task SelectTestModeAsync(string mode)
     {
         _testMode = mode;
         LocationContainer.Visibility = Visibility.Collapsed;
         FormContainer.Visibility = Visibility.Visible;
         ApplyTestMode();
+
+        if (mode == "pop")
+        {
+            await LoadAvailablePopsAsync();
+        }
     }
 
     private void BackToLanding_Click(object sender, RoutedEventArgs e)
@@ -79,9 +85,11 @@ public partial class NewTestPage : Page
             FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.ServerNetwork;
             FormSectionTitle.Text = "Data POP";
             NameFieldLabel.Text = "NAMA POP";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Masukkan nama POP");
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Nama POP terisi dari pilihan di atas");
             PackageFieldLabel.Text = "PAKET JNIX";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
+            PopSelectionPanel.Visibility = Visibility.Visible;
+            FullNameBox.IsReadOnly = true;
         }
         else
         {
@@ -93,6 +101,62 @@ public partial class NewTestPage : Page
             MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Masukkan nama pelanggan");
             PackageFieldLabel.Text = "PAKET INTERNET";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
+            PopSelectionPanel.Visibility = Visibility.Collapsed;
+            FullNameBox.IsReadOnly = false;
+            PopComboBox.ItemsSource = null;
+            PopComboBox.SelectedItem = null;
+            PopStatusText.Text = string.Empty;
+        }
+    }
+
+    private async Task LoadAvailablePopsAsync()
+    {
+        if (_isLoadingPops)
+        {
+            return;
+        }
+
+        try
+        {
+            _isLoadingPops = true;
+            PopComboBox.IsEnabled = false;
+            PopStatusText.Text = "Memuat daftar POP sesuai company login...";
+
+            var pops = await _api.GetAvailablePopsAsync();
+            PopComboBox.ItemsSource = pops;
+            PopComboBox.SelectedItem = null;
+            FullNameBox.Text = string.Empty;
+
+            PopStatusText.Text = pops.Count > 0
+                ? $"{pops.Count} POP tersedia."
+                : "Tidak ada POP yang tersedia untuk company ini.";
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to load available POPs");
+            PopStatusText.Text = "Gagal memuat daftar POP.";
+            PopComboBox.ItemsSource = null;
+        }
+        finally
+        {
+            _isLoadingPops = false;
+            PopComboBox.IsEnabled = true;
+        }
+    }
+
+    private void PopComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (PopComboBox.SelectedItem is not PopOption selectedPop)
+        {
+            FullNameBox.Text = string.Empty;
+            return;
+        }
+
+        FullNameBox.Text = selectedPop.Name;
+
+        if (string.IsNullOrWhiteSpace(NotesBox.Text) && !string.IsNullOrWhiteSpace(selectedPop.Address))
+        {
+            NotesBox.Text = $"Alamat POP: {selectedPop.Address}";
         }
     }
 
@@ -130,8 +194,11 @@ public partial class NewTestPage : Page
             var customer = new FoCustomer
             {
                 SiteType = isPopMode ? "pop" : "customer",
+                SiteId = isPopMode ? (PopComboBox.SelectedItem as PopOption)?.SiteId : null,
                 FullName = FullNameBox.Text.Trim(),
-                Address = "-",
+                Address = isPopMode
+                    ? (PopComboBox.SelectedItem as PopOption)?.Address ?? "-"
+                    : "-",
                 PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
                 TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
             };
@@ -233,6 +300,12 @@ public partial class NewTestPage : Page
 
     private bool ValidateForm()
     {
+        if (_testMode == "pop" && PopComboBox.SelectedItem is not PopOption)
+        {
+            MessageBox.Show("Silakan pilih POP yang tersedia.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
         if (string.IsNullOrWhiteSpace(FullNameBox.Text) ||
             string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
         {
