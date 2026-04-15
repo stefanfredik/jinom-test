@@ -5,6 +5,7 @@ using System.Windows.Media;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
 using MaterialDesignThemes.Wpf;
+using Serilog;
 
 namespace FoTestingApp.Views.Pages;
 
@@ -20,18 +21,32 @@ public partial class DashboardPage : Page
 
     private async Task LoadSessionsAsync()
     {
-        var from = FromDatePicker.SelectedDate;
-        var to = ToDatePicker.SelectedDate;
-        var statusItem = StatusFilter.SelectedItem as ComboBoxItem;
-        var statusText = statusItem?.Content?.ToString();
-        string? status = statusText == "Semua" ? null : statusText;
+        try
+        {
+            var from = FromDatePicker.SelectedDate;
+            var to = ToDatePicker.SelectedDate;
+            var statusItem = StatusFilter.SelectedItem as ComboBoxItem;
+            var statusText = statusItem?.Content?.ToString();
+            string? status = statusText == "Semua" ? null : statusText;
 
-        var sessions = await _api.GetSessionsAsync(from, to, null, status);
-        SessionsGrid.ItemsSource = sessions;
+            Log.Information("Loading sessions with from={From}, to={To}, status={Status}", from, to, status);
 
-        TotalSessionCount.Text = sessions.Count.ToString();
-        TotalPassCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Pass).ToString();
-        TotalFailCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Fail).ToString();
+            var sessions = await _api.GetSessionsAsync(from, to, null, status);
+            Log.Information("Got {Count} sessions from API", sessions.Count);
+
+            SessionsGrid.ItemsSource = sessions;
+
+            TotalSessionCount.Text = sessions.Count.ToString();
+            TotalPassCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Pass).ToString();
+            TotalFailCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Fail).ToString();
+            
+            Log.Information("Dashboard stats updated");
+        }
+        catch (Exception ex)
+        {
+            // Log tangkapan atau tampilkan jika perlu
+            Log.Error(ex, "Error in LoadSessionsAsync");
+        }
     }
 
     private async void FilterBtn_Click(object sender, RoutedEventArgs e) =>
@@ -203,6 +218,11 @@ public partial class DashboardPage : Page
         try
         {
             var root = result.ResultData.RootElement;
+            if (root.ValueKind == JsonValueKind.String)
+            {
+                var doc = JsonDocument.Parse(root.GetString() ?? "{}");
+                root = doc.RootElement;
+            }
 
             return result.TestType switch
             {

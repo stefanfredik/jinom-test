@@ -21,6 +21,7 @@ public class ApiService
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new JsonStringEnumConverter(), new DateTimeConverter(), new NullableDateTimeConverter() }
     };
 
     public ApiService()
@@ -83,7 +84,7 @@ public class ApiService
                 return null;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>(_snakeCaseOptions);
             if (result?.User != null && result.Token != null)
             {
                 var user = new User
@@ -114,7 +115,7 @@ public class ApiService
             var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/customers/search?q={Uri.EscapeDataString(query)}&type={Uri.EscapeDataString(type)}");
             if (response.IsSuccessStatusCode)
             {
-                var customers = await response.Content.ReadFromJsonAsync<List<FoCustomer>>();
+                var customers = await response.Content.ReadFromJsonAsync<List<FoCustomer>>(_snakeCaseOptions);
                 return customers ?? new List<FoCustomer>();
             }
         }
@@ -136,7 +137,7 @@ public class ApiService
             Log.Error("UpsertCustomerAsync failed: {Status} - {Body}", response.StatusCode, body);
             throw new HttpRequestException($"Gagal menyimpan data pelanggan (HTTP {(int)response.StatusCode})");
         }
-        var savedCustomer = await response.Content.ReadFromJsonAsync<FoCustomer>();
+        var savedCustomer = await response.Content.ReadFromJsonAsync<FoCustomer>(_snakeCaseOptions);
         return savedCustomer?.Id ?? 0;
     }
 
@@ -161,7 +162,7 @@ public class ApiService
             Log.Error("CreateTestSessionAsync failed: {Status} - {Body}", response.StatusCode, body);
             throw new HttpRequestException($"Gagal membuat sesi pengujian (HTTP {(int)response.StatusCode})");
         }
-        var savedSession = await response.Content.ReadFromJsonAsync<FoTestSession>();
+        var savedSession = await response.Content.ReadFromJsonAsync<FoTestSession>(_snakeCaseOptions);
         return savedSession?.Id ?? 0;
     }
 
@@ -219,7 +220,7 @@ public class ApiService
         var response = await _httpClient.GetAsync(url);
         if (response.IsSuccessStatusCode)
         {
-            var sessions = await response.Content.ReadFromJsonAsync<List<FoTestSession>>();
+            var sessions = await response.Content.ReadFromJsonAsync<List<FoTestSession>>(_snakeCaseOptions);
             return sessions ?? new List<FoTestSession>();
         }
         return new List<FoTestSession>();
@@ -231,7 +232,7 @@ public class ApiService
         var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/results?session_id={sessionId}");
         if (response.IsSuccessStatusCode)
         {
-            var results = await response.Content.ReadFromJsonAsync<List<FoTestResult>>();
+            var results = await response.Content.ReadFromJsonAsync<List<FoTestResult>>(_snakeCaseOptions);
             return results ?? new List<FoTestResult>();
         }
         return new List<FoTestResult>();
@@ -250,4 +251,51 @@ public class OpenAccessUser
     public string? Name { get; set; }
     public string? Email { get; set; }
     public int? CompanyId { get; set; }
+}
+
+public class DateTimeConverter : JsonConverter<DateTime>
+{
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var str = reader.GetString();
+        if (str == null) return default;
+        if (DateTime.TryParse(str, out var dt)) return dt;
+        return default;
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
+}
+
+public class NullableDateTimeConverter : JsonConverter<DateTime?>
+{
+    public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var str = reader.GetString();
+        if (string.IsNullOrWhiteSpace(str)) return null;
+        if (DateTime.TryParse(str, out var dt)) return dt;
+        return null;
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
+    {
+        if (value.HasValue) writer.WriteStringValue(value.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+        else writer.WriteNullValue();
+    }
+}
+{
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var str = reader.GetString();
+        if (str == null) return default;
+        if (DateTime.TryParse(str, out var dt)) return dt;
+        return default;
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
 }

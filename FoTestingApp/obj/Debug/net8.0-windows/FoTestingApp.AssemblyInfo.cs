@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Aplikasi Pengujian dan Sertifikasi Jaringan Fiber Optik")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e8019af86ec2f1310a06ff90798b21282d0d6040")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a2a46b02118b5b91599138aa58a1bbedcd9c52e6")]
 [assembly: System.Reflection.AssemblyProductAttribute("FO Testing & Commissioning")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FoTestingApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
