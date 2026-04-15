@@ -150,7 +150,7 @@
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Account"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="#F8FAFC"/>
+                                         Background="Transparent"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
@@ -162,7 +162,7 @@
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="#F8FAFC"/>
+                                         Background="Transparent"/>
                             </StackPanel>
                         </Grid>
 
@@ -178,7 +178,7 @@
                                      VerticalContentAlignment="Top"
                                      materialDesign:TextFieldAssist.LeadingIcon="NoteTextOutline"
                                      BorderBrush="{DynamicResource BorderLightBrush}"
-                                     Background="#F8FAFC"/>
+                                     Background="Transparent"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -224,7 +224,7 @@
         </ScrollViewer>
 
         <!-- ═══ Stage 4: Progress Overlay ═══ -->
-        <Grid x:Name="ProgressContainer" Visibility="Collapsed" Background="#F8F6F6">
+        <Grid x:Name="ProgressContainer" Visibility="Collapsed" Background="{DynamicResource AppBackgroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel HorizontalAlignment="Center" MaxWidth="640" Margin="24,48,24,48" Width="640">
                     
@@ -234,29 +234,49 @@
                         <TextBlock Text="Analyzing your network performance and security" FontSize="18" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Central Progress Visualization -->
-                    <Grid Width="256" Height="256" HorizontalAlignment="Center" Margin="0,0,0,64">
-                        <!-- Outer Glow (Simulated) -->
-                        <Ellipse Fill="#1A22c55e" Margin="-32"/>
-                        
-                        <!-- Progress Ring -->
-                        <ProgressBar x:Name="MainCircularProgress" 
-                                     Style="{StaticResource MaterialDesignCircularProgressBar}" 
-                                     Value="0" Maximum="100" Width="256" Height="256" 
-                                     Foreground="{DynamicResource PrimaryBrush}" Background="#E2E8F0"/>
-                        
-                        <!-- Inner Text -->
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock x:Name="ProgressPercentText" Text="0" FontSize="64" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
-                                <TextBlock Text="%" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Bottom" Margin="4,0,0,4"/>
+                    <!-- Stepper Progress UI -->
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,48">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Step 1: Network -->
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                <Border x:Name="Step1Circle" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" Margin="0,0,0,8">
+                                    <materialDesign:PackIcon x:Name="Step1Icon" Kind="LanConnect" Foreground="White" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="Step1Text" Text="NETWORK" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="OVERALL" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Grid>
+
+                            <ProgressBar x:Name="Line1" Grid.Column="1" Value="0" Maximum="100" Height="4" VerticalAlignment="Top" Margin="0,22,0,0" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderLightBrush}" BorderThickness="0"/>
+                            
+                            <!-- Step 2: Application -->
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                <Border x:Name="Step2Circle" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="2" Margin="0,0,0,8">
+                                    <materialDesign:PackIcon x:Name="Step2Icon" Kind="Web" Foreground="{DynamicResource TextLightBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="Step2Text" Text="APPLICATION" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <ProgressBar x:Name="Line2" Grid.Column="3" Value="0" Maximum="100" Height="4" VerticalAlignment="Top" Margin="0,22,0,0" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderLightBrush}" BorderThickness="0"/>
+                            
+                            <!-- Step 3: Speedtest -->
+                            <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+                                <Border x:Name="Step3Circle" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="2" Margin="0,0,0,8">
+                                    <materialDesign:PackIcon x:Name="Step3Icon" Kind="Speedometer" Foreground="{DynamicResource TextLightBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="Step3Text" Text="BANDWIDTH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
 
                     <!-- Current Task Card -->
-                    <Border Background="White" CornerRadius="16" BorderBrush="#1A22c55e" BorderThickness="1" Margin="0,0,0,40">
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" BorderBrush="#1A22c55e" BorderThickness="1" Margin="0,0,0,40">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="{DynamicResource PrimaryColor}" Opacity="0.05"/>
                         </Border.Effect>
@@ -271,13 +291,13 @@
                                         <Ellipse Width="6" Height="6" Fill="{DynamicResource PrimaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
-                                <Border Background="#F1F5F9" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="12,4">
+                                <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="12,4">
                                     <TextBlock x:Name="TaskCountText" Text="Task 1 of 7" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
                                 </Border>
                             </Grid>
                             
                             <!-- Internal Progress bar -->
-                            <ProgressBar x:Name="SubTaskProgressBar" Value="0" Maximum="100" Height="16" materialDesign:ButtonAssist.CornerRadius="8" Foreground="{DynamicResource PrimaryBrush}" Background="#F1F5F9" Margin="0,0,0,12"/>
+                            <ProgressBar x:Name="SubTaskProgressBar" Value="0" Maximum="100" Height="16" materialDesign:ButtonAssist.CornerRadius="8" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackgroundBrush}" Margin="0,0,0,12"/>
                             
                             <Grid>
                                 <TextBlock x:Name="SubTaskDetailText" Text="Initializing diagnostic engine..." FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" FontStyle="Italic" HorizontalAlignment="Left"/>
@@ -358,6 +378,17 @@
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Pengujian Baru" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="RetryFailedBtn" Height="48" Padding="24,0" Margin="0,0,12,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="12"
+                                Background="{DynamicResource WarnYellowBrush}" BorderBrush="{DynamicResource WarnYellowBrush}" Foreground="Black"
+                                Click="RetryFailedBtn_Click" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Coba Ulang Gagal" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 

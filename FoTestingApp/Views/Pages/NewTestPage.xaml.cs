@@ -103,8 +103,20 @@ public partial class NewTestPage : Page
         FormContainer.Visibility = Visibility.Collapsed;
         ProgressContainer.Visibility = Visibility.Visible;
         DiagnosticLogsPanel.Children.Clear();
-        MainCircularProgress.Value = 0;
-        ProgressPercentText.Text = "0";
+        
+        // Reset Stepper UI
+        Line1.Value = 0; Line2.Value = 0;
+        
+        Step2Circle.Background = (Brush)FindResource("AppBackgroundBrush");
+        Step2Circle.BorderBrush = (Brush)FindResource("BorderLightBrush");
+        Step2Icon.Foreground = (Brush)FindResource("TextLightBrush");
+        Step2Text.Foreground = (Brush)FindResource("TextLightBrush");
+        
+        Step3Circle.Background = (Brush)FindResource("AppBackgroundBrush");
+        Step3Circle.BorderBrush = (Brush)FindResource("BorderLightBrush");
+        Step3Icon.Foreground = (Brush)FindResource("TextLightBrush");
+        Step3Text.Foreground = (Brush)FindResource("TextLightBrush");
+
         CurrentActivityText.Text = "Preparing Tests...";
         TaskCountText.Text = "Task 1 of 7";
         SubTaskProgressBar.Value = 0;
@@ -157,18 +169,48 @@ public partial class NewTestPage : Page
         var networkSvc = new NetworkTestService(_api, sessionId);
         var progress = new Progress<(int percent, string status)>(p =>
         {
-            MainCircularProgress.Value = p.percent;
-            ProgressPercentText.Text = p.percent.ToString();
-            
-            // Extract task count and subtask from the status string if passed in a specific format
-            // like "Task 1 of 7|Running Speedtest|Downloading..."
             var parts = p.status.Split('|');
             if (parts.Length == 3)
             {
                 TaskCountText.Text = parts[0];
                 CurrentActivityText.Text = parts[1];
                 SubTaskDetailText.Text = parts[2];
-                SubTaskProgressBar.Value = p.percent; // Keep it simple by syncing to overall percent for now
+                SubTaskProgressBar.Value = p.percent;
+
+                var taskNumStr = parts[0].Replace("Task ", "").Split(' ')[0];
+                if (int.TryParse(taskNumStr, out int taskNum))
+                {
+                    // Update Stepper UI
+                    if (taskNum <= 5) // Network
+                    {
+                        Line1.Value = (taskNum / 5.0) * 100;
+                    }
+                    else if (taskNum == 6) // Apps
+                    {
+                        Line1.Value = 100;
+                        Step2Circle.Background = (Brush)FindResource("PrimaryBrush");
+                        Step2Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
+                        Step2Icon.Foreground = Brushes.White;
+                        Step2Text.Foreground = (Brush)FindResource("PrimaryBrush");
+                        
+                        Line2.Value = p.percent == 100 ? 100 : 50; // Partial line
+                    }
+                    else if (taskNum == 7) // Bandwidth
+                    {
+                        Line1.Value = 100;
+                        Line2.Value = 100;
+
+                        Step2Circle.Background = (Brush)FindResource("PrimaryBrush");
+                        Step2Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
+                        Step2Icon.Foreground = Brushes.White;
+                        Step2Text.Foreground = (Brush)FindResource("PrimaryBrush");
+                        
+                        Step3Circle.Background = (Brush)FindResource("PrimaryBrush");
+                        Step3Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
+                        Step3Icon.Foreground = Brushes.White;
+                        Step3Text.Foreground = (Brush)FindResource("PrimaryBrush");
+                    }
+                }
             }
             else
             {
@@ -260,11 +302,123 @@ public partial class NewTestPage : Page
         }
 
         SaveReportBtn.Visibility = Visibility.Visible;
+        RetryFailedBtn.Visibility = passCount == totalCount ? Visibility.Collapsed : Visibility.Visible;
 
-        foreach (var result in results)
+        // 📂 Tambahkan Grup Akordion
+        PopulateResultsWithExpanders(results);
+    }
+
+    private async void RetryFailedBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentSessionId.HasValue && int.TryParse(PackageMbpsBox.Text, out var pkgMbps))
         {
-            ResultCardsPanel.Children.Add(BuildResultCard(result));
+            var results = await _api.GetResultsBySessionAsync(_currentSessionId.Value);
+            var failures = results.Where(r => r.Status == TestStatus.Fail).ToList();
+
+            if (!failures.Any())
+            {
+                MessageBox.Show("Tidak ada test yang gagal untuk diulang.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var confirm = MessageBox.Show($"Ditemukan {failures.Count} test yang gagal. Apakah Anda ingin mengulang pengujian jaringan?", "Konfirmasi Ulang", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            ResultsContainer.Visibility = Visibility.Collapsed;
+            ProgressContainer.Visibility = Visibility.Visible;
+            DiagnosticLogsPanel.Children.Clear();
+            SubTaskDetailText.Text = "Starting tests...";
+            CurrentActivityText.Text = "Retrying...";
+            EndTestBtnText.Text = "CANCEL";
+
+            try
+            {
+                await RunAllTestsAsync(_currentSessionId.Value, pkgMbps);
+                await ShowResultsAsync(_currentSessionId.Value);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Retry execution failed");
+                CurrentActivityText.Text = "Diagnostics Failed";
+                EndTestBtnText.Text = "TUTUP";
+            }
         }
+    }
+    private void PopulateResultsWithExpanders(List<FoTestResult> results)
+    {
+        var networkTypes = new[] { TestTypes.PingGateway, TestTypes.PingDns, TestTypes.NslookupNasional, TestTypes.NslookupInternasional, TestTypes.PingDomainLokal };
+        var appTypes = new[] { TestTypes.BrowsingTest, TestTypes.StreamingTest, TestTypes.SocialMediaTest };
+        var bandwidthTypes = new[] { TestTypes.SpeedtestFast, TestTypes.SpeedtestOokla };
+
+        var netResults = results.Where(r => networkTypes.Contains(r.TestType)).ToList();
+        var appResults = results.Where(r => appTypes.Contains(r.TestType)).ToList();
+        var bwResults = results.Where(r => bandwidthTypes.Contains(r.TestType)).ToList();
+
+        if (netResults.Any())
+            ResultCardsPanel.Children.Add(CreateExpanderGroup("Network & Routing Tests", netResults, true));
+
+        if (appResults.Any())
+            ResultCardsPanel.Children.Add(CreateExpanderGroup("Application Health", appResults, false));
+
+        if (bwResults.Any())
+            ResultCardsPanel.Children.Add(CreateExpanderGroup("Bandwidth Capacity", bwResults, false));
+    }
+
+    private Expander CreateExpanderGroup(string groupName, List<FoTestResult> groupResults, bool expandDefault)
+    {
+        var passCount = groupResults.Count(r => r.Status == TestStatus.Pass);
+        var totalCount = groupResults.Count;
+        var hasFailures = passCount < totalCount;
+
+        var headerBrush = hasFailures ? (Brush)FindResource("FailRedBrush") : (Brush)FindResource("PassGreenBrush");
+
+        var headerStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 8) };
+        headerStack.Children.Add(new TextBlock 
+        { 
+            Text = groupName, 
+            FontSize = 16, 
+            FontWeight = FontWeights.Bold,
+            Foreground = (Brush)FindResource("TextDarkBrush"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = 250 // Align badges strictly
+        });
+        
+        var badgeBorder = new Border
+        {
+            Background = hasFailures 
+                ? new SolidColorBrush(Color.FromArgb(0x15, 0xEF, 0x44, 0x44))
+                : new SolidColorBrush(Color.FromArgb(0x15, 0x22, 0xC5, 0x5E)),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(12, 4, 12, 4),
+            Margin = new Thickness(16, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        badgeBorder.Child = new TextBlock
+        {
+            Text = $"{passCount}/{totalCount} Passed",
+            FontSize = 12,
+            FontWeight = FontWeights.Bold,
+            Foreground = headerBrush
+        };
+        headerStack.Children.Add(badgeBorder);
+
+        var cardsPanel = new StackPanel { Margin = new Thickness(0, 8, 0, 16) };
+        foreach (var r in groupResults)
+        {
+            cardsPanel.Children.Add(BuildResultCard(r));
+        }
+
+        return new Expander
+        {
+            Header = headerStack,
+            Content = cardsPanel,
+            IsExpanded = hasFailures || expandDefault, // Otomatis kebuka jika gagal/network
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            BorderBrush = (Brush)FindResource("BorderLightBrush"),
+            Margin = new Thickness(0, 0, 0, 8),
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
     }
 
     private Border BuildResultCard(FoTestResult result)
@@ -517,3 +671,4 @@ public partial class NewTestPage : Page
         _ => PackIconKind.TestTube,
     };
 }
+

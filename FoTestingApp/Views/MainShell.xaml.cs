@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using FoTestingApp.Helpers;
 using FoTestingApp.Services;
 using FoTestingApp.Views.Pages;
+using MaterialDesignThemes.Wpf;
 
 namespace FoTestingApp.Views;
 
@@ -115,5 +116,37 @@ public partial class MainShell : Window
         var login = new LoginWindow();
         login.Show();
         Close();
+    }
+
+    private void BtnToggleTheme_Click(object sender, RoutedEventArgs e)
+    {
+        var paletteHelper = new MaterialDesignThemes.Wpf.PaletteHelper();
+        var theme = paletteHelper.GetTheme();
+        
+        var isCurrentlyDark = theme.GetBaseTheme() == MaterialDesignThemes.Wpf.BaseTheme.Dark;
+        theme.SetBaseTheme(isCurrentlyDark ? MaterialDesignThemes.Wpf.BaseTheme.Light : MaterialDesignThemes.Wpf.BaseTheme.Dark);
+        paletteHelper.SetTheme(theme);
+        
+        IconTheme.Kind = isCurrentlyDark ? MaterialDesignThemes.Wpf.PackIconKind.Brightness2 : MaterialDesignThemes.Wpf.PackIconKind.WeatherSunny;
+        
+        // Ensure manual custom brushes adapt dynamically
+        if (!isCurrentlyDark) // Switching to Dark
+        {
+            Application.Current.Resources["AppBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 30, 30));
+            Application.Current.Resources["CardBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
+            Application.Current.Resources["TextDarkBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 240));
+            Application.Current.Resources["TextLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(160, 160, 160));
+            Application.Current.Resources["BorderLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70, 70, 70));
+            Application.Current.Resources["PrimaryLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)60, (byte)34, (byte)197, (byte)94));
+        }
+        else // Switching to Light
+        {
+            Application.Current.Resources["AppBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(248, 246, 246));
+            Application.Current.Resources["CardBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+            Application.Current.Resources["TextDarkBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(15, 23, 42));
+            Application.Current.Resources["TextLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139));
+            Application.Current.Resources["BorderLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(226, 232, 240));
+            Application.Current.Resources["PrimaryLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 252, 231));
+        }
     }
 }

@@ -99,13 +99,22 @@
 
                 <!-- User Info & Logout -->
                 <StackPanel Grid.Row="3" Margin="16,0,16,24">
-                    <!-- Status badge -->
-                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="12,6" Margin="0,0,0,16" HorizontalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="8" Height="8" Fill="{DynamicResource PassGreenBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Sistem Online &amp; Terhubung" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryDarkBrush}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
+                        <!-- Theme Toggle -->
+                        <Button x:Name="BtnToggleTheme" Style="{StaticResource MaterialDesignIconButton}"
+                                Click="BtnToggleTheme_Click" ToolTip="Ubah Tampilan Terang/Gelap"
+                                Foreground="{DynamicResource TextLightBrush}" Width="32" Height="32" Margin="0,0,16,0">
+                            <materialDesign:PackIcon x:Name="IconTheme" Kind="Brightness2" Width="18" Height="18"/>
+                        </Button>
+                        
+                        <!-- Status badge -->
+                        <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="12,6">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="{DynamicResource PassGreenBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Sistem Online" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryDarkBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                     
                     <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource BorderLightBrush}">
                         <Grid>
