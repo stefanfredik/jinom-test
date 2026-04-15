@@ -75,16 +75,25 @@ public partial class MainShell : Window
             case "Dashboard":
                 BtnDashboard.Style = activeStyle;
                 ContentFrame.Navigate(new DashboardPage());
+                FabNewTest.Visibility = Visibility.Visible;
                 break;
             case "NewTest":
                 BtnNewTest.Style = activeStyle;
                 ContentFrame.Navigate(new NewTestPage());
+                FabNewTest.Visibility = Visibility.Collapsed;
                 break;
             case "Settings":
                 BtnSettings.Style = activeStyle;
                 ContentFrame.Navigate(new SettingsPage());
+                FabNewTest.Visibility = Visibility.Visible;
                 break;
         }
+    }
+
+    private void FabNewTest_Click(object sender, RoutedEventArgs e)
+    {
+        NavigateTo("NewTest");
+        SessionManager.RecordActivity();
     }
 
     private void LogoutButton_Click(object sender, RoutedEventArgs e)

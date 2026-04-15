@@ -285,17 +285,3 @@ public class NullableDateTimeConverter : JsonConverter<DateTime?>
         else writer.WriteNullValue();
     }
 }
-{
-    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        var str = reader.GetString();
-        if (str == null) return default;
-        if (DateTime.TryParse(str, out var dt)) return dt;
-        return default;
-    }
-
-    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
-    {
-        writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
-    }
-}

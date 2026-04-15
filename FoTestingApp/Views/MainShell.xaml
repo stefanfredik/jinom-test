@@ -9,66 +9,73 @@
         Background="{DynamicResource AppBackgroundBrush}">
 
     <Window.Resources>
-        <!-- Top Nav Button (inactive) -->
+        <!-- Sidebar Nav Button (inactive) -->
         <Style x:Key="NavButtonStyle" TargetType="Button"
                BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Foreground" Value="{DynamicResource TextLightBrush}"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="Height" Value="48"/>
             <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Margin" Value="2,0"/>
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="20"/>
+            <Setter Property="Margin" Value="12,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
-        <!-- Top Nav Button (active) -->
+        <!-- Sidebar Nav Button (active) -->
         <Style x:Key="NavButtonActiveStyle" TargetType="Button"
                BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryDarkBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PrimaryLightBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="Height" Value="48"/>
             <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Margin" Value="2,0"/>
-            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="20"/>
+            <Setter Property="Margin" Value="12,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="64"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- ═══ Top Navigation Bar ═══ -->
-        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}"
-                BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,0,0,1">
-            <Grid Margin="20,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- ═══ Sidebar Navigation ═══ -->
+        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,0,1,0">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" Opacity="0.05" BlurRadius="10" Direction="0" ShadowDepth="2"/>
+            </Border.Effect>
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
                 <!-- Logo -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="10" Padding="6">
-                        <materialDesign:PackIcon Kind="LanConnect" Foreground="{DynamicResource PrimaryBrush}" Width="24" Height="24"/>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,24,24,32">
+                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="10" Padding="8">
+                        <materialDesign:PackIcon Kind="LanConnect" Foreground="{DynamicResource PrimaryBrush}" Width="28" Height="28"/>
                     </Border>
-                    <TextBlock Text="Jinom" FontSize="20" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextDarkBrush}"/>
-                    <TextBlock Text="Test" FontSize="20" FontWeight="Light" VerticalAlignment="Center" Foreground="{DynamicResource TextLightBrush}" Margin="4,0,0,0"/>
+                    <TextBlock Text="Jinom" FontSize="24" FontWeight="Bold" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextDarkBrush}"/>
+                    <TextBlock Text="Test" FontSize="24" FontWeight="Light" VerticalAlignment="Center" Foreground="{DynamicResource TextLightBrush}" Margin="4,0,0,0"/>
                 </StackPanel>
 
-                <!-- Center Nav Items -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- Navigation Menu -->
+                <StackPanel Grid.Row="1">
                     <Button x:Name="BtnDashboard" Style="{StaticResource NavButtonActiveStyle}"
                             Click="NavButton_Click" Tag="Dashboard">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewDashboard" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <materialDesign:PackIcon Kind="ViewDashboard" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -76,7 +83,7 @@
                     <Button x:Name="BtnNewTest" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="NewTest">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="PlayCircle" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <materialDesign:PackIcon Kind="TestTube" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <TextBlock Text="Pengujian Baru" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -84,50 +91,74 @@
                     <Button x:Name="BtnSettings" Style="{StaticResource NavButtonStyle}"
                             Click="NavButton_Click" Tag="Settings" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Cog" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <materialDesign:PackIcon Kind="Cog" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <TextBlock Text="Pengaturan" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
-                <!-- Right: User Info + Logout -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- User Info & Logout -->
+                <StackPanel Grid.Row="3" Margin="16,0,16,24">
                     <!-- Status badge -->
-                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="14" Padding="10,4" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="12,6" Margin="0,0,0,16" HorizontalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Fill="{DynamicResource PassGreenBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Online" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource PassGreenBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Sistem Online &amp; Terhubung" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryDarkBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
-
-                    <!-- User avatar + name -->
-                    <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="20" Padding="4,4,12,4" VerticalAlignment="Center" Cursor="Hand">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource PrimaryBrush}">
-                                <materialDesign:PackIcon Kind="Account" Foreground="White" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    
+                    <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="12" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource BorderLightBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="{DynamicResource PrimaryBrush}">
+                                <materialDesign:PackIcon Kind="Account" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock x:Name="UserNameLabel" Text="Teknisi" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
-                                <TextBlock x:Name="UserEmailLabel" Text="-" FontSize="10" Foreground="{DynamicResource TextLightBrush}"/>
+                            
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="UserNameLabel" Text="Teknisi" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="UserEmailLabel" Text="email@jinom.net" FontSize="11" Foreground="{DynamicResource TextLightBrush}" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
-                        </StackPanel>
+                            
+                            <!-- Logout icon -->
+                            <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                                    Click="LogoutButton_Click" ToolTip="Keluar"
+                                    Width="32" Height="32" Margin="4,0,0,0"
+                                    Foreground="{DynamicResource TextLightBrush}">
+                                <materialDesign:PackIcon Kind="LogoutVariant" Width="18" Height="18"/>
+                            </Button>
+                        </Grid>
                     </Border>
-
-                    <!-- Logout button -->
-                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                            Click="LogoutButton_Click" ToolTip="Keluar"
-                            Width="36" Height="36" Margin="8,0,0,0"
-                            Foreground="{DynamicResource TextLightBrush}">
-                        <materialDesign:PackIcon Kind="Logout" Width="18" Height="18"/>
-                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ═══ Main Content Area ═══ -->
-        <Frame x:Name="ContentFrame"
-               Grid.Row="1"
-               NavigationUIVisibility="Hidden"
-               Background="{DynamicResource AppBackgroundBrush}"/>
+        <Grid Grid.Column="1" Background="{DynamicResource AppBackgroundBrush}">
+            <materialDesign:TransitioningContent>
+                <materialDesign:TransitioningContent.OpeningEffect>
+                    <materialDesign:TransitionEffect Kind="FadeIn" Duration="0:0:0.3"/>
+                </materialDesign:TransitioningContent.OpeningEffect>
+                <Frame x:Name="ContentFrame"
+                       NavigationUIVisibility="Hidden"
+                       Background="Transparent"/>
+            </materialDesign:TransitioningContent>
+
+            <!-- Floating Action Button for "New Test" to make it highly visible on every page except New Test -->
+            <Button x:Name="FabNewTest"
+                    Style="{StaticResource MaterialDesignFloatingActionButton}"
+                    Background="{DynamicResource PrimaryBrush}"
+                    BorderBrush="{DynamicResource PrimaryBrush}"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,32,32" Width="64" Height="64"
+                    Click="FabNewTest_Click" ToolTip="Mulai Pengujian Baru">
+                <materialDesign:PackIcon Kind="PlusNetwork" Width="32" Height="32" Foreground="White" />
+            </Button>
+        </Grid>
+
     </Grid>
 </Window>
