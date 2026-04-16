@@ -27,9 +27,7 @@
                     <StackPanel VerticalAlignment="Center">
                         
                         <TextBlock Text="Welcome Back" FontSize="30" FontWeight="Bold" 
-                                   Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
-                        <TextBlock Text="Enter your credentials to access the console" FontSize="16" 
-                                   Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,40"/>
+                                   Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,40"/>
 
                         <!-- Email Input -->
                         <StackPanel Margin="0,0,0,24">
@@ -49,10 +47,7 @@
 
                         <!-- Password Input -->
                         <StackPanel Margin="0,0,0,24">
-                            <Grid Margin="0,0,0,8">
-                                <TextBlock Text="Password" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Left"/>
-                                <TextBlock Text="Forgot password?" FontWeight="Medium" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Right" Cursor="Hand"/>
-                            </Grid>
+                            <TextBlock Text="Password" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Left" Margin="0,0,0,8"/>
                             
                             <PasswordBox x:Name="PasswordBox"
                                          materialDesign:HintAssist.Hint="••••••••"
@@ -101,13 +96,7 @@
 
                         <!-- Footer Links -->
                         <StackPanel Margin="0,48,0,0">
-                            <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderLightBrush}" Padding="0,32,0,0">
-                                <TextBlock HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource TextLightBrush}">
-                                    <Run Text="Don't have an account yet?" />
-                                    <Run Text=" Request Access" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Cursor="Hand"/>
-                                </TextBlock>
-                            </Border>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0" Opacity="0.5">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,0" Opacity="0.5">
                                 <TextBlock Text="SECURE INFRASTRUCTURE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,16,0"/>
                                 <TextBlock Text="ISO 27001" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,16,0"/>
                                 <TextBlock Text="SOC 2 TYPE II" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
