@@ -77,7 +77,8 @@ public static class ConfigManager
 
     public static int GetPingGatewayMaxRto() => int.TryParse(_config!["NetworkTest:PingGateway:MaxRto"], out var v) ? v : 0;
 
-    public static string GetPingDnsTarget() => _config!["NetworkTest:PingDns:Target"] ?? "103.122.65.66";
+    public static string[] GetPingDnsTargets() =>
+        _config!.GetSection("NetworkTest:PingDns:Targets").Get<string[]>() ?? ["103.122.65.66", "8.8.8.8", "1.1.1.1"];
     public static int GetPingDnsCount() => int.TryParse(_config!["NetworkTest:PingDns:Count"], out var v) ? v : 100;
     public static int GetPingDnsThresholdMs() => int.TryParse(_config!["NetworkTest:PingDns:ThresholdAvgMs"], out var v) ? v : 15;
     public static int GetPingDnsMaxRto() => int.TryParse(_config!["NetworkTest:PingDns:MaxRto"], out var v) ? v : 0;

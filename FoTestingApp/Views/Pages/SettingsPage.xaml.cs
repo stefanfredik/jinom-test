@@ -14,7 +14,7 @@ public partial class SettingsPage : Page
 
     private void LoadCurrentSettings()
     {
-        DnsTargetBox.Text = ConfigManager.GetPingDnsTarget();
+        DnsTargetBox.Text = string.Join(", ", ConfigManager.GetPingDnsTargets());
         PingGwCountBox.Text = ConfigManager.GetPingGatewayCount().ToString();
         PingDnsCountBox.Text = ConfigManager.GetPingDnsCount().ToString();
         PingLocalTargetBox.Text = string.Join(", ", ConfigManager.GetPingDomainLokalDomains());
@@ -27,6 +27,8 @@ public partial class SettingsPage : Page
     {
         try
         {
+            var dnsTargets = DnsTargetBox.Text
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var lokalDomains = PingLocalTargetBox.Text
                 .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var nasionalDomains = NslookupNasionalBox.Text
@@ -36,7 +38,7 @@ public partial class SettingsPage : Page
 
             var changes = new Dictionary<string, object>
             {
-                ["NetworkTest:PingDns:Target"] = DnsTargetBox.Text.Trim(),
+                ["NetworkTest:PingDns:Targets"] = dnsTargets,
                 ["NetworkTest:PingGateway:Count"] = int.TryParse(PingGwCountBox.Text, out var gwc) ? gwc : 100,
                 ["NetworkTest:PingDns:Count"] = int.TryParse(PingDnsCountBox.Text, out var dnsc) ? dnsc : 100,
                 ["NetworkTest:PingDomainLokal:Domains"] = lokalDomains,

@@ -56,8 +56,12 @@ public class NetworkTestService
 
         // 2. Ping DNS
         progress.Report((22, "Task 2 of 7|Ping DNS Server|Mengirim paket ICMP..."));
-        await RunPingTestAsync(resultsPanel, TestTypes.PingDns, ConfigManager.GetPingDnsTarget(),
-            ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs(), ConfigManager.GetPingDnsMaxRto());
+        var dnsTargets = ConfigManager.GetPingDnsTargets();
+        foreach (var target in dnsTargets)
+        {
+            await RunPingTestAsync(resultsPanel, TestTypes.PingDns, target,
+                ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs(), ConfigManager.GetPingDnsMaxRto());
+        }
         progress.Report((40, "Task 2 of 7|Ping DNS Server|Selesai"));
 
         // 3. NSLookup Nasional
@@ -105,32 +109,27 @@ public class NetworkTestService
         var latencies = new List<long>();
         var rtoCount = 0;
 
-        await Task.Run(() =>
+        using var pingSvc = new Ping();
+        for (var i = 0; i < count; i++)
         {
-            for (var i = 0; i < count; i++)
+            try
             {
-                try
+                var reply = await pingSvc.SendPingAsync(target, 2000);
+                if (reply.Status == IPStatus.Success)
                 {
-                    using var pingSvc = new Ping();
-                    var reply = pingSvc.Send(target, 2000);
-                    if (reply.Status == IPStatus.Success)
-                    {
-                        latencies.Add(reply.RoundtripTime);
-                    }
-                    else
-                    {
-                        rtoCount++;
-                    }
+                    latencies.Add(reply.RoundtripTime);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Log.Warning(ex, "Ping error to {Target}", target);
                     rtoCount++;
                 }
-
-                Thread.Sleep(500); // Harus dikasih jeda sama seperti cmd Windows agar target tidak menganggapnya DDOS/Flood
             }
-        });
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Ping error to {Target}", target);
+                rtoCount++;
+            }
+        }
 
         var avg = latencies.Count > 0 ? (long)latencies.Average() : 9999;
         var max = latencies.Count > 0 ? latencies.Max() : 9999;
