@@ -15,6 +15,7 @@ public partial class NewTestPage : Page
     private readonly ApiService _api = new();
     private int? _currentSessionId;
     private bool _isLoadingPops;
+    private bool _isLoadingCustomers;
 
     private string _testMode = "customer";
 
@@ -89,6 +90,7 @@ public partial class NewTestPage : Page
             PackageFieldLabel.Text = "PAKET JNIX";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
             PopSelectionPanel.Visibility = Visibility.Visible;
+            CustomerSelectionPanel.Visibility = Visibility.Collapsed;
             FullNameBox.IsReadOnly = true;
         }
         else
@@ -102,10 +104,13 @@ public partial class NewTestPage : Page
             PackageFieldLabel.Text = "PAKET INTERNET";
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
             PopSelectionPanel.Visibility = Visibility.Collapsed;
+            CustomerSelectionPanel.Visibility = Visibility.Visible;
             FullNameBox.IsReadOnly = false;
             PopComboBox.ItemsSource = null;
             PopComboBox.SelectedItem = null;
             PopStatusText.Text = string.Empty;
+
+            _ = LoadAvailableCustomersAsync();
         }
     }
 
@@ -158,6 +163,62 @@ public partial class NewTestPage : Page
         if (!string.IsNullOrWhiteSpace(selectedPop.Address))
         {
             NotesBox.Text = $"Alamat POP: {selectedPop.Address}";
+        }
+    }
+
+    private async Task LoadAvailableCustomersAsync(string query = "")
+    {
+        if (_isLoadingCustomers) return;
+
+        try
+        {
+            _isLoadingCustomers = true;
+            CustomerStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar pelanggan..." : "Mencari pelanggan...";
+            
+            var customers = await _api.SearchCustomersAsync(query);
+            CustomerComboBox.ItemsSource = customers;
+            
+            CustomerStatusText.Text = customers.Count > 0 
+                ? $"{customers.Count} pelanggan ditemukan." 
+                : "Pelanggan tidak ditemukan.";
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to load customers");
+            CustomerStatusText.Text = "Gagal memuat pelanggan.";
+        }
+        finally
+        {
+            _isLoadingCustomers = false;
+        }
+    }
+
+    private void CustomerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CustomerComboBox.SelectedItem is not FoCustomer selectedCustomer)
+        {
+            return;
+        }
+
+        FullNameBox.Text = selectedCustomer.FullName;
+        PackageMbpsBox.Text = selectedCustomer.PackageMbps > 0 ? selectedCustomer.PackageMbps.ToString() : "";
+        if (!string.IsNullOrWhiteSpace(selectedCustomer.Address))
+        {
+            NotesBox.Text = $"Alamat: {selectedCustomer.Address}";
+        }
+    }
+
+    private async void CustomerComboBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is ComboBox cb)
+        {
+            if (cb.IsDropDownOpen)
+            {
+                if (cb.SelectedItem == null)
+                {
+                    await LoadAvailableCustomersAsync(cb.Text);
+                }
+            }
         }
     }
 

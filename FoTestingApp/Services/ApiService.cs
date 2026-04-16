@@ -112,11 +112,30 @@ public class ApiService
         SetAuthorizationHeader();
         try
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/reseller-certification/fo-test/customers/search?q={Uri.EscapeDataString(query)}&type={Uri.EscapeDataString(type)}");
+            var requestUrl = $"{_baseUrl}/infrastructure/subscribers?per_page=50";
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                requestUrl += $"&search={Uri.EscapeDataString(query)}";
+            }
+
+            var response = await _httpClient.GetAsync(requestUrl);
             if (response.IsSuccessStatusCode)
             {
-                var customers = await response.Content.ReadFromJsonAsync<List<FoCustomer>>(_snakeCaseOptions);
-                return customers ?? new List<FoCustomer>();
+                var body = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<PaginatedResponse<ApiSubscriber>>(body, _snakeCaseOptions);
+
+                return result?.Data?
+                    .Select(sub => new FoCustomer
+                    {
+                        SiteType = "customer",
+                        SiteId = sub.NomorLayanan,
+                        FullName = sub.Nama ?? string.Empty,
+                        Address = sub.Alamat ?? string.Empty,
+                        PackageMbps = ParseMbps(sub.Paket),
+                        PackageName = sub.Paket,
+                        Email = sub.Email
+                    })
+                    .ToList() ?? new List<FoCustomer>();
             }
         }
         catch (Exception ex)
@@ -124,6 +143,14 @@ public class ApiService
             Log.Error(ex, "SearchCustomersAsync failed for query: {Query}", query);
         }
         return new List<FoCustomer>();
+    }
+
+    private static int ParseMbps(string? paket)
+    {
+        if (string.IsNullOrWhiteSpace(paket)) return 0;
+        var match = System.Text.RegularExpressions.Regex.Match(paket, @"(\d+)\s*(m|mb|mbps)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (match.Success && int.TryParse(match.Groups[1].Value, out int mbps)) return mbps;
+        return 0;
     }
 
     public async Task<List<PopOption>> GetAvailablePopsAsync(string query = "")
@@ -312,6 +339,16 @@ public class ApiPop
     public string? Code { get; set; }
     public string? Name { get; set; }
     public string? Address { get; set; }
+}
+
+public class ApiSubscriber
+{
+    public int Id { get; set; }
+    public string? NomorLayanan { get; set; }
+    public string? Nama { get; set; }
+    public string? Email { get; set; }
+    public string? Alamat { get; set; }
+    public string? Paket { get; set; }
 }
 
 public class PaginatedResponse<T>

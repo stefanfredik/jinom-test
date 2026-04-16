@@ -153,6 +153,19 @@
                                     <TextBlock x:Name="PopStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
                                 </StackPanel>
 
+                                <StackPanel x:Name="CustomerSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
+                                    <TextBlock Text="PILIH PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                    <ComboBox x:Name="CustomerComboBox"
+                                              IsEditable="True"
+                                              TextBoxBase.TextChanged="CustomerComboBox_TextChanged"
+                                              Height="48"
+                                              FontSize="14"
+                                              DisplayMemberPath="DisplayName"
+                                              SelectionChanged="CustomerComboBox_SelectionChanged"
+                                              HorizontalContentAlignment="Stretch"/>
+                                    <TextBlock x:Name="CustomerStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
+                                </StackPanel>
+
                                 <TextBlock x:Name="NameFieldLabel" Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
                                 <TextBox x:Name="FullNameBox"
                                          materialDesign:HintAssist.Hint="Masukkan nama"
