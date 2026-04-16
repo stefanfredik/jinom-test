@@ -50,24 +50,24 @@ public class NetworkTestService
         if (!string.IsNullOrEmpty(gwTarget))
         {
             await RunPingTestAsync(resultsPanel, TestTypes.PingGateway, gwTarget,
-                ConfigManager.GetPingGatewayCount(), ConfigManager.GetPingGatewayThresholdMs());
+                ConfigManager.GetPingGatewayCount(), ConfigManager.GetPingGatewayThresholdMs(), ConfigManager.GetPingGatewayMaxRto());
         }
         progress.Report((20, "Task 1 of 7|Ping Gateway ISP|Selesai"));
 
         // 2. Ping DNS
         progress.Report((22, "Task 2 of 7|Ping DNS Server|Mengirim paket ICMP..."));
         await RunPingTestAsync(resultsPanel, TestTypes.PingDns, ConfigManager.GetPingDnsTarget(),
-            ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs());
+            ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs(), ConfigManager.GetPingDnsMaxRto());
         progress.Report((40, "Task 2 of 7|Ping DNS Server|Selesai"));
 
         // 3. NSLookup Nasional
         progress.Report((42, "Task 3 of 7|NSLookup Nasional|Resolving DNS..."));
-        await RunNslookupAsync(resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains());
+        await RunNslookupAsync(resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains(), ConfigManager.GetNslookupNasionalTimeoutSeconds());
         progress.Report((55, "Task 3 of 7|NSLookup Nasional|Selesai"));
 
         // 4. NSLookup Internasional
         progress.Report((57, "Task 4 of 7|NSLookup Internasional|Resolving DNS..."));
-        await RunNslookupAsync(resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains());
+        await RunNslookupAsync(resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains(), ConfigManager.GetNslookupInternasionalTimeoutSeconds());
         progress.Report((65, "Task 4 of 7|NSLookup Internasional|Selesai"));
 
         // 5. Ping Domain Lokal
@@ -76,7 +76,7 @@ public class NetworkTestService
         foreach (var domain in localDomains)
         {
             await RunPingTestAsync(resultsPanel, TestTypes.PingDomainLokal, domain,
-                ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingGatewayThresholdMs());
+                ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingDomainLokalThresholdMs(), ConfigManager.GetPingDomainLokalMaxRto());
         }
         progress.Report((80, "Task 5 of 7|Ping Domain Lokal|Selesai"));
 
@@ -99,42 +99,47 @@ public class NetworkTestService
 
     // ── Ping Test ──────────────────────────────────────────────────────────────
 
-    private async Task RunPingTestAsync(StackPanel panel, string testType, string target, int count, int thresholdMs)
+    private async Task RunPingTestAsync(StackPanel panel, string testType, string target, int count, int thresholdMs, int maxRto)
     {
         _totalCount++;
-        var pingSvc = new Ping();
         var latencies = new List<long>();
         var rtoCount = 0;
 
-        for (var i = 0; i < count; i++)
+        await Task.Run(() =>
         {
-            try
+            for (var i = 0; i < count; i++)
             {
-                var reply = await pingSvc.SendPingAsync(target, 2000);
-                if (reply.Status == IPStatus.Success)
+                try
                 {
-                    latencies.Add(reply.RoundtripTime);
+                    using var pingSvc = new Ping();
+                    var reply = pingSvc.Send(target, 2000);
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        latencies.Add(reply.RoundtripTime);
+                    }
+                    else
+                    {
+                        rtoCount++;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
+                    Log.Warning(ex, "Ping error to {Target}", target);
                     rtoCount++;
                 }
+
+                Thread.Sleep(500); // Harus dikasih jeda sama seperti cmd Windows agar target tidak menganggapnya DDOS/Flood
             }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Ping error to {Target}", target);
-                rtoCount++;
-            }
-        }
+        });
 
         var avg = latencies.Count > 0 ? (long)latencies.Average() : 9999;
         var max = latencies.Count > 0 ? latencies.Max() : 9999;
         var min = latencies.Count > 0 ? latencies.Min() : 9999;
-        var status = avg <= thresholdMs && rtoCount == 0 ? TestStatus.Pass : TestStatus.Fail;
+        var status = avg <= thresholdMs && rtoCount <= maxRto ? TestStatus.Pass : TestStatus.Fail;
 
         if (status == TestStatus.Pass) { _passCount++; }
 
-        var resultData = new { ping_count = count, avg_ms = avg, max_ms = max, min_ms = min, rto = rtoCount, threshold_ms = thresholdMs };
+        var resultData = new { ping_count = count, avg_ms = avg, max_ms = max, min_ms = min, rto = rtoCount, threshold_ms = thresholdMs, max_rto = maxRto };
 
         // Simpan ke API
         try
@@ -160,7 +165,7 @@ public class NetworkTestService
 
     // ── NSLookup Test ───────────────────────────────────────────────────────────
 
-    private async Task RunNslookupAsync(StackPanel panel, string testType, string[] domains)
+    private async Task RunNslookupAsync(StackPanel panel, string testType, string[] domains, int timeoutSeconds)
     {
         _totalCount++;
         var domainResults = new Dictionary<string, string>();
@@ -169,8 +174,12 @@ public class NetworkTestService
         {
             try
             {
-                var addresses = await Dns.GetHostAddressesAsync(domain);
+                var addresses = await Dns.GetHostAddressesAsync(domain).WaitAsync(TimeSpan.FromSeconds(timeoutSeconds));
                 domainResults[domain] = addresses.Length > 0 ? "Resolved" : "Failed";
+            }
+            catch (TimeoutException)
+            {
+                domainResults[domain] = "Timeout";
             }
             catch
             {

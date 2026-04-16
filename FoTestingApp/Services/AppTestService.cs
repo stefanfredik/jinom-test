@@ -18,7 +18,7 @@ public class AppTestService
     private readonly int _sessionId;
     private static readonly HttpClient _client = new(new HttpClientHandler { AllowAutoRedirect = true })
     {
-        Timeout = TimeSpan.FromSeconds(15),
+        Timeout = TimeSpan.FromSeconds(60)
     };
 
     public AppTestService(ApiService api, int sessionId)
@@ -40,7 +40,7 @@ public class AppTestService
 
         foreach (var url in browsingUrls)
         {
-            var loadTime = await MeasureLoadTimeAsync(url);
+            var loadTime = await MeasureLoadTimeAsync(url, thresholdSec);
             browsingResults[url] = loadTime;
         }
 
@@ -66,7 +66,8 @@ public class AppTestService
         // Streaming
         total++;
         var streamingUrls = ConfigManager.GetStreamingUrls();
-        var streamingResults = await SimulateStreamingAsync(streamingUrls);
+        var streamingThreshold = ConfigManager.GetStreamingThresholdSeconds();
+        var streamingResults = await SimulateStreamingAsync(streamingUrls, streamingThreshold);
         var streamingPass = streamingResults.Values.All(v => !v.StartsWith("Failed") && !v.StartsWith("Error"));
         if (streamingPass) { pass++; }
 
@@ -88,7 +89,8 @@ public class AppTestService
         // Social Media
         total++;
         var socialUrls = ConfigManager.GetSocialMediaUrls();
-        var socialResults = await CheckAccessibilityAsync(socialUrls);
+        var socialThreshold = ConfigManager.GetSocialMediaThresholdSeconds();
+        var socialResults = await CheckAccessibilityAsync(socialUrls, socialThreshold);
         var socialPass = socialResults.Values.All(v => v == "Loaded");
         if (socialPass) { pass++; }
 
@@ -110,12 +112,13 @@ public class AppTestService
         return (pass, total);
     }
 
-    private async Task<double> MeasureLoadTimeAsync(string url)
+    private async Task<double> MeasureLoadTimeAsync(string url, int timeoutSec)
     {
         try
         {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
             var start = DateTime.UtcNow;
-            var response = await _client.GetAsync(url);
+            var response = await _client.GetAsync(url, cts.Token);
             var elapsed = (DateTime.UtcNow - start).TotalSeconds;
             return response.IsSuccessStatusCode ? elapsed : -1;
         }
@@ -125,7 +128,7 @@ public class AppTestService
         }
     }
 
-    private async Task<Dictionary<string, string>> SimulateStreamingAsync(string[] urls)
+    private async Task<Dictionary<string, string>> SimulateStreamingAsync(string[] urls, int timeoutSec)
     {
         var results = new Dictionary<string, string>();
         
@@ -134,12 +137,14 @@ public class AppTestService
         {
             try
             {
-                var response = await _client.GetAsync(url);
-                results[url] = response.IsSuccessStatusCode ? "Akses Web OK" : "Failed";
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
+                var response = await _client.GetAsync(url, cts.Token);
+                results[url] = response.IsSuccessStatusCode ? "Akses Web OK" : $"Failed ({(int)response.StatusCode})";
             }
-            catch
+            catch (Exception ex)
             {
                 results[url] = "Failed (Timeout)";
+                Log.Warning(ex, "Streaming main site access error reaching {Url}", url);
             }
         }
 
@@ -195,19 +200,21 @@ public class AppTestService
         return results;
     }
 
-    private async Task<Dictionary<string, string>> CheckAccessibilityAsync(string[] urls)
+    private async Task<Dictionary<string, string>> CheckAccessibilityAsync(string[] urls, int timeoutSec)
     {
         var results = new Dictionary<string, string>();
         foreach (var url in urls)
         {
             try
             {
-                var response = await _client.GetAsync(url);
-                results[url] = response.IsSuccessStatusCode ? "Loaded" : "Failed";
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
+                var response = await _client.GetAsync(url, cts.Token);
+                results[url] = response.IsSuccessStatusCode ? "Loaded" : $"Failed ({(int)response.StatusCode})";
             }
-            catch
+            catch (Exception ex)
             {
-                results[url] = "Failed";
+                results[url] = "Failed (Timeout)";
+                Log.Warning(ex, "AppTest error reaching {Url}", url);
             }
         }
 

@@ -81,7 +81,7 @@ public partial class NewTestPage : Page
     {
         if (_testMode == "pop")
         {
-            FormTitle.Text = "POP Network Test";
+            FormTitle.Text = "Pengujian di POP";
             FormSubtitle.Text = "PENGUJIAN JARINGAN POP";
             FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.ServerNetwork;
             FormSectionTitle.Text = "Data POP";
@@ -95,7 +95,7 @@ public partial class NewTestPage : Page
         }
         else
         {
-            FormTitle.Text = "Customer Network Test";
+            FormTitle.Text = "Pengujian Kualitas Jaringan di Pelanggan";
             FormSubtitle.Text = "PENGUJIAN JARINGAN CPE";
             FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountPlus;
             FormSectionTitle.Text = "Data Pelanggan";
@@ -248,7 +248,7 @@ public partial class NewTestPage : Page
         SubTaskProgressBar.Value = 0;
         SubTaskDetailText.Text = "Initializing diagnostic engine...";
         SaveReportBtn.Visibility = Visibility.Collapsed;
-        EndTestBtnText.Text = "CANCEL DIAGNOSTICS";
+        EndTestBtnText.Text = "Batal";
 
         try
         {

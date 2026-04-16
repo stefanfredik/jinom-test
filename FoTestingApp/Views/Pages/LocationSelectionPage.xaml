@@ -26,67 +26,63 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- POP Testing Card -->
-                    <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" 
+                    <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" 
                             BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" ClipToBounds="True">
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="Black" Opacity="0.05" />
+                            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="Black" Opacity="0.05" />
                         </Border.Effect>
-                        <StackPanel>
-                            <!-- Image Holder -->
-                            <Grid Height="200" Background="#E2E8F0">
-                                <!-- Simulated Image -->
-                                <materialDesign:PackIcon Kind="Hub" Foreground="White" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="16" />
-                            </Grid>
+                        <Grid Margin="24">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
                             
-                            <!-- Card Content -->
-                            <StackPanel Margin="24">
-                                <TextBlock Text="POP Testing" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8" />
-                                <TextBlock Text="Analyze backbone performance, latency, and throughput at regional Point of Presence locations." FontSize="14" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" Margin="0,0,0,24" />
-                                
-                                <Border BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
-                                    <Grid>
-                                        <TextBlock Text="INFRASTRUCTURE FOCUS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" />
-                                        <Button x:Name="BtnSelectPop" Content="Select POP" Click="BtnSelectPop_Click" HorizontalAlignment="Right" Height="40" 
-                                                Style="{StaticResource MaterialDesignRaisedButton}" 
-                                                materialDesign:ButtonAssist.CornerRadius="8" 
-                                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" 
-                                                Foreground="White" FontWeight="Bold" />
-                                    </Grid>
-                                </Border>
+                            <Border Grid.Row="0" Background="#EEF2FF" CornerRadius="12" Width="56" Height="56" HorizontalAlignment="Left" Margin="0,0,0,16">
+                                <materialDesign:PackIcon Kind="ServerNetwork" Foreground="#4F46E5" Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Row="1">
+                                <TextBlock Text="POP Testing" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8" />
+                                <TextBlock Text="Analyze backbone performance, latency, and throughput at regional Point of Presence locations." FontSize="14" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" Margin="0,0,0,24" LineHeight="20" />
                             </StackPanel>
-                        </StackPanel>
+                            
+                            <Button Grid.Row="2" x:Name="BtnSelectPop" Content="Select POP" Click="BtnSelectPop_Click" 
+                                    Height="48" Style="{StaticResource MaterialDesignRaisedButton}" 
+                                    materialDesign:ButtonAssist.CornerRadius="8" 
+                                    Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" 
+                                    Foreground="White" FontWeight="Bold" />
+                        </Grid>
                     </Border>
 
                     <!-- Customer Testing Card -->
-                    <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" 
+                    <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" 
                             BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" ClipToBounds="True">
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="Black" Opacity="0.05" />
+                            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="Black" Opacity="0.05" />
                         </Border.Effect>
-                        <StackPanel>
-                            <!-- Image Holder -->
-                            <Grid Height="200" Background="#E2E8F0">
-                                <!-- Simulated Image -->
-                                <materialDesign:PackIcon Kind="RouterWireless" Foreground="White" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="16" />
-                            </Grid>
+                        <Grid Margin="24">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
                             
-                            <!-- Card Content -->
-                            <StackPanel Margin="24">
-                                <TextBlock Text="Customer Testing" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8" />
-                                <TextBlock Text="Measure true end-user experience, local Wi-Fi stability, and last-mile connectivity metrics." FontSize="14" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" Margin="0,0,0,24" />
-                                
-                                <Border BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
-                                    <Grid>
-                                        <TextBlock Text="EDGE PERFORMANCE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" />
-                                        <Button x:Name="BtnSelectCustomer" Content="Select Customer" Click="BtnSelectCustomer_Click" HorizontalAlignment="Right" Height="40"
-                                                Style="{StaticResource MaterialDesignRaisedButton}" 
-                                                materialDesign:ButtonAssist.CornerRadius="8" 
-                                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" 
-                                                Foreground="White" FontWeight="Bold" />
-                                    </Grid>
-                                </Border>
+                            <Border Grid.Row="0" Background="#ECFDF5" CornerRadius="12" Width="56" Height="56" HorizontalAlignment="Left" Margin="0,0,0,16">
+                                <materialDesign:PackIcon Kind="RouterWireless" Foreground="#10B981" Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Row="1">
+                                <TextBlock Text="Customer Testing" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8" />
+                                <TextBlock Text="Measure true end-user experience, local Wi-Fi stability, and last-mile connectivity metrics." FontSize="14" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" Margin="0,0,0,24" LineHeight="20" />
                             </StackPanel>
-                        </StackPanel>
+                            
+                            <Button Grid.Row="2" x:Name="BtnSelectCustomer" Content="Select Customer" Click="BtnSelectCustomer_Click" 
+                                    Height="48" Style="{StaticResource MaterialDesignRaisedButton}" 
+                                    materialDesign:ButtonAssist.CornerRadius="8" 
+                                    Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" 
+                                    Foreground="White" FontWeight="Bold" />
+                        </Grid>
                     </Border>
                 </Grid>
 

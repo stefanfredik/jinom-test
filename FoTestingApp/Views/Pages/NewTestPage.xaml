@@ -10,8 +10,8 @@
         <Grid x:Name="LandingContainer" Visibility="Visible">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <!-- Title -->
-                <TextBlock Text="Network Diagnostic" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                <TextBlock Text="Mulai pengujian jaringan fiber optik" FontSize="16" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,48"/>
+                <TextBlock Text="Jinom Testing" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Mulai pengujian jaringan" FontSize="16" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,48"/>
 
                 <!-- Big Circular Start Button -->
                 <Grid HorizontalAlignment="Center" Margin="0,0,0,48">
@@ -72,7 +72,7 @@
                             </Border>
                             <TextBlock Text="POP" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                             <TextBlock Text="Point of Presence" FontSize="13" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                            <TextBlock Text="Pengujian di sisi infrastruktur backbone jaringan" FontSize="12" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,20"/>
+                            <TextBlock Text="Pengujian di sisi POP" FontSize="12" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,20"/>
                             <Button Content="Pilih POP" Click="PopCard_Click"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
                                     materialDesign:ButtonAssist.CornerRadius="8"
@@ -145,11 +145,17 @@
                                 <StackPanel x:Name="PopSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
                                     <TextBlock Text="PILIH POP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
                                     <ComboBox x:Name="PopComboBox"
-                                              Height="48"
-                                              FontSize="14"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              materialDesign:HintAssist.Hint="Pilih POP (Point of Presence)"
+                                              materialDesign:HintAssist.IsFloating="False"
+                                              materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
+                                              Height="48" FontSize="14"
                                               DisplayMemberPath="DisplayName"
                                               SelectionChanged="PopComboBox_SelectionChanged"
-                                              HorizontalContentAlignment="Stretch"/>
+                                              HorizontalContentAlignment="Stretch"
+                                              VerticalContentAlignment="Center"
+                                              BorderBrush="{DynamicResource BorderLightBrush}"
+                                              Background="Transparent" />
                                     <TextBlock x:Name="PopStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
                                 </StackPanel>
 
@@ -158,11 +164,17 @@
                                     <ComboBox x:Name="CustomerComboBox"
                                               IsEditable="True"
                                               TextBoxBase.TextChanged="CustomerComboBox_TextChanged"
-                                              Height="48"
-                                              FontSize="14"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
+                                              materialDesign:HintAssist.IsFloating="False"
+                                              materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
+                                              Height="48" FontSize="14"
                                               DisplayMemberPath="DisplayName"
                                               SelectionChanged="CustomerComboBox_SelectionChanged"
-                                              HorizontalContentAlignment="Stretch"/>
+                                              HorizontalContentAlignment="Stretch"
+                                              VerticalContentAlignment="Center"
+                                              BorderBrush="{DynamicResource BorderLightBrush}"
+                                              Background="Transparent" />
                                     <TextBlock x:Name="CustomerStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
                                 </StackPanel>
 
@@ -254,8 +266,8 @@
                     
                     <!-- Title Section -->
                     <StackPanel HorizontalAlignment="Center" Margin="0,0,0,48">
-                        <TextBlock Text="Testing in Progress" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                        <TextBlock Text="Analyzing your network performance and security" FontSize="18" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Pengujian sedang berjalan" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                        <TextBlock Text="Menganalisis kinerja dan keamanan jaringan Anda" FontSize="18" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Stepper Progress UI -->
