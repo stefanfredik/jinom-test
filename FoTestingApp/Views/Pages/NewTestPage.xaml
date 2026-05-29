@@ -140,44 +140,133 @@
                                 <ColumnDefinition Width="24"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/> <!-- Row 0: Search Dropdowns (Full Width) -->
+                                <RowDefinition Height="Auto"/> <!-- Row 1: Selected Details Card (Full Width) -->
+                                <RowDefinition Height="Auto"/> <!-- Row 2: Name (Left) & Package (Right) -->
+                                <RowDefinition Height="Auto"/> <!-- Row 3: Address (Full Width) -->
+                                <RowDefinition Height="Auto"/> <!-- Row 4: Notes (Full Width) -->
+                            </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Column="0">
-                                <StackPanel x:Name="PopSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
-                                    <TextBlock Text="PILIH POP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                                    <ComboBox x:Name="PopComboBox"
-                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                              materialDesign:HintAssist.Hint="Pilih POP (Point of Presence)"
-                                              materialDesign:HintAssist.IsFloating="False"
-                                              materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
-                                              Height="48" FontSize="14"
-                                              DisplayMemberPath="DisplayName"
-                                              SelectionChanged="PopComboBox_SelectionChanged"
-                                              HorizontalContentAlignment="Stretch"
-                                              VerticalContentAlignment="Center"
-                                              BorderBrush="{DynamicResource BorderLightBrush}"
-                                              Background="Transparent" />
-                                    <TextBlock x:Name="PopStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
-                                </StackPanel>
+                            <!-- Row 0: Search/Select ComboBoxes (Spans both columns) -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="PopSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
+                                <TextBlock Text="PILIH POP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                <ComboBox x:Name="PopComboBox"
+                                          IsEditable="True"
+                                          TextSearch.TextPath="DisplayName"
+                                          TextBoxBase.TextChanged="PopComboBox_TextChanged"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                          materialDesign:HintAssist.Hint="Ketik untuk mencari POP..."
+                                          materialDesign:HintAssist.IsFloating="False"
+                                          materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
+                                          Height="48" FontSize="14"
+                                          SelectionChanged="PopComboBox_SelectionChanged"
+                                          HorizontalContentAlignment="Stretch"
+                                          VerticalContentAlignment="Center"
+                                          BorderBrush="{DynamicResource BorderLightBrush}"
+                                          Background="Transparent">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon Kind="ServerNetwork" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                                                    <TextBlock Text="{Binding Address}" FontSize="11" Foreground="{DynamicResource TextLightBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock x:Name="PopStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
+                            </StackPanel>
 
-                                <StackPanel x:Name="CustomerSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
-                                    <TextBlock Text="PILIH PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                                    <ComboBox x:Name="CustomerComboBox"
-                                              IsEditable="True"
-                                              TextBoxBase.TextChanged="CustomerComboBox_TextChanged"
-                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                              materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
-                                              materialDesign:HintAssist.IsFloating="False"
-                                              materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
-                                              Height="48" FontSize="14"
-                                              DisplayMemberPath="DisplayName"
-                                              SelectionChanged="CustomerComboBox_SelectionChanged"
-                                              HorizontalContentAlignment="Stretch"
-                                              VerticalContentAlignment="Center"
-                                              BorderBrush="{DynamicResource BorderLightBrush}"
-                                              Background="Transparent" />
-                                    <TextBlock x:Name="CustomerStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
-                                </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="CustomerSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
+                                <TextBlock Text="PILIH PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                <ComboBox x:Name="CustomerComboBox"
+                                          IsEditable="True"
+                                          TextSearch.TextPath="DisplayName"
+                                          TextBoxBase.TextChanged="CustomerComboBox_TextChanged"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                          materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
+                                          materialDesign:HintAssist.IsFloating="False"
+                                          materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
+                                          Height="48" FontSize="14"
+                                          SelectionChanged="CustomerComboBox_SelectionChanged"
+                                          HorizontalContentAlignment="Stretch"
+                                          VerticalContentAlignment="Center"
+                                          BorderBrush="{DynamicResource BorderLightBrush}"
+                                          Background="Transparent">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,4">
+                                                 <Grid.ColumnDefinitions>
+                                                     <ColumnDefinition Width="Auto"/>
+                                                     <ColumnDefinition Width="*"/>
+                                                 </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon Kind="Account" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding FullName}" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                                                    <TextBlock Text="{Binding Address}" FontSize="11" Foreground="{DynamicResource TextLightBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock x:Name="CustomerStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
+                            </StackPanel>
 
+                            <!-- Row 1: Selected Details Card (Read-only) -->
+                            <Border x:Name="SelectedDetailsCard" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                    Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="20" Margin="0,0,0,16"
+                                    BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Visibility="Collapsed">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="Black" Opacity="0.04"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Icon Circle -->
+                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource PrimaryLightBrush}" VerticalAlignment="Center" Margin="0,0,16,0">
+                                        <materialDesign:PackIcon x:Name="DetailsCardIcon" Kind="CheckCircle" Width="24" Height="24" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <!-- Details Content -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <!-- Header Row: Name & Badges -->
+                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock x:Name="DetailsNameText" Text="Nama" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            
+                                            <Border x:Name="DetailsSiteIdBadge" Background="{DynamicResource PrimaryLightBrush}" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                <TextBlock x:Name="DetailsSiteIdText" Text="SITE-ID" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                                            </Border>
+                                            
+                                            <Border x:Name="DetailsPackageBadge" Background="#F1F5F9" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                <TextBlock x:Name="DetailsPackageText" Text="100 Mbps" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
+                                            </Border>
+                                        </WrapPanel>
+                                        
+                                        <!-- Address Row -->
+                                        <Grid x:Name="DetailsAddressPanel">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon Kind="MapMarker" Width="16" Height="16" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Top" Margin="0,2,6,0" Grid.Column="0"/>
+                                            <TextBlock x:Name="DetailsAddressText" Text="Alamat" FontSize="13" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" Grid.Column="1"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Row 2: Name and Package Fields (Side-by-Side) -->
+                            <StackPanel Grid.Row="2" Grid.Column="0" x:Name="NameFieldPanel" Margin="0,0,0,16">
                                 <TextBlock x:Name="NameFieldLabel" Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
                                 <TextBox x:Name="FullNameBox"
                                          materialDesign:HintAssist.Hint="Masukkan nama"
@@ -189,7 +278,7 @@
                                          Background="Transparent"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2">
+                            <StackPanel Grid.Row="2" Grid.Column="2" x:Name="PackageFieldPanel" Margin="0,0,0,16">
                                 <TextBlock x:Name="PackageFieldLabel" Text="PAKET INTERNET" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
                                 <TextBox x:Name="PackageMbpsBox"
                                          materialDesign:HintAssist.Hint="Contoh: 100 Mbps"
@@ -200,22 +289,35 @@
                                          BorderBrush="{DynamicResource BorderLightBrush}"
                                          Background="Transparent"/>
                             </StackPanel>
-                        </Grid>
 
-                        <!-- Catatan -->
-                        <StackPanel Margin="0,24,0,0">
-                            <TextBlock Text="CATATAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
-                            <TextBox x:Name="NotesBox"
-                                     materialDesign:HintAssist.Hint="Catatan tambahan (opsional)"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Height="80" FontSize="14"
-                                     TextWrapping="Wrap"
-                                     AcceptsReturn="True"
-                                     VerticalContentAlignment="Top"
-                                     materialDesign:TextFieldAssist.LeadingIcon="NoteTextOutline"
-                                     BorderBrush="{DynamicResource BorderLightBrush}"
-                                     Background="Transparent"/>
-                        </StackPanel>
+                            <!-- Row 3: Address Field (Spans both columns) -->
+                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AddressFieldPanel" Margin="0,0,0,16">
+                                <TextBlock Text="ALAMAT PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                <TextBox x:Name="AddressBox"
+                                         materialDesign:HintAssist.Hint="Masukkan alamat pelanggan"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Height="48" FontSize="14"
+                                         VerticalContentAlignment="Center"
+                                         materialDesign:TextFieldAssist.LeadingIcon="MapMarker"
+                                         BorderBrush="{DynamicResource BorderLightBrush}"
+                                         Background="Transparent"/>
+                            </StackPanel>
+
+                            <!-- Row 4: Notes Field (Spans both columns) -->
+                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" x:Name="NotesFieldPanel" Margin="0,8,0,0">
+                                <TextBlock Text="CATATAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                                <TextBox x:Name="NotesBox"
+                                         materialDesign:HintAssist.Hint="Catatan tambahan (opsional)"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Height="80" FontSize="14"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         VerticalContentAlignment="Top"
+                                         materialDesign:TextFieldAssist.LeadingIcon="NoteTextOutline"
+                                         BorderBrush="{DynamicResource BorderLightBrush}"
+                                         Background="Transparent"/>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -323,8 +425,24 @@
                                     <TextBlock Text="CURRENT ACTIVITY" FontSize="10" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8"/>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock x:Name="CurrentActivityText" Text="Preparing Tests..." FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
-                                        <!-- Ping dot simulation -->
-                                        <Ellipse Width="6" Height="6" Fill="{DynamicResource PrimaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                        <!-- Ping dot simulation (pulsating heartbeat) -->
+                                        <Ellipse Width="6" Height="6" Fill="{DynamicResource PrimaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <EventTrigger RoutedEvent="Loaded">
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                     From="1.0" To="0.2" Duration="0:0:0.6"
+                                                                                     AutoReverse="True" RepeatBehavior="Forever"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </EventTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
                                     </StackPanel>
                                 </StackPanel>
                                 <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="12,4">

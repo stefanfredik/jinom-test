@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Controls.Primitives;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
@@ -79,19 +81,28 @@ public partial class NewTestPage : Page
 
     private void ApplyTestMode()
     {
+        SelectedDetailsCard.Visibility = Visibility.Collapsed;
+
         if (_testMode == "pop")
         {
             FormTitle.Text = "Pengujian di POP";
             FormSubtitle.Text = "PENGUJIAN JARINGAN POP";
             FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.ServerNetwork;
             FormSectionTitle.Text = "Data POP";
-            NameFieldLabel.Text = "POP TERPILIH";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Field ini mengikuti POP yang dipilih");
-            PackageFieldLabel.Text = "PAKET JNIX";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
             PopSelectionPanel.Visibility = Visibility.Visible;
             CustomerSelectionPanel.Visibility = Visibility.Collapsed;
+            NameFieldPanel.Visibility = Visibility.Collapsed;
+            PackageFieldPanel.Visibility = Visibility.Collapsed;
+            AddressFieldPanel.Visibility = Visibility.Collapsed;
+            NotesFieldPanel.Visibility = Visibility.Visible;
             FullNameBox.IsReadOnly = true;
+            PackageMbpsBox.Text = "1000"; // Default speed to pass validation
+            FullNameBox.Text = string.Empty;
+            AddressBox.Text = string.Empty;
+            NotesBox.Text = string.Empty;
+            PopComboBox.ItemsSource = null;
+            PopComboBox.SelectedItem = null;
+            PopStatusText.Text = string.Empty;
         }
         else
         {
@@ -105,7 +116,15 @@ public partial class NewTestPage : Page
             MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
             PopSelectionPanel.Visibility = Visibility.Collapsed;
             CustomerSelectionPanel.Visibility = Visibility.Visible;
+            NameFieldPanel.Visibility = Visibility.Visible;
+            PackageFieldPanel.Visibility = Visibility.Visible;
+            AddressFieldPanel.Visibility = Visibility.Visible;
+            NotesFieldPanel.Visibility = Visibility.Visible;
             FullNameBox.IsReadOnly = false;
+            PackageMbpsBox.Text = string.Empty;
+            FullNameBox.Text = string.Empty;
+            AddressBox.Text = string.Empty;
+            NotesBox.Text = string.Empty;
             PopComboBox.ItemsSource = null;
             PopComboBox.SelectedItem = null;
             PopStatusText.Text = string.Empty;
@@ -114,7 +133,7 @@ public partial class NewTestPage : Page
         }
     }
 
-    private async Task LoadAvailablePopsAsync()
+    private async Task LoadAvailablePopsAsync(string query = "")
     {
         if (_isLoadingPops)
         {
@@ -124,14 +143,10 @@ public partial class NewTestPage : Page
         try
         {
             _isLoadingPops = true;
-            PopComboBox.IsEnabled = false;
-            PopStatusText.Text = "Memuat daftar POP sesuai company login...";
+            PopStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP sesuai company login..." : "Mencari POP...";
 
-            var pops = await _api.GetAvailablePopsAsync();
+            var pops = await _api.GetAvailablePopsAsync(query);
             PopComboBox.ItemsSource = pops;
-            PopComboBox.SelectedItem = null;
-            FullNameBox.Text = string.Empty;
-            NotesBox.Text = string.Empty;
 
             PopStatusText.Text = pops.Count > 0
                 ? $"{pops.Count} POP tersedia."
@@ -146,7 +161,6 @@ public partial class NewTestPage : Page
         finally
         {
             _isLoadingPops = false;
-            PopComboBox.IsEnabled = true;
         }
     }
 
@@ -155,14 +169,38 @@ public partial class NewTestPage : Page
         if (PopComboBox.SelectedItem is not PopOption selectedPop)
         {
             FullNameBox.Text = string.Empty;
+            AddressBox.Text = string.Empty;
+            NotesBox.Text = string.Empty;
+            SelectedDetailsCard.Visibility = Visibility.Collapsed;
             return;
         }
 
         FullNameBox.Text = selectedPop.DisplayName;
+        AddressBox.Text = selectedPop.Address ?? string.Empty;
+        NotesBox.Text = string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(selectedPop.Address))
+        // Show read-only details card
+        DetailsCardIcon.Kind = PackIconKind.ServerNetwork;
+        DetailsNameText.Text = selectedPop.Name;
+        DetailsSiteIdText.Text = selectedPop.SiteId;
+        DetailsSiteIdBadge.Visibility = string.IsNullOrWhiteSpace(selectedPop.SiteId) ? Visibility.Collapsed : Visibility.Visible;
+        DetailsPackageBadge.Visibility = Visibility.Collapsed;
+        DetailsAddressText.Text = selectedPop.Address ?? "-";
+        DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(selectedPop.Address) ? Visibility.Collapsed : Visibility.Visible;
+        SelectedDetailsCard.Visibility = Visibility.Visible;
+    }
+
+    private async void PopComboBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is ComboBox cb)
         {
-            NotesBox.Text = $"Alamat POP: {selectedPop.Address}";
+            if (cb.IsDropDownOpen)
+            {
+                if (cb.SelectedItem == null)
+                {
+                    await LoadAvailablePopsAsync(cb.Text);
+                }
+            }
         }
     }
 
@@ -197,15 +235,49 @@ public partial class NewTestPage : Page
     {
         if (CustomerComboBox.SelectedItem is not FoCustomer selectedCustomer)
         {
+            SelectedDetailsCard.Visibility = Visibility.Collapsed;
+            NameFieldPanel.Visibility = Visibility.Visible;
+            PackageFieldPanel.Visibility = Visibility.Visible;
+            AddressFieldPanel.Visibility = Visibility.Visible;
+            FullNameBox.Text = string.Empty;
+            PackageMbpsBox.Text = string.Empty;
+            AddressBox.Text = string.Empty;
+            NotesBox.Text = string.Empty;
             return;
         }
 
         FullNameBox.Text = selectedCustomer.FullName;
         PackageMbpsBox.Text = selectedCustomer.PackageMbps > 0 ? selectedCustomer.PackageMbps.ToString() : "";
-        if (!string.IsNullOrWhiteSpace(selectedCustomer.Address))
+        AddressBox.Text = selectedCustomer.Address ?? string.Empty;
+        NotesBox.Text = string.Empty;
+
+        // Show read-only details card
+        DetailsCardIcon.Kind = PackIconKind.Account;
+        DetailsNameText.Text = selectedCustomer.FullName;
+        DetailsSiteIdBadge.Visibility = Visibility.Collapsed;
+        
+        if (!string.IsNullOrWhiteSpace(selectedCustomer.PackageName))
         {
-            NotesBox.Text = $"Alamat: {selectedCustomer.Address}";
+            DetailsPackageText.Text = selectedCustomer.PackageName;
+            DetailsPackageBadge.Visibility = Visibility.Visible;
         }
+        else if (selectedCustomer.PackageMbps > 0)
+        {
+            DetailsPackageText.Text = $"{selectedCustomer.PackageMbps} Mbps";
+            DetailsPackageBadge.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            DetailsPackageBadge.Visibility = Visibility.Collapsed;
+        }
+        
+        DetailsAddressText.Text = selectedCustomer.Address ?? "-";
+        DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(selectedCustomer.Address) ? Visibility.Collapsed : Visibility.Visible;
+        
+        SelectedDetailsCard.Visibility = Visibility.Visible;
+        NameFieldPanel.Visibility = Visibility.Collapsed;
+        PackageFieldPanel.Visibility = Visibility.Collapsed;
+        AddressFieldPanel.Visibility = Visibility.Collapsed;
     }
 
     private async void CustomerComboBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -250,18 +322,23 @@ public partial class NewTestPage : Page
         SaveReportBtn.Visibility = Visibility.Collapsed;
         EndTestBtnText.Text = "Batal";
 
+        // Start pulsating the active step
+        StartStepPulse(Step1Circle);
+
         try
         {
             var isPopMode = _testMode == "pop";
             var selectedPop = isPopMode ? PopComboBox.SelectedItem as PopOption : null;
+            var selectedCustomer = !isPopMode ? CustomerComboBox.SelectedItem as FoCustomer : null;
             var customer = new FoCustomer
             {
+                Id = selectedCustomer?.Id ?? 0,
                 SiteType = isPopMode ? "pop" : "customer",
-                SiteId = selectedPop?.SiteId,
+                SiteId = isPopMode ? selectedPop?.SiteId : selectedCustomer?.SiteId,
                 FullName = isPopMode ? selectedPop?.DisplayName ?? string.Empty : FullNameBox.Text.Trim(),
                 Address = isPopMode
                     ? selectedPop?.Address ?? "-"
-                    : "-",
+                    : AddressBox.Text.Trim(),
                 PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
                 TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
             };
@@ -305,30 +382,33 @@ public partial class NewTestPage : Page
                 TaskCountText.Text = parts[0];
                 CurrentActivityText.Text = parts[1];
                 SubTaskDetailText.Text = parts[2];
-                SubTaskProgressBar.Value = p.percent;
+                AnimateProgressBar(SubTaskProgressBar, p.percent);
 
                 var taskNumStr = parts[0].Replace("Task ", "").Split(' ')[0];
                 if (int.TryParse(taskNumStr, out int taskNum))
                 {
-                    // Update Stepper UI
+                    // Update Stepper UI & Pulses
                     if (taskNum <= 5) // Network
                     {
-                        Line1.Value = (taskNum / 5.0) * 100;
+                        StartStepPulse(Step1Circle);
+                        AnimateProgressBar(Line1, (taskNum / 5.0) * 100);
                     }
                     else if (taskNum == 6) // Apps
                     {
-                        Line1.Value = 100;
+                        StartStepPulse(Step2Circle);
+                        AnimateProgressBar(Line1, 100);
                         Step2Circle.Background = (Brush)FindResource("PrimaryBrush");
                         Step2Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
                         Step2Icon.Foreground = Brushes.White;
                         Step2Text.Foreground = (Brush)FindResource("PrimaryBrush");
                         
-                        Line2.Value = p.percent == 100 ? 100 : 50; // Partial line
+                        AnimateProgressBar(Line2, p.percent == 100 ? 100 : 50); // Partial line
                     }
                     else if (taskNum == 7) // Bandwidth
                     {
-                        Line1.Value = 100;
-                        Line2.Value = 100;
+                        StartStepPulse(Step3Circle);
+                        AnimateProgressBar(Line1, 100);
+                        AnimateProgressBar(Line2, 100);
 
                         Step2Circle.Background = (Brush)FindResource("PrimaryBrush");
                         Step2Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
@@ -349,7 +429,14 @@ public partial class NewTestPage : Page
         });
 
         // Pass DiagnosticLogsPanel instead of ResultsPanel so services can append their UI logs
-        await networkSvc.RunAllAsync(DiagnosticLogsPanel, progress, packageMbps);
+        try
+        {
+            await networkSvc.RunAllAsync(DiagnosticLogsPanel, progress, packageMbps);
+        }
+        finally
+        {
+            StartStepPulse(null); // Stop pulsing
+        }
 
         try
         {
@@ -363,23 +450,29 @@ public partial class NewTestPage : Page
 
     private bool ValidateForm()
     {
-        if (_testMode == "pop" && PopComboBox.SelectedItem is not PopOption)
+        if (_testMode == "pop")
         {
-            MessageBox.Show("Silakan pilih POP yang tersedia.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return false;
+            if (PopComboBox.SelectedItem is not PopOption)
+            {
+                MessageBox.Show("Silakan pilih POP yang tersedia.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
         }
-
-        if (string.IsNullOrWhiteSpace(FullNameBox.Text) ||
-            string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
+        else
         {
-            MessageBox.Show("Nama dan Paket wajib diisi.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return false;
-        }
+            if (string.IsNullOrWhiteSpace(FullNameBox.Text) ||
+                string.IsNullOrWhiteSpace(PackageMbpsBox.Text) ||
+                string.IsNullOrWhiteSpace(AddressBox.Text))
+            {
+                MessageBox.Show("Nama, Paket, dan Alamat wajib diisi.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
 
-        if (!int.TryParse(PackageMbpsBox.Text, out var pkg) || pkg <= 0)
-        {
-            MessageBox.Show("Paket harus berupa angka positif (Mbps).", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return false;
+            if (!int.TryParse(PackageMbpsBox.Text, out var pkg) || pkg <= 0)
+            {
+                MessageBox.Show("Paket harus berupa angka positif (Mbps).", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
         }
 
         return true;
@@ -395,6 +488,7 @@ public partial class NewTestPage : Page
 
     private void EndTestBtn_Click(object sender, RoutedEventArgs e)
     {
+        StartStepPulse(null);
         ProgressContainer.Visibility = Visibility.Collapsed;
         LandingContainer.Visibility = Visibility.Visible;
     }
@@ -806,4 +900,61 @@ public partial class NewTestPage : Page
         TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla => PackIconKind.Speedometer,
         _ => PackIconKind.TestTube,
     };
+
+    private void AnimateProgressBar(ProgressBar progressBar, double toValue)
+    {
+        var animation = new DoubleAnimation
+        {
+            To = toValue,
+            Duration = TimeSpan.FromMilliseconds(400),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        progressBar.BeginAnimation(RangeBase.ValueProperty, animation);
+    }
+
+    private void StartStepPulse(Border circle)
+    {
+        StopStepPulse(Step1Circle);
+        StopStepPulse(Step2Circle);
+        StopStepPulse(Step3Circle);
+
+        if (circle == null) return;
+
+        if (circle.RenderTransform is not ScaleTransform)
+        {
+            circle.RenderTransform = new ScaleTransform(1, 1);
+            circle.RenderTransformOrigin = new Point(0.5, 0.5);
+        }
+
+        var scaleTransform = (ScaleTransform)circle.RenderTransform;
+
+        var anim = new DoubleAnimation(1.0, 1.12, TimeSpan.FromMilliseconds(600))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever,
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
+        };
+
+        scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
+        scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+
+        var borderAnim = new DoubleAnimation(1.0, 0.5, TimeSpan.FromMilliseconds(600))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        circle.BeginAnimation(UIElement.OpacityProperty, borderAnim);
+    }
+
+    private void StopStepPulse(Border circle)
+    {
+        if (circle.RenderTransform is ScaleTransform scaleTransform)
+        {
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            circle.RenderTransform = null;
+        }
+        circle.BeginAnimation(UIElement.OpacityProperty, null);
+        circle.Opacity = 1.0;
+    }
 }

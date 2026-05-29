@@ -17,14 +17,69 @@ public static class ConfigManager
     public static void Initialize()
     {
         _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+        
+        // Jika file tidak ada, buat file default
+        if (!File.Exists(_configPath))
+        {
+            CreateDefaultConfig();
+        }
+        
         Reload();
+    }
+
+    private static void CreateDefaultConfig()
+    {
+        var defaultConfig = new
+        {
+            App = new
+            {
+                SessionTimeoutMinutes = 30
+            },
+            NetworkTest = new
+            {
+                PingGateway = new
+                {
+                    Target = "8.8.8.8",
+                    Count = 100,
+                    ThresholdAvgMs = 10,
+                    MaxRto = 0
+                },
+                PingDns = new
+                {
+                    Targets = new[] { "103.122.65.66", "8.8.8.8", "1.1.1.1" },
+                    Count = 100,
+                    ThresholdAvgMs = 15,
+                    MaxRto = 0
+                },
+                NslookupNasional = new
+                {
+                    Domains = new[] { "jinom.net", "kompas.com" },
+                    TimeoutSeconds = 10
+                },
+                NslookupInternasional = new
+                {
+                    Domains = new[] { "google.com", "facebook.com" },
+                    TimeoutSeconds = 10
+                },
+                PingDomainLokal = new
+                {
+                    Domains = new[] { "detik.com", "tokopedia.com" },
+                    Count = 10,
+                    ThresholdAvgMs = 35,
+                    MaxRto = 0
+                }
+            }
+        };
+
+        var json = JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(_configPath, json);
     }
 
     private static void Reload()
     {
         _config = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .Build();
     }
 

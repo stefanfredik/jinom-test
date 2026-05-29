@@ -330,7 +330,7 @@ public class PopOption
     public string Name { get; set; } = string.Empty;
     public string? Address { get; set; }
 
-    public string DisplayName => string.IsNullOrWhiteSpace(SiteId) ? Name : $"{Name} ({SiteId})";
+    public string DisplayName => Name;
 }
 
 public class ApiPop

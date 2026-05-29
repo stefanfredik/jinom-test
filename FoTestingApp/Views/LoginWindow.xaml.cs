@@ -82,6 +82,9 @@ public partial class LoginWindow : Window
         EmailTextBox.IsEnabled = !isLoading;
         PasswordBox.IsEnabled = !isLoading;
         LoadingBar.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
-        ErrorMessage.Visibility = Visibility.Collapsed;
+        if (isLoading)
+        {
+            ErrorMessage.Visibility = Visibility.Collapsed;
+        }
     }
 }

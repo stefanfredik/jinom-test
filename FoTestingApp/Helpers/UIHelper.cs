@@ -1,6 +1,8 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace FoTestingApp.Helpers;
 
@@ -64,6 +66,26 @@ public static class UIHelper
         };
         cardBorder.SetResourceReference(Border.BorderBrushProperty, "BorderLightBrush");
         cardBorder.Child = grid;
+
+        // Smooth Entrance Animation (Fade-in + Slide-up)
+        cardBorder.Opacity = 0;
+        var translateTransform = new TranslateTransform(0, 15);
+        cardBorder.RenderTransform = translateTransform;
+
+        cardBorder.Loaded += (s, e) =>
+        {
+            var opacityAnim = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            var translateAnim = new DoubleAnimation(15, 0, TimeSpan.FromMilliseconds(400))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            cardBorder.BeginAnimation(UIElement.OpacityProperty, opacityAnim);
+            translateTransform.BeginAnimation(TranslateTransform.YProperty, translateAnim);
+        };
 
         return cardBorder;
     }

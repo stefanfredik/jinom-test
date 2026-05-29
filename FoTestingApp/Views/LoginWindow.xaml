@@ -26,7 +26,7 @@
                 <Grid Margin="64">
                     <StackPanel VerticalAlignment="Center">
                         
-                        <TextBlock Text="Welcome Back" FontSize="30" FontWeight="Bold" 
+                        <TextBlock Text="Login" FontSize="30" FontWeight="Bold" 
                                    Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,40"/>
 
                         <!-- Email Input -->
