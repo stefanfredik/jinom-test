@@ -153,7 +153,6 @@ public class SpeedtestService
             dlSw.Stop();
 
             var actualDlSeconds = dlSw.Elapsed.TotalSeconds;
-            if (actualDlSeconds > 10) actualDlSeconds = 10;
             var downloadMbps = totalDownloadBytes * 8.0 / 1_000_000 / actualDlSeconds;
 
             // 4. Upload paralel (POST/PUT ke endpoint yang sama) selama 10 detik
@@ -178,12 +177,11 @@ public class SpeedtestService
                         {
                             try
                             {
-                                using var content = new ByteArrayContent(uploadPayload);
-                                using var response = await client.PostAsync(url, content, uCts.Token);
-                                if (response.IsSuccessStatusCode)
+                                using var content = new ProgressHttpContent(uploadPayload, (bytesSent) =>
                                 {
-                                    Interlocked.Add(ref totalUploadBytes, uploadPayload.Length);
-                                }
+                                    Interlocked.Add(ref totalUploadBytes, bytesSent);
+                                });
+                                using var response = await client.PostAsync(url, content, uCts.Token);
                             }
                             catch { /* Abaikan error koneksi tertutup dll */ }
                         }
@@ -196,7 +194,6 @@ public class SpeedtestService
             ulSw.Stop();
 
             var actualUlSeconds = ulSw.Elapsed.TotalSeconds;
-            if (actualUlSeconds > 10) actualUlSeconds = 10;
             var uploadMbps = totalUploadBytes * 8.0 / 1_000_000 / actualUlSeconds;
 
             return (Math.Round(downloadMbps, 2), Math.Round(uploadMbps, 2), null);
@@ -211,13 +208,13 @@ public class SpeedtestService
     /// <summary>Download URL dan hitung total bytes yang diterima.</summary>
     private static async Task<long> DownloadAndCountBytesAsync(HttpClient client, string url, CancellationToken ct)
     {
+        long totalRead = 0;
         try
         {
             using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
             using var stream = await response.Content.ReadAsStreamAsync(ct);
             var buffer = new byte[81920];
-            long totalRead = 0;
             int bytesRead;
             while ((bytesRead = await stream.ReadAsync(buffer, ct)) > 0)
             {
@@ -228,7 +225,44 @@ public class SpeedtestService
         }
         catch
         {
-            return 0;
+            return totalRead;
+        }
+    }
+
+    private class ProgressHttpContent : HttpContent
+    {
+        private readonly byte[] _payload;
+        private readonly Action<long> _onBytesSent;
+
+        public ProgressHttpContent(byte[] payload, Action<long> onBytesSent)
+        {
+            _payload = payload;
+            _onBytesSent = onBytesSent;
+        }
+
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context)
+        {
+            return SerializeToStreamAsync(stream, context, CancellationToken.None);
+        }
+
+        protected override async Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context, CancellationToken cancellationToken)
+        {
+            const int bufferSize = 16384; // 16KB
+            int sent = 0;
+            while (sent < _payload.Length)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                int toSend = Math.Min(bufferSize, _payload.Length - sent);
+                await stream.WriteAsync(_payload, sent, toSend, cancellationToken);
+                sent += toSend;
+                _onBytesSent(toSend);
+            }
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _payload.Length;
+            return true;
         }
     }
 

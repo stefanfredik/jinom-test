@@ -793,6 +793,11 @@ public partial class NewTestPage : Page
         try
         {
             var root = result.ResultData.RootElement;
+            if (root.ValueKind == JsonValueKind.String)
+            {
+                var doc = JsonDocument.Parse(root.GetString() ?? "{}");
+                root = doc.RootElement;
+            }
 
             switch (result.TestType)
             {
@@ -828,6 +833,8 @@ public partial class NewTestPage : Page
 
                 case TestTypes.SpeedtestFast:
                     AddDetailRow(panel, "Download", $"{root.GetProperty("download_mbps").GetDouble():F1} Mbps");
+                    if (root.TryGetProperty("upload_mbps", out var uploadProp))
+                        AddDetailRow(panel, "Upload", $"{uploadProp.GetDouble():F1} Mbps");
                     break;
 
                 case TestTypes.SpeedtestOokla:
