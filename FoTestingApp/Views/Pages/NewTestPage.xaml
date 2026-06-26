@@ -120,7 +120,7 @@
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="Black" Opacity="0.06"/>
                         </Border.Effect>
-                        <StackPanel HorizontalAlignment="Center" Margin="32">
+                        <StackPanel Margin="32">
                             <!-- Icon Circle -->
                             <Border Width="80" Height="80" CornerRadius="40" Background="{DynamicResource PrimaryLightBrush}" Margin="0,0,0,20" HorizontalAlignment="Center">
                                 <materialDesign:PackIcon Kind="ServerNetwork" Width="36" Height="36" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -142,7 +142,7 @@
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="Black" Opacity="0.06"/>
                         </Border.Effect>
-                        <StackPanel HorizontalAlignment="Center" Margin="32">
+                        <StackPanel Margin="32">
                             <!-- Icon Circle -->
                             <Border Width="80" Height="80" CornerRadius="40" Background="{DynamicResource PrimaryLightBrush}" Margin="0,0,0,20" HorizontalAlignment="Center">
                                 <materialDesign:PackIcon Kind="RouterWireless" Width="36" Height="36" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
