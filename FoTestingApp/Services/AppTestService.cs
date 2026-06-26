@@ -228,8 +228,48 @@ public class AppTestService
         var iconKind = pass ? MaterialDesignThemes.Wpf.PackIconKind.CheckCircle : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
         var statusText = pass ? "COMPLETED" : "FAILED";
         
-        var failedUrls = results.Where(r => r.Value == "Failed" || r.Value.StartsWith("Error")).Select(r => r.Key).ToList();
-        var subtitle = failedUrls.Count > 0 ? $"Gagal di: {string.Join(", ", failedUrls)}" : "Semua akses berhasil";
+        string subtitle;
+        if (pass)
+        {
+            subtitle = "Semua akses berhasil";
+        }
+        else
+        {
+            var failedItems = new List<string>();
+            foreach (var r in results)
+            {
+                var val = r.Value;
+                if (val != null && (val.StartsWith("Failed") || val == "Error"))
+                {
+                    if (r.Key == "Video_Throughput")
+                    {
+                        if (val.Contains("(") && val.Contains(")"))
+                        {
+                            var startIdx = val.IndexOf('(') + 1;
+                            var len = val.IndexOf(')') - startIdx;
+                            failedItems.Add(val.Substring(startIdx, len));
+                        }
+                        else
+                        {
+                            failedItems.Add("Throughput video lambat");
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var uri = new Uri(r.Key);
+                            failedItems.Add($"{uri.Host} gagal");
+                        }
+                        catch
+                        {
+                            failedItems.Add($"{r.Key} gagal");
+                        }
+                    }
+                }
+            }
+            subtitle = failedItems.Count > 0 ? $"Gagal di: {string.Join(", ", failedItems)}" : "Beberapa akses gagal";
+        }
 
         return FoTestingApp.Helpers.UIHelper.CreateLogCard(label, subtitle, primaryColor, bgColor, iconKind, statusText);
     }
