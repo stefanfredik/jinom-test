@@ -168,7 +168,7 @@
 
         <!-- ═══ Stage 3: Form Area — Customer data input ═══ -->
         <ScrollViewer x:Name="FormContainer" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-            <StackPanel Margin="24,20,24,20" MaxWidth="720" HorizontalAlignment="Center">
+            <StackPanel Margin="24,20,24,20" Width="720" HorizontalAlignment="Center">
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,16">
                     <TextBlock x:Name="FormTitle" Text="Pengujian Kualitas Jaringan" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
