@@ -3,9 +3,9 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Title="Laporan">
-    <StackPanel Margin="32">
-        <TextBlock Text="Cetak Laporan" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
-        <TextBlock Text="Pilih sesi riwayat pengujian untuk men-generate dokumen laporan PDF Sertifikasi FO." FontSize="15" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,32"/>
+    <StackPanel Margin="24,20,24,20">
+        <TextBlock Text="Cetak Laporan" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
+        <TextBlock Text="Pilih sesi riwayat pengujian untuk men-generate dokumen laporan PDF Sertifikasi FO." FontSize="14" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,20"/>
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -13,7 +13,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="28"
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="20"
                     BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                 <StackPanel>
                     <!-- Icon Header inside Card -->
@@ -28,11 +28,11 @@
                     </StackPanel>
 
                     <!-- Input Section -->
-                    <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="{DynamicResource TextLightBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8"/>
+                    <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="{DynamicResource TextLightBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,6"/>
                     <ComboBox x:Name="SessionComboBox"
                               materialDesign:HintAssist.Hint="Cari atau pilih sesi..."
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              Height="48" Margin="0,0,0,32" VerticalContentAlignment="Center"
+                              Height="44" Margin="0,0,0,20" VerticalContentAlignment="Center"
                               IsEditable="True"/>
                     
                     <!-- Actions -->
@@ -45,7 +45,7 @@
                         
                         <Button Grid.Column="0" Content="Preview PDF" Style="{StaticResource MaterialDesignOutlinedButton}"
                                 materialDesign:ButtonAssist.CornerRadius="8"
-                                Foreground="{DynamicResource TextDarkBrush}" BorderBrush="{DynamicResource BorderLightBrush}" Height="46" Margin="0,0,6,0" Click="PreviewBtn_Click">
+                                Foreground="{DynamicResource TextDarkBrush}" BorderBrush="{DynamicResource BorderLightBrush}" Height="44" Margin="0,0,6,0" Click="PreviewBtn_Click">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -58,7 +58,7 @@
                         
                         <Button Grid.Column="1" Content="Export PDF" Style="{StaticResource MaterialDesignFlatButton}"
                                 materialDesign:ButtonAssist.CornerRadius="8"
-                                Background="#E0F2FE" Foreground="#0284C7" Height="46" Margin="6,0,6,0" Click="ExportBtn_Click">
+                                Background="#E0F2FE" Foreground="#0284C7" Height="44" Margin="6,0,6,0" Click="ExportBtn_Click">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -71,7 +71,7 @@
                         
                         <Button Grid.Column="2" Content="Cetak" Style="{StaticResource MaterialDesignRaisedButton}"
                                 materialDesign:ButtonAssist.CornerRadius="8"
-                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="White" Height="46" Margin="6,0,0,0" Click="PrintBtn_Click">
+                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="White" Height="44" Margin="6,0,0,0" Click="PrintBtn_Click">
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -83,7 +83,7 @@
                         </Button>
                     </Grid>
                     
-                    <Border Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,24,0,0">
+                    <Border Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,16,0,0">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock x:Name="ReportStatus" Text="Siap untuk men-generate laporan." Foreground="{DynamicResource TextLightBrush}" FontSize="12" VerticalAlignment="Center"/>

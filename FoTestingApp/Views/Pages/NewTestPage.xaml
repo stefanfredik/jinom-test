@@ -168,19 +168,19 @@
 
         <!-- ═══ Stage 3: Form Area — Customer data input ═══ -->
         <ScrollViewer x:Name="FormContainer" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-            <StackPanel Margin="32">
+            <StackPanel Margin="24,20,24,20">
                 <!-- Header -->
-                <StackPanel Margin="0,0,0,32">
+                <StackPanel Margin="0,0,0,16">
                     <TextBlock x:Name="FormTitle" Text="Customer Network Test" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
                     <TextBlock x:Name="FormSubtitle" Text="DIAGNOSTIC SUITE FOR CPE VERIFICATION" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
 
                 <!-- Customer Configuration Panel -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="32" Margin="0,0,0,32"
+                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="20" Margin="0,0,0,16"
                         BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                     <StackPanel>
                         <!-- Section Title -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                             <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="8" Padding="8">
                                 <materialDesign:PackIcon x:Name="FormSectionIcon" Kind="AccountPlus" Foreground="{DynamicResource PrimaryBrush}" Width="24" Height="24"/>
                             </Border>
@@ -203,8 +203,8 @@
                             </Grid.RowDefinitions>
 
                             <!-- Row 0: Search/Select ComboBoxes (Spans both columns) -->
-                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="PopSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
-                                <TextBlock Text="PILIH POP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="PopSelectionPanel" Margin="0,0,0,12" Visibility="Collapsed">
+                                <TextBlock Text="PILIH POP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <ComboBox x:Name="PopComboBox"
                                           IsEditable="True"
                                           TextSearch.TextPath="DisplayName"
@@ -213,7 +213,7 @@
                                           materialDesign:HintAssist.Hint="Ketik untuk mencari POP..."
                                           materialDesign:HintAssist.IsFloating="False"
                                           materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
-                                          Height="48" FontSize="14"
+                                          Height="44" FontSize="14"
                                           SelectionChanged="PopComboBox_SelectionChanged"
                                           HorizontalContentAlignment="Stretch"
                                           VerticalContentAlignment="Center"
@@ -238,8 +238,8 @@
                                 <TextBlock x:Name="PopStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="CustomerSelectionPanel" Margin="0,0,0,16" Visibility="Collapsed">
-                                <TextBlock Text="PILIH PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="CustomerSelectionPanel" Margin="0,0,0,12" Visibility="Collapsed">
+                                <TextBlock Text="PILIH PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <ComboBox x:Name="CustomerComboBox"
                                           IsEditable="True"
                                           TextSearch.TextPath="DisplayName"
@@ -248,7 +248,7 @@
                                           materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
                                           materialDesign:HintAssist.IsFloating="False"
                                           materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
-                                          Height="48" FontSize="14"
+                                          Height="44" FontSize="14"
                                           SelectionChanged="CustomerComboBox_SelectionChanged"
                                           HorizontalContentAlignment="Stretch"
                                           VerticalContentAlignment="Center"
@@ -275,7 +275,7 @@
 
                             <!-- Row 1: Selected Details Card (Read-only) -->
                             <Border x:Name="SelectedDetailsCard" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                    Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="20" Margin="0,0,0,16"
+                                    Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="16" Margin="0,0,0,12"
                                     BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Visibility="Collapsed">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="Black" Opacity="0.04"/>
@@ -288,8 +288,8 @@
                                     </Grid.ColumnDefinitions>
                                     
                                     <!-- Icon Circle -->
-                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource PrimaryLightBrush}" VerticalAlignment="Center" Margin="0,0,16,0">
-                                        <materialDesign:PackIcon x:Name="DetailsCardIcon" Kind="CheckCircle" Width="24" Height="24" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource PrimaryLightBrush}" VerticalAlignment="Center" Margin="0,0,12,0">
+                                        <materialDesign:PackIcon x:Name="DetailsCardIcon" Kind="CheckCircle" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     
                                     <!-- Details Content -->
@@ -327,24 +327,24 @@
                             </Border>
 
                             <!-- Row 2: Name and Package Fields (Side-by-Side) -->
-                            <StackPanel Grid.Row="2" Grid.Column="0" x:Name="NameFieldPanel" Margin="0,0,0,16">
-                                <TextBlock x:Name="NameFieldLabel" Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="2" Grid.Column="0" x:Name="NameFieldPanel" Margin="0,0,0,12">
+                                <TextBlock x:Name="NameFieldLabel" Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="FullNameBox"
                                          materialDesign:HintAssist.Hint="Masukkan nama"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
+                                         Height="44" FontSize="14"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Account"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
                                          Background="Transparent"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="2" Grid.Column="2" x:Name="PackageFieldPanel" Margin="0,0,0,16">
-                                <TextBlock x:Name="PackageFieldLabel" Text="PAKET INTERNET" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="2" Grid.Column="2" x:Name="PackageFieldPanel" Margin="0,0,0,12">
+                                <TextBlock x:Name="PackageFieldLabel" Text="PAKET INTERNET" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="PackageMbpsBox"
                                          materialDesign:HintAssist.Hint="Contoh: 100 Mbps"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
+                                         Height="44" FontSize="14"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
@@ -352,12 +352,12 @@
                             </StackPanel>
 
                             <!-- Row 3: Address Field (Spans both columns) -->
-                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AddressFieldPanel" Margin="0,0,0,16">
-                                <TextBlock Text="ALAMAT PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AddressFieldPanel" Margin="0,0,0,12">
+                                <TextBlock Text="ALAMAT PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="AddressBox"
                                          materialDesign:HintAssist.Hint="Masukkan alamat pelanggan"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="48" FontSize="14"
+                                         Height="44" FontSize="14"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="MapMarker"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
@@ -365,12 +365,12 @@
                             </StackPanel>
 
                             <!-- Row 4: Notes Field (Spans both columns) -->
-                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" x:Name="NotesFieldPanel" Margin="0,8,0,0">
-                                <TextBlock Text="CATATAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" x:Name="NotesFieldPanel" Margin="0,4,0,0">
+                                <TextBlock Text="CATATAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="NotesBox"
                                          materialDesign:HintAssist.Hint="Catatan tambahan (opsional)"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="80" FontSize="14"
+                                         Height="68" FontSize="14"
                                          TextWrapping="Wrap"
                                          AcceptsReturn="True"
                                          VerticalContentAlignment="Top"
@@ -383,7 +383,7 @@
                 </Border>
 
                 <!-- Action Toolbar -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="16" Margin="0,0,0,32"
+                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="12" Margin="0,0,0,0"
                         BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -392,11 +392,10 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Back button on Left Column -->
                         <Button x:Name="BackToLocationBtn" Grid.Column="0"
-                                Height="52" Padding="16,0"
+                                Height="44" Padding="16,0"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"
+                                materialDesign:ButtonAssist.CornerRadius="8"
                                 BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextLightBrush}"
                                 Click="BackToLocation_Click">
                             <StackPanel Orientation="Horizontal">
@@ -405,11 +404,10 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Start Test Button on Right Column -->
                         <Button x:Name="StartTestBtn" Grid.Column="2"
-                                Height="52" Padding="28,0"
+                                Height="44" Padding="28,0"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"
+                                materialDesign:ButtonAssist.CornerRadius="8"
                                 Foreground="White"
                                 Click="StartTestBtn_Click"
                                 BorderBrush="Transparent"
@@ -433,16 +431,16 @@
         <!-- ═══ Stage 4: Progress Overlay ═══ -->
         <Grid x:Name="ProgressContainer" Visibility="Collapsed" Background="{DynamicResource AppBackgroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel HorizontalAlignment="Center" MaxWidth="640" Margin="24,48,24,48" Width="640">
+                <StackPanel HorizontalAlignment="Center" MaxWidth="640" Margin="24,12,24,12" Width="640">
                     
                     <!-- Title Section -->
-                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,48">
-                        <TextBlock Text="Pengujian sedang berjalan" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                        <TextBlock Text="Menganalisis kinerja dan keamanan jaringan Anda" FontSize="18" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,12">
+                        <TextBlock Text="Pengujian sedang berjalan" FontSize="24" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                        <TextBlock Text="Menganalisis kinerja dan keamanan jaringan Anda" FontSize="13" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Stepper Progress UI -->
-                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,48">
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,12">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -454,28 +452,28 @@
                             
                             <!-- Step 1: Network -->
                             <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                <Border x:Name="Step1Circle" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" Margin="0,0,0,8">
-                                    <materialDesign:PackIcon x:Name="Step1Icon" Kind="LanConnect" Foreground="White" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border x:Name="Step1Circle" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" Margin="0,0,0,6">
+                                    <materialDesign:PackIcon x:Name="Step1Icon" Kind="LanConnect" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock x:Name="Step1Text" Text="NETWORK" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
 
-                            <ProgressBar x:Name="Line1" Grid.Column="1" Value="0" Maximum="100" Height="4" VerticalAlignment="Top" Margin="0,22,0,0" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderLightBrush}" BorderThickness="0"/>
+                            <ProgressBar x:Name="Line1" Grid.Column="1" Value="0" Maximum="100" Height="4" VerticalAlignment="Top" Margin="0,18,0,0" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderLightBrush}" BorderThickness="0"/>
                             
                             <!-- Step 2: Application -->
                             <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                                <Border x:Name="Step2Circle" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="2" Margin="0,0,0,8">
-                                    <materialDesign:PackIcon x:Name="Step2Icon" Kind="Web" Foreground="{DynamicResource TextLightBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border x:Name="Step2Circle" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="2" Margin="0,0,0,6">
+                                    <materialDesign:PackIcon x:Name="Step2Icon" Kind="Web" Foreground="{DynamicResource TextLightBrush}" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock x:Name="Step2Text" Text="APPLICATION" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
 
-                            <ProgressBar x:Name="Line2" Grid.Column="3" Value="0" Maximum="100" Height="4" VerticalAlignment="Top" Margin="0,22,0,0" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderLightBrush}" BorderThickness="0"/>
+                            <ProgressBar x:Name="Line2" Grid.Column="3" Value="0" Maximum="100" Height="4" VerticalAlignment="Top" Margin="0,18,0,0" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderLightBrush}" BorderThickness="0"/>
                             
                             <!-- Step 3: Speedtest -->
                             <StackPanel Grid.Column="4" HorizontalAlignment="Center">
-                                <Border x:Name="Step3Circle" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="2" Margin="0,0,0,8">
-                                    <materialDesign:PackIcon x:Name="Step3Icon" Kind="Speedometer" Foreground="{DynamicResource TextLightBrush}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border x:Name="Step3Circle" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="2" Margin="0,0,0,6">
+                                    <materialDesign:PackIcon x:Name="Step3Icon" Kind="Speedometer" Foreground="{DynamicResource TextLightBrush}" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock x:Name="Step3Text" Text="BANDWIDTH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
@@ -483,13 +481,13 @@
                     </StackPanel>
 
                     <!-- Current Task Card -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" BorderBrush="#1A22c55e" BorderThickness="1" Margin="0,0,0,40">
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" BorderBrush="#1A22c55e" BorderThickness="1" Margin="0,0,0,12">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="5" Color="{DynamicResource PrimaryColor}" Opacity="0.05"/>
                         </Border.Effect>
-                        <StackPanel Margin="24">
+                        <StackPanel Margin="16">
                             <!-- Header -->
-                            <Grid Margin="0,0,0,24">
+                            <Grid Margin="0,0,0,12">
                                 <StackPanel HorizontalAlignment="Left">
                                     <TextBlock Text="CURRENT ACTIVITY" FontSize="10" FontWeight="Black" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8"/>
                                     <StackPanel Orientation="Horizontal">
@@ -501,7 +499,7 @@
                                                     <Style.Triggers>
                                                         <EventTrigger RoutedEvent="Loaded">
                                                             <BeginStoryboard>
-                                                                <Storyboard>
+                                                                 <Storyboard>
                                                                     <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                                                                      From="1.0" To="0.2" Duration="0:0:0.6"
                                                                                      AutoReverse="True" RepeatBehavior="Forever"/>
@@ -520,7 +518,7 @@
                             </Grid>
                             
                             <!-- Internal Progress bar -->
-                            <ProgressBar x:Name="SubTaskProgressBar" Value="0" Maximum="100" Height="16" materialDesign:ButtonAssist.CornerRadius="8" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackgroundBrush}" Margin="0,0,0,12"/>
+                            <ProgressBar x:Name="SubTaskProgressBar" Value="0" Maximum="100" Height="8" materialDesign:ButtonAssist.CornerRadius="4" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackgroundBrush}" Margin="0,0,0,8"/>
                             
                             <Grid>
                                 <TextBlock x:Name="SubTaskDetailText" Text="Initializing diagnostic engine..." FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" FontStyle="Italic" HorizontalAlignment="Left"/>
@@ -529,9 +527,9 @@
                     </Border>
 
                     <!-- Diagnostic Log List -->
-                    <StackPanel Margin="0,0,0,16">
+                    <StackPanel Margin="0,0,0,12">
                         <!-- Terminal Window Header -->
-                        <Border Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1,1,1,0" CornerRadius="12,12,0,0" Padding="12,10">
+                        <Border Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1,1,1,0" CornerRadius="12,12,0,0" Padding="12,4">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                     <!-- macOS-style window controls -->
@@ -564,9 +562,9 @@
                             </Grid>
                         </Border>
                         
-                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="0,0,12,12" Padding="16,12"
+                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="0,0,12,12" Padding="16,8"
                                 BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
-                            <ScrollViewer x:Name="LogsScrollViewer" Height="300" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer x:Name="LogsScrollViewer" Height="180" VerticalScrollBarVisibility="Auto">
                                 <ScrollViewer.Resources>
                                     <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource ThinScrollbarStyle}"/>
                                 </ScrollViewer.Resources>
@@ -578,10 +576,10 @@
                     </StackPanel>
 
                     <!-- Action Area -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,48,0,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
                         <!-- End/Cancel Button -->
                         <Button x:Name="EndTestBtn" Foreground="{DynamicResource FailRedBrush}" Background="Transparent" BorderThickness="0"
-                                Style="{StaticResource MaterialDesignFlatButton}" Height="48" Padding="24,0" Click="EndTestBtn_Click">
+                                Style="{StaticResource MaterialDesignFlatButton}" Height="40" Padding="24,0" Click="EndTestBtn_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Close" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock x:Name="EndTestBtnText" Text="CANCEL DIAGNOSTICS" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -595,10 +593,10 @@
         <!-- ═══ Stage 5: Results Detail ═══ -->
         <Grid x:Name="ResultsContainer" Visibility="Collapsed" Background="{DynamicResource AppBackgroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel HorizontalAlignment="Center" MaxWidth="720" Margin="24,32,24,48" Width="720">
+                <StackPanel HorizontalAlignment="Center" MaxWidth="720" Margin="24,20,24,20" Width="720">
 
                     <!-- Summary Header -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="28" Margin="0,0,0,24"
+                    <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16" Padding="20" Margin="0,0,0,16"
                             BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -630,9 +628,9 @@
 
                     <!-- Action Buttons -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
-                        <Button Height="48" Padding="24,0" Margin="0,0,12,0"
+                        <Button Height="44" Padding="24,0" Margin="0,0,12,0"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"
+                                materialDesign:ButtonAssist.CornerRadius="8"
                                 Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="White"
                                 Click="NewTestFromResults_Click">
                             <StackPanel Orientation="Horizontal">
@@ -641,9 +639,9 @@
                             </StackPanel>
                         </Button>
 
-                        <Button x:Name="RetryFailedBtn" Height="48" Padding="24,0" Margin="0,0,12,0"
+                        <Button x:Name="RetryFailedBtn" Height="44" Padding="24,0" Margin="0,0,12,0"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"
+                                materialDesign:ButtonAssist.CornerRadius="8"
                                 Background="{DynamicResource WarnYellowBrush}" BorderBrush="{DynamicResource WarnYellowBrush}" Foreground="Black"
                                 Click="RetryFailedBtn_Click" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
@@ -653,9 +651,9 @@
                         </Button>
 
                         <Button x:Name="SaveReportBtn"
-                                Height="48" Padding="24,0"
+                                Height="44" Padding="24,0"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="12"
+                                materialDesign:ButtonAssist.CornerRadius="8"
                                 BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextDarkBrush}"
                                 Click="SaveReportBtn_Click" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">

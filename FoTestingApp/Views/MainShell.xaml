@@ -152,5 +152,55 @@
             </Button>
         </Grid>
 
+        <!-- Custom Dialog Overlay -->
+        <Grid x:Name="DialogOverlay" Grid.Row="0" Grid.RowSpan="2" Background="#80000000" Visibility="Collapsed">
+            <Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderLightBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Width="420"
+                    Height="240"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Padding="24">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" ShadowDepth="0" Color="Black" Opacity="0.2"/>
+                </Border.Effect>
+                
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Title/Icon -->
+                        <RowDefinition Height="*"/>    <!-- Content Message -->
+                        <RowDefinition Height="Auto"/> <!-- Buttons -->
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <Border Background="#FEE2E2" CornerRadius="8" Padding="8" Margin="0,0,12,0" x:Name="DialogIconBorder">
+                            <materialDesign:PackIcon x:Name="DialogIcon" Kind="Logout" Foreground="{DynamicResource FailRedBrush}" Width="24" Height="24"/>
+                        </Border>
+                        <TextBlock x:Name="DialogTitleText" Text="Konfirmasi Keluar" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <TextBlock Grid.Row="1" x:Name="DialogMessageText" Text="Apakah Anda yakin ingin keluar dari aplikasi?" FontSize="14" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                    
+                    <Grid Grid.Row="2" Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Button Grid.Column="0" x:Name="BtnDialogCancel" Content="Batal" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="10" Height="42" Foreground="{DynamicResource TextLightBrush}" BorderBrush="{DynamicResource BorderLightBrush}"
+                                Click="BtnDialogCancel_Click"/>
+                                
+                        <Button Grid.Column="2" x:Name="BtnDialogConfirm" Content="Keluar" Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="10" Height="42" Background="{DynamicResource FailRedBrush}" BorderBrush="{DynamicResource FailRedBrush}" Foreground="White"
+                                Click="BtnDialogConfirm_Click"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
     </Grid>
 </Window>

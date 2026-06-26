@@ -3,26 +3,26 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Title="Riwayat Pengujian">
-    <Grid Margin="32">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Riwayat Pengujian" FontSize="28" FontWeight="Bold"
-                   Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,24"/>
+        <TextBlock Grid.Row="0" Text="Riwayat Pengujian" FontSize="24" FontWeight="Bold"
+                   Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,12"/>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="20"
-                Effect="{DynamicResource MaterialDesignShadowDepth2}" Margin="0,0,0,24">
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="16,12"
+                Effect="{DynamicResource MaterialDesignShadowDepth2}" Margin="0,0,0,16">
             <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Margin="0,0,16,8"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="42" Margin="0,0,12,4"/>
                 <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Margin="0,0,16,8"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="42" Margin="0,0,12,4"/>
                 <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status Pengujian"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="160" Margin="0,0,16,8">
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="160" Height="42" Margin="0,0,12,4">
                     <ComboBoxItem Content="Semua Status"/>
                     <ComboBoxItem Content="PASS"/>
                     <ComboBoxItem Content="FAIL"/>
@@ -30,7 +30,7 @@
                 </ComboBox>
                 <Button Content="Terapkan Filter" Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                        Foreground="White" Click="FilterBtn_Click" Margin="0,4,0,8" Height="48"
+                        Foreground="White" Click="FilterBtn_Click" Margin="0,0,0,4" Height="42"
                         materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}">
                     <Button.ContentTemplate>
                         <DataTemplate>
@@ -45,13 +45,13 @@
         </Border>
 
         <!-- Sessions DataGrid -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="24"
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="16"
                 Effect="{DynamicResource MaterialDesignShadowDepth2}">
             <DataGrid x:Name="SessionsGrid"
                       AutoGenerateColumns="False" IsReadOnly="True"
                       Style="{StaticResource MaterialDesignDataGrid}"
                       BorderThickness="0" GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="{DynamicResource BorderLightBrush}" RowHeight="56" FontSize="14">
+                      HorizontalGridLinesBrush="{DynamicResource BorderLightBrush}" RowHeight="48" FontSize="13">
                       
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">

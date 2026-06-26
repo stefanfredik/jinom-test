@@ -81,15 +81,15 @@
                 
                 <!-- Header -->
                 <TextBlock Text="Selamat Datang" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,8"/>
-                <TextBlock Text="Masukkan kredensial OpenAccess Anda untuk masuk" FontSize="14" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,36"/>
+                <TextBlock Text="Masukkan kredensial OpenAccess Anda untuk masuk" FontSize="14" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,24"/>
 
                 <!-- Email Input -->
-                <StackPanel Margin="0,0,0,20">
-                    <TextBlock Text="ALAMAT EMAIL" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                <StackPanel Margin="0,0,0,14">
+                    <TextBlock Text="ALAMAT EMAIL" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,6"/>
                     <TextBox x:Name="EmailTextBox"
                              materialDesign:HintAssist.Hint="nama@jinom.net"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             Height="52" FontSize="14"
+                             Height="44" FontSize="14"
                              VerticalContentAlignment="Center"
                              materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
                              BorderBrush="{DynamicResource BorderLightBrush}"
@@ -97,12 +97,12 @@
                 </StackPanel>
 
                 <!-- Password Input -->
-                <StackPanel Margin="0,0,0,20">
-                    <TextBlock Text="PASSWORD" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,8"/>
+                <StackPanel Margin="0,0,0,14">
+                    <TextBlock Text="PASSWORD" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,6"/>
                     <PasswordBox x:Name="PasswordBox"
                                  materialDesign:HintAssist.Hint="••••••••"
                                  Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
-                                 Height="52" FontSize="14"
+                                 Height="44" FontSize="14"
                                  VerticalContentAlignment="Center"
                                  materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
                                  BorderBrush="{DynamicResource BorderLightBrush}"
@@ -111,22 +111,22 @@
                 </StackPanel>
 
                 <!-- Remember Me -->
-                <CheckBox x:Name="RememberMeCheckBox" Content="Ingat perangkat ini" FontSize="14" Foreground="{DynamicResource TextLightBrush}" BorderBrush="{DynamicResource BorderLightBrush}" Margin="0,0,0,24"/>
+                <CheckBox x:Name="RememberMeCheckBox" Content="Ingat perangkat ini" FontSize="14" Foreground="{DynamicResource TextLightBrush}" BorderBrush="{DynamicResource BorderLightBrush}" Margin="0,0,0,16"/>
 
                 <!-- Error Message -->
                 <TextBlock x:Name="ErrorMessage" Foreground="{DynamicResource FailRedBrush}" FontSize="12"
-                           Visibility="Collapsed" Margin="0,0,0,16" TextWrapping="Wrap"/>
+                           Visibility="Collapsed" Margin="0,0,0,12" TextWrapping="Wrap"/>
 
                 <!-- Submit Button -->
                 <Button x:Name="LoginButton"
-                        Height="52"
+                        Height="44"
                         Style="{StaticResource MaterialDesignRaisedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="12"
+                        materialDesign:ButtonAssist.CornerRadius="8"
                         Foreground="White"
                         Click="LoginButton_Click"
                         BorderBrush="Transparent"
                         Cursor="Hand"
-                        Margin="0,0,0,16">
+                        Margin="0,0,0,12">
                     <Button.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                             <GradientStop Color="#22C55E" Offset="0.0"/>
@@ -134,7 +134,7 @@
                         </LinearGradientBrush>
                     </Button.Background>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Masuk ke Konsol" FontSize="15" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Masuk ke Konsol" FontSize="14" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <materialDesign:PackIcon Kind="Login" Width="20" Height="20" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -145,10 +145,10 @@
                              IsIndeterminate="True"
                              Visibility="Collapsed"
                              Foreground="{DynamicResource PrimaryBrush}"
-                             Margin="0,0,0,16"/>
+                             Margin="0,0,0,12"/>
 
                 <!-- Security Badges -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,32,0,0" Opacity="0.4">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0" Opacity="0.4">
                     <TextBlock Text="SECURE INFRASTRUCTURE" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>
                     <TextBlock Text="•" FontSize="9" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>
                     <TextBlock Text="ISO 27001" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>

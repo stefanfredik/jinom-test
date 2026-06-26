@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using FoTestingApp.Helpers;
 using FoTestingApp.Services;
@@ -47,9 +49,7 @@ public partial class MainShell : Window
         if (SessionManager.IsSessionExpired())
         {
             _sessionTimer.Stop();
-            MessageBox.Show("Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.",
-                "Sesi Berakhir", MessageBoxButton.OK, MessageBoxImage.Information);
-            DoLogout();
+            ShowDialog("Sesi Berakhir", "Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.", "OK", "session_expired", false);
         }
     }
 
@@ -99,13 +99,7 @@ public partial class MainShell : Window
 
     private void LogoutButton_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show("Apakah Anda yakin ingin keluar?",
-            "Konfirmasi Keluar", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-        if (result == MessageBoxResult.Yes)
-        {
-            DoLogout();
-        }
+        ShowDialog("Konfirmasi Keluar", "Apakah Anda yakin ingin keluar dari aplikasi?", "Keluar", "logout", true);
     }
 
     private void DoLogout()
@@ -116,6 +110,78 @@ public partial class MainShell : Window
         var login = new LoginWindow();
         login.Show();
         Close();
+    }
+
+    private void ShowDialog(string title, string message, string confirmText, string actionTag, bool showCancel = true)
+    {
+        DialogTitleText.Text = title;
+        DialogMessageText.Text = message;
+        BtnDialogConfirm.Content = confirmText;
+        BtnDialogConfirm.Tag = actionTag;
+
+        BtnDialogCancel.Visibility = showCancel ? Visibility.Visible : Visibility.Collapsed;
+
+        if (!showCancel)
+        {
+            Grid.SetColumn(BtnDialogConfirm, 0);
+            Grid.SetColumnSpan(BtnDialogConfirm, 3);
+        }
+        else
+        {
+            Grid.SetColumn(BtnDialogConfirm, 2);
+            Grid.SetColumnSpan(BtnDialogConfirm, 1);
+        }
+
+        if (actionTag == "logout")
+        {
+            DialogIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Logout;
+            DialogIconBorder.Background = new SolidColorBrush(Color.FromArgb((byte)0x1F, (byte)0xEF, (byte)0x44, (byte)0x44));
+            DialogIcon.Foreground = (Brush)FindResource("FailRedBrush");
+        }
+        else
+        {
+            DialogIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AlertCircleOutline;
+            DialogIconBorder.Background = new SolidColorBrush(Color.FromArgb((byte)0x1F, (byte)0xF5, (byte)0x9E, (byte)0x0B));
+            DialogIcon.Foreground = (Brush)FindResource("WarnYellowBrush");
+        }
+
+        DialogOverlay.Opacity = 0;
+        DialogOverlay.Visibility = Visibility.Visible;
+
+        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        DialogOverlay.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+    }
+
+    private void BtnDialogCancel_Click(object sender, RoutedEventArgs e)
+    {
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+        };
+        fadeOut.Completed += (s, ev) => DialogOverlay.Visibility = Visibility.Collapsed;
+        DialogOverlay.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+    }
+
+    private void BtnDialogConfirm_Click(object sender, RoutedEventArgs e)
+    {
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+        };
+
+        var tag = BtnDialogConfirm.Tag?.ToString();
+        fadeOut.Completed += (s, ev) =>
+        {
+            DialogOverlay.Visibility = Visibility.Collapsed;
+            if (tag == "logout" || tag == "session_expired")
+            {
+                DoLogout();
+            }
+        };
+        DialogOverlay.BeginAnimation(UIElement.OpacityProperty, fadeOut);
     }
 
     private void BtnToggleTheme_Click(object sender, RoutedEventArgs e)

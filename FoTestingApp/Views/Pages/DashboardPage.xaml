@@ -10,118 +10,122 @@
         </Grid.ColumnDefinitions>
 
         <!-- ═══ Main Content ═══ -->
-        <ScrollViewer Grid.Column="0">
-            <StackPanel Margin="32">
-                <!-- Header -->
-                <Grid Margin="0,0,0,24">
-                    <StackPanel>
-                        <TextBlock Text="Riwayat Pengujian" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,4"/>
-                        <TextBlock Text="Data rekapitulasi dan riwayat pengujian diagnostik jaringan" FontSize="14" Foreground="{DynamicResource TextLightBrush}"/>
-                    </StackPanel>
-                    
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Border Background="#10B981" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Lulus (PASS)">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CheckCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="TotalPassCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#EF4444" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Gagal (FAIL)">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="TotalFailCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#3B82F6" CornerRadius="8" Padding="12,6" ToolTip="Total Sesi">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ViewList" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Total:" FontSize="13" Foreground="White" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
+        <Grid Grid.Column="0" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                <!-- Filters -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="16"
-                        BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Margin="0,0,0,16">
-                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
-                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Margin="0,0,12,0"/>
-                        <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
-                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Margin="0,0,12,0"/>
-                        <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Margin="0,0,12,0">
-                            <ComboBoxItem Content="Semua" IsSelected="True"/>
-                            <ComboBoxItem Content="PASS"/>
-                            <ComboBoxItem Content="FAIL"/>
-                            <ComboBoxItem Content="PARTIAL"/>
-                        </ComboBox>
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                                Foreground="White" Click="FilterBtn_Click" Height="40"
-                                materialDesign:ButtonAssist.CornerRadius="8" Padding="16,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FilterVariant" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="Filter" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
-                    </WrapPanel>
-                </Border>
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Riwayat Pengujian" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Data rekapitulasi dan riwayat pengujian diagnostik jaringan" FontSize="13" Foreground="{DynamicResource TextLightBrush}"/>
+                </StackPanel>
+                
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Border Background="#10B981" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Lulus (PASS)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CheckCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TotalPassCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#EF4444" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Gagal (FAIL)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TotalFailCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#3B82F6" CornerRadius="8" Padding="12,6" ToolTip="Total Sesi">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ViewList" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Total:" FontSize="13" Foreground="White" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TotalSessionCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
 
-                <!-- Sessions Table -->
-                <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="0"
-                        BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
-                    <DataGrid x:Name="SessionsGrid"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              Style="{StaticResource MaterialDesignDataGrid}"
-                              BorderThickness="0" GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="{DynamicResource BorderLightBrush}" RowHeight="52" FontSize="13"
-                              SelectionChanged="SessionsGrid_SelectionChanged"
-                              Cursor="Hand">
-                        <DataGrid.Resources>
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                <Setter Property="Foreground" Value="{DynamicResource TextLightBrush}"/>
-                                <Setter Property="FontSize" Value="12"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Padding" Value="16,10"/>
-                            </Style>
-                            <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
-                                <Setter Property="Padding" Value="16,0"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="{x:Type DataGridCell}">
-                                            <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
-                                                <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </DataGrid.Resources>
+            <!-- Filters -->
+            <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="12"
+                    BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Margin="0,0,0,12">
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="40" Margin="0,0,12,0"/>
+                    <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="40" Margin="0,0,12,0"/>
+                    <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Height="40" Margin="0,0,12,0">
+                        <ComboBoxItem Content="Semua" IsSelected="True"/>
+                        <ComboBoxItem Content="PASS"/>
+                        <ComboBoxItem Content="FAIL"/>
+                        <ComboBoxItem Content="PARTIAL"/>
+                    </ComboBox>
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
+                            Foreground="White" Click="FilterBtn_Click" Height="40"
+                            materialDesign:ButtonAssist.CornerRadius="8" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FilterVariant" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Filter" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </Border>
 
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID" Binding="{Binding CertificationId}" Width="180"/>
-                            <DataGridTextColumn Header="Nama" Binding="{Binding Customer.FullName}" Width="*"/>
-                            <DataGridTextColumn Header="Tipe" Binding="{Binding Customer.SiteType}" Width="80"/>
-                            <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="90"/>
-                            <DataGridTextColumn Header="Tanggal" Binding="{Binding TestDate, StringFormat='dd MMM yyyy HH:mm'}" Width="150"/>
-                            <DataGridTemplateColumn Header="Status" Width="90">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left"
-                                                Background="{Binding OverallStatus, Converter={StaticResource StatusToBackgroundConverter}}">
-                                            <TextBlock Text="{Binding OverallStatus}" FontSize="11" FontWeight="Bold"
-                                                       Foreground="{Binding OverallStatus, Converter={StaticResource StatusToForegroundConverter}}"/>
+            <!-- Sessions Table -->
+            <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="0"
+                    BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                <DataGrid x:Name="SessionsGrid"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          Style="{StaticResource MaterialDesignDataGrid}"
+                          BorderThickness="0" GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource BorderLightBrush}" RowHeight="44" FontSize="13"
+                          SelectionChanged="SessionsGrid_SelectionChanged"
+                          Cursor="Hand">
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                            <Setter Property="Foreground" Value="{DynamicResource TextLightBrush}"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="16,10"/>
+                        </Style>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                            <Setter Property="Padding" Value="16,0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                        <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="Center"/>
                                         </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding CertificationId}" Width="180"/>
+                        <DataGridTextColumn Header="Nama" Binding="{Binding Customer.FullName}" Width="*"/>
+                        <DataGridTextColumn Header="Tipe" Binding="{Binding Customer.SiteType}" Width="80"/>
+                        <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="90"/>
+                        <DataGridTextColumn Header="Tanggal" Binding="{Binding TestDate, StringFormat='dd MMM yyyy HH:mm'}" Width="150"/>
+                        <DataGridTemplateColumn Header="Status" Width="90">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left"
+                                            Background="{Binding OverallStatus, Converter={StaticResource StatusToBackgroundConverter}}">
+                                        <TextBlock Text="{Binding OverallStatus}" FontSize="11" FontWeight="Bold"
+                                                   Foreground="{Binding OverallStatus, Converter={StaticResource StatusToForegroundConverter}}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
 
         <!-- ═══ Detail Side Panel ═══ -->
         <Border Grid.Column="1" Background="{DynamicResource CardBackgroundBrush}"
