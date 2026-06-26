@@ -41,7 +41,7 @@
                 <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="Height" Value="44"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth1"/>
+                <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp2"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
             </Style>
