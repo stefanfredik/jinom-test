@@ -76,12 +76,12 @@
                               AutoGenerateColumns="False" IsReadOnly="True"
                               Style="{StaticResource MaterialDesignDataGrid}"
                               BorderThickness="0" GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#E2E8F0" RowHeight="52" FontSize="13"
+                              HorizontalGridLinesBrush="{DynamicResource BorderLightBrush}" RowHeight="52" FontSize="13"
                               SelectionChanged="SessionsGrid_SelectionChanged"
                               Cursor="Hand">
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextLightBrush}"/>
                                 <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="Padding" Value="16,10"/>

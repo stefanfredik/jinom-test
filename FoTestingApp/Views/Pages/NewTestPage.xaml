@@ -18,6 +18,41 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="ThinScrollbarStyle" TargetType="{x:Type ScrollBar}">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid x:Name="Bg" Background="Transparent" SnapsToDevicePixels="true">
+                            <Track x:Name="PART_Track" IsDirectionReversed="true" IsEnabled="{TemplateBinding IsEnabled}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Opacity="0" Focusable="false"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Opacity="0" Focusable="false"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Background="{DynamicResource TextLightBrush}" Opacity="0.25" BorderBrush="Transparent" BorderThickness="0">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="4" SnapsToDevicePixels="True"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="PART_Track" Property="Thumb.Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
@@ -267,7 +302,7 @@
                                                 <TextBlock x:Name="DetailsSiteIdText" Text="SITE-ID" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                                             </Border>
                                             
-                                            <Border x:Name="DetailsPackageBadge" Background="#F1F5F9" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                            <Border x:Name="DetailsPackageBadge" Background="{DynamicResource AppBackgroundBrush}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
                                                 <TextBlock x:Name="DetailsPackageText" Text="100 Mbps" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
                                             </Border>
                                         </WrapPanel>
@@ -495,14 +530,46 @@
 
                     <!-- Diagnostic Log List -->
                     <StackPanel Margin="0,0,0,16">
-                        <Grid Margin="4,0,4,8">
-                            <TextBlock Text="DIAGNOSTIC LOG" FontSize="12" FontWeight="Black" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Real-time updates" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
+                        <!-- Terminal Window Header -->
+                        <Border Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1,1,1,0" CornerRadius="12,12,0,0" Padding="12,10">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <!-- macOS-style window controls -->
+                                    <Ellipse Width="8" Height="8" Fill="#FF5F56" Margin="0,0,6,0"/>
+                                    <Ellipse Width="8" Height="8" Fill="#FFBD2E" Margin="0,0,6,0"/>
+                                    <Ellipse Width="8" Height="8" Fill="#27C93F" Margin="0,0,12,0"/>
+                                    <TextBlock Text="DIAGNOSTIC LOG CONSOLE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" LetterSpacing="0.5"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <!-- Pulsating dot -->
+                                    <Ellipse x:Name="LiveLogDot" Width="8" Height="8" Fill="#22C55E" Margin="0,0,6,0" VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Style.Triggers>
+                                                    <EventTrigger RoutedEvent="Loaded">
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                 From="1.0" To="0.2" Duration="0:0:0.8"
+                                                                                 AutoReverse="True" RepeatBehavior="Forever"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <TextBlock Text="LIVE STREAMING" FontSize="10" FontWeight="Bold" Foreground="#22C55E" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
                         
-                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="12"
+                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="0,0,12,12" Padding="16,12"
                                 BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                             <ScrollViewer x:Name="LogsScrollViewer" Height="300" VerticalScrollBarVisibility="Auto">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource ThinScrollbarStyle}"/>
+                                </ScrollViewer.Resources>
                                 <StackPanel x:Name="DiagnosticLogsPanel">
                                     <!-- Logs injected here dynamically by code-->
                                 </StackPanel>

@@ -51,11 +51,11 @@
                       AutoGenerateColumns="False" IsReadOnly="True"
                       Style="{StaticResource MaterialDesignDataGrid}"
                       BorderThickness="0" GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E2E8F0" RowHeight="56" FontSize="14">
+                      HorizontalGridLinesBrush="{DynamicResource BorderLightBrush}" RowHeight="56" FontSize="14">
                       
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                        <Setter Property="Foreground" Value="#64748B"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextLightBrush}"/>
                         <Setter Property="FontSize" Value="13"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
                         <Setter Property="Padding" Value="16,12"/>

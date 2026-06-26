@@ -5,6 +5,7 @@
         Title="Jinom Test"
         MinWidth="1024" MinHeight="640"
         Width="1280" Height="768"
+        ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
 

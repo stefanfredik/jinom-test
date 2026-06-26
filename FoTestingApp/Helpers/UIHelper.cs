@@ -61,9 +61,10 @@ public static class UIHelper
 
         var cardBorder = new Border
         {
-            Background = Brushes.White, CornerRadius = new CornerRadius(16),
+            CornerRadius = new CornerRadius(16),
             BorderThickness = new Thickness(1), Margin = new Thickness(0, 0, 0, 12), Padding = new Thickness(16)
         };
+        cardBorder.SetResourceReference(Border.BackgroundProperty, "CardBackgroundBrush");
         cardBorder.SetResourceReference(Border.BorderBrushProperty, "BorderLightBrush");
         cardBorder.Child = grid;
 

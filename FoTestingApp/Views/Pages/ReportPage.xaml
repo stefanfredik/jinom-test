@@ -18,7 +18,7 @@
                 <StackPanel>
                     <!-- Icon Header inside Card -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
-                        <Border Background="#F1F5F9" CornerRadius="8" Padding="12">
+                        <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="8" Padding="12">
                             <materialDesign:PackIcon Kind="FileDocumentOutline" Width="32" Height="32" Foreground="#3B82F6"/>
                         </Border>
                         <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
@@ -28,7 +28,7 @@
                     </StackPanel>
 
                     <!-- Input Section -->
-                    <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="#475569" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8"/>
+                    <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="{DynamicResource TextLightBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8"/>
                     <ComboBox x:Name="SessionComboBox"
                               materialDesign:HintAssist.Hint="Cari atau pilih sesi..."
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
@@ -83,10 +83,10 @@
                         </Button>
                     </Grid>
                     
-                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,24,0,0">
+                    <Border Background="{DynamicResource AppBackgroundBrush}" BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,24,0,0">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock x:Name="ReportStatus" Text="Siap untuk men-generate laporan." Foreground="#64748B" FontSize="12" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16" Foreground="{DynamicResource TextLightBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="ReportStatus" Text="Siap untuk men-generate laporan." Foreground="{DynamicResource TextLightBrush}" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
