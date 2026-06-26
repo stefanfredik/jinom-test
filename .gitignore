@@ -1,33 +1,55 @@
-# Build results
-**/bin/Debug/
-**/bin/Release/
+# ──────────────────────────────────────────
+# .gitignore — FoTestingApp (WPF / .NET 8)
+# ──────────────────────────────────────────
+
+# ── Build output ──────────────────────────
+**/bin/
 **/obj/
 
-# Logs
-**/Logs/
+# ── Publish output ────────────────────────
+**/publish/
+dist/
 
-# User-specific files
+# ── NuGet packages (restored on build) ───
+*.nupkg
+**/packages/
+!**/packages/build/
+
+# ── Visual Studio ──────────────────────────
+.vs/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
+*.VC.db
+*.VC.opendb
+*.pidb
+*.svclog
+*.scc
+_Upgrade Report Files/
 
-# VS Code
+# ── Rider / JetBrains ─────────────────────
+.idea/
+*.DotSettings.user
+
+# ── VS Code ───────────────────────────────
 .vscode/
 
-# OS files
+# ── OS files ──────────────────────────────
 Thumbs.db
 Desktop.ini
 .DS_Store
+ehthumbs.db
 
-# App-specific Logs from appsettings.json
-FoTestingApp/Logs/
+# ── Application logs ──────────────────────
+**/Logs/
+*.log
 
-# FoTestingApp outputs and debug
-FoTestingApp/bin/
-FoTestingApp/obj/
-FoTestingApp/Logs/
-
-# Packaging artifacts
+# ── Packaging & installer output ──────────
 SingleFilePacker/
-dist/
+Output/
+Setup*.exe
+
+# ── Sensitive config (never commit secrets) ─
+# appsettings.Production.json
+# appsettings.local.json
