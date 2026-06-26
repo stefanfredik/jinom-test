@@ -103,6 +103,7 @@ public partial class NewTestPage : Page
             PopComboBox.ItemsSource = null;
             PopComboBox.SelectedItem = null;
             PopStatusText.Text = string.Empty;
+            BtnEditDetails.Visibility = Visibility.Collapsed;
         }
         else
         {
@@ -128,6 +129,7 @@ public partial class NewTestPage : Page
             PopComboBox.ItemsSource = null;
             PopComboBox.SelectedItem = null;
             PopStatusText.Text = string.Empty;
+            BtnEditDetails.Visibility = Visibility.Visible;
 
             _ = LoadAvailableCustomersAsync();
         }
@@ -294,6 +296,13 @@ public partial class NewTestPage : Page
                 }
             }
         }
+    }
+
+    private void BtnEditDetails_Click(object sender, RoutedEventArgs e)
+    {
+        NameFieldPanel.Visibility = Visibility.Visible;
+        PackageFieldPanel.Visibility = Visibility.Visible;
+        AddressFieldPanel.Visibility = Visibility.Visible;
     }
 
     private async void StartTestBtn_Click(object sender, RoutedEventArgs e)
@@ -492,13 +501,13 @@ public partial class NewTestPage : Page
     {
         StartStepPulse(null);
         ProgressContainer.Visibility = Visibility.Collapsed;
-        LandingContainer.Visibility = Visibility.Visible;
+        LocationContainer.Visibility = Visibility.Visible;
     }
 
     private void NewTestFromResults_Click(object sender, RoutedEventArgs e)
     {
         ResultsContainer.Visibility = Visibility.Collapsed;
-        LandingContainer.Visibility = Visibility.Visible;
+        LocationContainer.Visibility = Visibility.Visible;
     }
 
     // ── Results Display ───────────────────────────────────────────────────────

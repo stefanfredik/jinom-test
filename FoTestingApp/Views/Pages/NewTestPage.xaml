@@ -7,7 +7,7 @@
     <Grid Background="{DynamicResource AppBackgroundBrush}">
 
         <!-- ═══ Stage 1: Landing — Big circular start button ═══ -->
-        <Grid x:Name="LandingContainer" Visibility="Visible">
+        <Grid x:Name="LandingContainer" Visibility="Collapsed">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <!-- Title -->
                 <TextBlock Text="Jinom Testing" FontSize="36" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
@@ -30,8 +30,13 @@
                     <!-- Main button -->
                     <Button x:Name="StartLandingBtn" Width="180" Height="180" Click="StartLandingBtn_Click"
                             Style="{StaticResource MaterialDesignFloatingActionButton}"
-                            Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                            Foreground="White" Cursor="Hand">
+                            Foreground="White" Cursor="Hand" BorderBrush="Transparent">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#22C55E" Offset="0.0"/>
+                                <GradientStop Color="#16A34A" Offset="1.0"/>
+                            </LinearGradientBrush>
+                        </Button.Background>
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Play" Width="56" Height="56" HorizontalAlignment="Center"/>
                             <TextBlock Text="MULAI" FontSize="16" FontWeight="Black" HorizontalAlignment="Center" Margin="0,4,0,0"/>
@@ -44,7 +49,7 @@
         </Grid>
 
         <!-- ═══ Stage 2: Location Selection — POP or CPE ═══ -->
-        <Grid x:Name="LocationContainer" Visibility="Collapsed">
+        <Grid x:Name="LocationContainer" Visibility="Visible">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="700">
                 <!-- Title -->
                 <TextBlock Text="Pilih Lokasi Pengujian" FontSize="32" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
@@ -105,10 +110,10 @@
                     </Border>
                 </Grid>
 
-                <!-- Back button -->
+                <!-- Back button (Bypassed) -->
                 <Button Content="Kembali" Click="BackToLanding_Click" Margin="0,32,0,0"
                         Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource TextLightBrush}"
-                        HorizontalAlignment="Center" Height="40"/>
+                        HorizontalAlignment="Center" Height="40" Visibility="Collapsed"/>
             </StackPanel>
         </Grid>
 
@@ -209,7 +214,7 @@
                                                  </Grid.ColumnDefinitions>
                                                 <materialDesign:PackIcon Kind="Account" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding FullName}" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
                                                     <TextBlock Text="{Binding Address}" FontSize="11" Foreground="{DynamicResource TextLightBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                                                 </StackPanel>
                                             </Grid>
@@ -230,6 +235,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     
                                     <!-- Icon Circle -->
@@ -262,6 +268,12 @@
                                             <TextBlock x:Name="DetailsAddressText" Text="Alamat" FontSize="13" Foreground="{DynamicResource TextLightBrush}" TextWrapping="Wrap" Grid.Column="1"/>
                                         </Grid>
                                     </StackPanel>
+
+                                    <!-- Edit Button -->
+                                    <Button Grid.Column="2" x:Name="BtnEditDetails" Style="{StaticResource MaterialDesignIconButton}"
+                                            Click="BtnEditDetails_Click" ToolTip="Ubah data manual" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <materialDesign:PackIcon Kind="Pencil" Width="22" Height="22" Foreground="{DynamicResource TextLightBrush}"/>
+                                    </Button>
                                 </Grid>
                             </Border>
 
@@ -331,31 +343,39 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                            <Button x:Name="BackToLocationBtn" Margin="0,0,12,0"
-                                    Height="52" Padding="16,0"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="12"
-                                    BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextLightBrush}"
-                                    Click="BackToLocation_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ArrowLeft" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Kembali" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                        <!-- Back button on Left Column -->
+                        <Button x:Name="BackToLocationBtn" Grid.Column="0"
+                                Height="52" Padding="16,0"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="12"
+                                BorderBrush="{DynamicResource BorderLightBrush}" Foreground="{DynamicResource TextLightBrush}"
+                                Click="BackToLocation_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ArrowLeft" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Kembali" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                            <Button x:Name="StartTestBtn"
-                                    Height="52" Padding="24,0"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="12"
-                                    Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="White"
-                                    Click="StartTestBtn_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Play" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Mulai Pengujian" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
+                        <!-- Start Test Button on Right Column -->
+                        <Button x:Name="StartTestBtn" Grid.Column="2"
+                                Height="52" Padding="28,0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="12"
+                                Foreground="White"
+                                Click="StartTestBtn_Click"
+                                BorderBrush="Transparent"
+                                Cursor="Hand">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#22C55E" Offset="0.0"/>
+                                    <GradientStop Color="#16A34A" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </Button.Background>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Play" Width="22" Height="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Mulai Pengujian" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </Grid>
                 </Border>
             </StackPanel>
