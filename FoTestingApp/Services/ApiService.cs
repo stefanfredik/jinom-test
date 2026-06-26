@@ -148,8 +148,15 @@ public class ApiService
     private static int ParseMbps(string? paket)
     {
         if (string.IsNullOrWhiteSpace(paket)) return 0;
-        var match = System.Text.RegularExpressions.Regex.Match(paket, @"(\d+)\s*(m|mb|mbps)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        
+        // 1. Match digits followed by unit (mbps, mb, m)
+        var match = System.Text.RegularExpressions.Regex.Match(paket, @"(\d+)\s*(mbps|mb|m)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         if (match.Success && int.TryParse(match.Groups[1].Value, out int mbps)) return mbps;
+
+        // 2. Fallback to match the first sequence of numbers (e.g. "Jinom 50", "100")
+        var matchNumbers = System.Text.RegularExpressions.Regex.Match(paket, @"\d+");
+        if (matchNumbers.Success && int.TryParse(matchNumbers.Value, out int num)) return num;
+
         return 0;
     }
 

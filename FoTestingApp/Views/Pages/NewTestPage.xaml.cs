@@ -275,9 +275,11 @@ public partial class NewTestPage : Page
         DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(selectedCustomer.Address) ? Visibility.Collapsed : Visibility.Visible;
         
         SelectedDetailsCard.Visibility = Visibility.Visible;
-        NameFieldPanel.Visibility = Visibility.Collapsed;
-        PackageFieldPanel.Visibility = Visibility.Collapsed;
-        AddressFieldPanel.Visibility = Visibility.Collapsed;
+        
+        // Keep input panels visible if the details are empty or missing so they can be filled manually
+        NameFieldPanel.Visibility = string.IsNullOrWhiteSpace(FullNameBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        PackageFieldPanel.Visibility = string.IsNullOrWhiteSpace(PackageMbpsBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        AddressFieldPanel.Visibility = string.IsNullOrWhiteSpace(AddressBox.Text) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void CustomerComboBox_TextChanged(object sender, TextChangedEventArgs e)
