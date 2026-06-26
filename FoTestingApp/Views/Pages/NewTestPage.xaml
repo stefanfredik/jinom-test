@@ -101,7 +101,7 @@
 
         <!-- ═══ Stage 2: Location Selection — POP or CPE ═══ -->
         <Grid x:Name="LocationContainer" Visibility="Visible">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="700">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="600">
                 <!-- Title -->
                 <TextBlock Text="Pilih Lokasi Pengujian" FontSize="32" FontWeight="Black" Foreground="{DynamicResource TextDarkBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                 <TextBlock Text="Tentukan lokasi pengujian yang akan dilakukan" FontSize="16" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Center" Margin="0,0,0,48"/>
