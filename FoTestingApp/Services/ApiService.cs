@@ -131,7 +131,7 @@ public class ApiService
                         SiteId = sub.NomorLayanan,
                         FullName = sub.Nama ?? string.Empty,
                         Address = sub.Alamat ?? string.Empty,
-                        PackageMbps = ParseMbps(sub.Paket),
+                        PackageMbps = ParseMbps(!string.IsNullOrWhiteSpace(sub.BandwidthDown) ? sub.BandwidthDown : sub.Paket),
                         PackageName = sub.Paket,
                         Email = sub.Email
                     })
@@ -356,6 +356,8 @@ public class ApiSubscriber
     public string? Email { get; set; }
     public string? Alamat { get; set; }
     public string? Paket { get; set; }
+    public string? BandwidthDown { get; set; }
+    public string? BandwidthUp { get; set; }
 }
 
 public class PaginatedResponse<T>
