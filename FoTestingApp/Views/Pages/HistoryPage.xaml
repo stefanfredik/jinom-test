@@ -22,7 +22,7 @@
                 <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="44" Padding="12,8" Margin="0,0,12,4"/>
                 <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status Pengujian"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="160" Height="44" Padding="12,8" Margin="0,0,12,4">
+                          Style="{StaticResource JinomComboBoxStyle}" Width="160" Margin="0,0,12,4">
                     <ComboBoxItem Content="Semua Status"/>
                     <ComboBoxItem Content="PASS"/>
                     <ComboBoxItem Content="FAIL"/>

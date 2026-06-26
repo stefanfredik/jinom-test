@@ -56,7 +56,7 @@
                     <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
                                 Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="44" Padding="12,8" Margin="0,0,12,0"/>
                     <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Height="44" Padding="12,8" Margin="0,0,12,0">
+                              Style="{StaticResource JinomComboBoxStyle}" Width="130" Margin="0,0,12,0">
                         <ComboBoxItem Content="Semua" IsSelected="True"/>
                         <ComboBoxItem Content="PASS"/>
                         <ComboBoxItem Content="FAIL"/>

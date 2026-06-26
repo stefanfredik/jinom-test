@@ -209,16 +209,12 @@
                                           IsEditable="True"
                                           TextSearch.TextPath="DisplayName"
                                           TextBoxBase.TextChanged="PopComboBox_TextChanged"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                          Style="{StaticResource JinomComboBoxStyle}"
                                           materialDesign:HintAssist.Hint="Ketik untuk mencari POP..."
                                           materialDesign:HintAssist.IsFloating="False"
                                           materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
-                                          Height="44" FontSize="14" Padding="12,8"
                                           SelectionChanged="PopComboBox_SelectionChanged"
-                                          HorizontalContentAlignment="Stretch"
-                                          VerticalContentAlignment="Center"
-                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                          Background="Transparent">
+                                          HorizontalContentAlignment="Stretch">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Margin="0,4">
@@ -244,16 +240,12 @@
                                           IsEditable="True"
                                           TextSearch.TextPath="DisplayName"
                                           TextBoxBase.TextChanged="CustomerComboBox_TextChanged"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                          Style="{StaticResource JinomComboBoxStyle}"
                                           materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
                                           materialDesign:HintAssist.IsFloating="False"
                                           materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
-                                          Height="44" FontSize="14" Padding="12,8"
                                           SelectionChanged="CustomerComboBox_SelectionChanged"
-                                          HorizontalContentAlignment="Stretch"
-                                          VerticalContentAlignment="Center"
-                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                          Background="Transparent">
+                                          HorizontalContentAlignment="Stretch">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Margin="0,4">

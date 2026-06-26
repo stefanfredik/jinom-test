@@ -34,6 +34,26 @@
             <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
             <CornerRadius x:Key="InputCornerRadius">12</CornerRadius>
             <CornerRadius x:Key="ButtonCornerRadius">12</CornerRadius>
+
+            <!-- Standardized ComboBox Styling -->
+            <Style x:Key="JinomComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Height" Value="44"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth1"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+            </Style>
+
+            <!-- Implicit ComboBoxItem style for consistent dropdown list items -->
+            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItem}">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextDarkBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
             
             <!-- Value Converters -->
             <helpers:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>

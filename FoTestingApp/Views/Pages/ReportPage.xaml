@@ -31,8 +31,8 @@
                     <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="{DynamicResource TextLightBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,6"/>
                     <ComboBox x:Name="SessionComboBox"
                               materialDesign:HintAssist.Hint="Cari atau pilih sesi..."
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              Height="44" Padding="12,8" Margin="0,0,0,20" VerticalContentAlignment="Center"
+                              Style="{StaticResource JinomComboBoxStyle}"
+                              Margin="0,0,0,20"
                               IsEditable="True"/>
                     
                     <!-- Actions -->
