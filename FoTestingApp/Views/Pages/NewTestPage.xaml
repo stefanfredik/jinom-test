@@ -334,6 +334,13 @@
                                          Background="Transparent"
                                          Foreground="{DynamicResource TextDarkBrush}"
                                          TextChanged="FullNameBox_TextChanged"/>
+                                <TextBlock x:Name="NameWarningText"
+                                           Text="* Nama pelanggan wajib diisi."
+                                           Foreground="{DynamicResource FailRedBrush}"
+                                           FontSize="11"
+                                           Margin="4,6,0,0"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="2" x:Name="PackageFieldPanel" Margin="0,0,0,12">
@@ -371,6 +378,13 @@
                                          Background="Transparent"
                                          Foreground="{DynamicResource TextDarkBrush}"
                                          TextChanged="AddressBox_TextChanged"/>
+                                <TextBlock x:Name="AddressWarningText"
+                                           Text="* Alamat pelanggan wajib diisi."
+                                           Foreground="{DynamicResource FailRedBrush}"
+                                           FontSize="11"
+                                           Margin="4,6,0,0"
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed"/>
                             </StackPanel>
 
                             <!-- Row 4: Notes Field (Spans both columns) -->

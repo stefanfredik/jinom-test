@@ -92,10 +92,9 @@ public partial class NewTestPage : Page
         PackageMbpsBox.BorderBrush = borderBrush;
         AddressBox.BorderBrush = borderBrush;
 
-        if (PackageWarningText != null)
-        {
-            PackageWarningText.Visibility = Visibility.Collapsed;
-        }
+        if (PackageWarningText != null) PackageWarningText.Visibility = Visibility.Collapsed;
+        if (NameWarningText != null) NameWarningText.Visibility = Visibility.Collapsed;
+        if (AddressWarningText != null) AddressWarningText.Visibility = Visibility.Collapsed;
 
         if (_testMode == "pop")
         {
@@ -272,10 +271,9 @@ public partial class NewTestPage : Page
         PackageMbpsBox.BorderBrush = borderBrush;
         AddressBox.BorderBrush = borderBrush;
         
-        if (PackageWarningText != null)
-        {
-            PackageWarningText.Visibility = Visibility.Collapsed;
-        }
+        if (PackageWarningText != null) PackageWarningText.Visibility = Visibility.Collapsed;
+        if (NameWarningText != null) NameWarningText.Visibility = Visibility.Collapsed;
+        if (AddressWarningText != null) AddressWarningText.Visibility = Visibility.Collapsed;
 
         if (CustomerComboBox.SelectedItem is not FoCustomer selectedCustomer)
         {
@@ -590,8 +588,24 @@ public partial class NewTestPage : Page
 
             if (isNameEmpty || isPackageEmpty || isAddressEmpty)
             {
-                if (isNameEmpty) FullNameBox.BorderBrush = failBrush;
-                if (isAddressEmpty) AddressBox.BorderBrush = failBrush;
+                if (isNameEmpty)
+                {
+                    FullNameBox.BorderBrush = failBrush;
+                    if (NameWarningText != null)
+                    {
+                        NameWarningText.Text = "* Nama pelanggan wajib diisi.";
+                        NameWarningText.Visibility = Visibility.Visible;
+                    }
+                }
+                if (isAddressEmpty)
+                {
+                    AddressBox.BorderBrush = failBrush;
+                    if (AddressWarningText != null)
+                    {
+                        AddressWarningText.Text = "* Alamat pelanggan wajib diisi.";
+                        AddressWarningText.Visibility = Visibility.Visible;
+                    }
+                }
                 if (isPackageEmpty)
                 {
                     PackageMbpsBox.BorderBrush = failBrush;
@@ -601,8 +615,6 @@ public partial class NewTestPage : Page
                         PackageWarningText.Visibility = Visibility.Visible;
                     }
                 }
-
-                MessageBox.Show("Nama, Paket, dan Alamat wajib diisi.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
@@ -614,7 +626,6 @@ public partial class NewTestPage : Page
                     PackageWarningText.Text = "* Kecepatan harus berupa angka positif (Mbps).";
                     PackageWarningText.Visibility = Visibility.Visible;
                 }
-                MessageBox.Show("Paket harus berupa angka positif (Mbps).", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
         }
@@ -625,11 +636,14 @@ public partial class NewTestPage : Page
     private void FullNameBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (!_enableRealTimeValidation || FullNameBox == null) return;
-        
+
         bool isEmpty = string.IsNullOrWhiteSpace(FullNameBox.Text);
-        FullNameBox.BorderBrush = isEmpty 
-            ? (SolidColorBrush)FindResource("FailRedBrush") 
+        FullNameBox.BorderBrush = isEmpty
+            ? (SolidColorBrush)FindResource("FailRedBrush")
             : (SolidColorBrush)FindResource("BorderLightBrush");
+
+        if (NameWarningText != null)
+            NameWarningText.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void PackageMbpsBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -661,11 +675,14 @@ public partial class NewTestPage : Page
     private void AddressBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (!_enableRealTimeValidation || AddressBox == null) return;
-        
+
         bool isEmpty = string.IsNullOrWhiteSpace(AddressBox.Text);
-        AddressBox.BorderBrush = isEmpty 
-            ? (SolidColorBrush)FindResource("FailRedBrush") 
+        AddressBox.BorderBrush = isEmpty
+            ? (SolidColorBrush)FindResource("FailRedBrush")
             : (SolidColorBrush)FindResource("BorderLightBrush");
+
+        if (AddressWarningText != null)
+            AddressWarningText.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SaveReportBtn_Click(object sender, RoutedEventArgs e)
