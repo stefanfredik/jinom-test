@@ -52,11 +52,11 @@
                     BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Margin="0,0,0,12">
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
-                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="40" Margin="0,0,12,0"/>
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="44" Padding="12,8" Margin="0,0,12,0"/>
                     <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
-                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="40" Margin="0,0,12,0"/>
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="150" Height="44" Padding="12,8" Margin="0,0,12,0"/>
                     <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Height="40" Margin="0,0,12,0">
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="130" Height="44" Padding="12,8" Margin="0,0,12,0">
                         <ComboBoxItem Content="Semua" IsSelected="True"/>
                         <ComboBoxItem Content="PASS"/>
                         <ComboBoxItem Content="FAIL"/>
@@ -64,7 +64,7 @@
                     </ComboBox>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                            Foreground="White" Click="FilterBtn_Click" Height="40"
+                            Foreground="White" Click="FilterBtn_Click" Height="44"
                             materialDesign:ButtonAssist.CornerRadius="8" Padding="16,0">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="FilterVariant" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>

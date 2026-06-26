@@ -32,7 +32,7 @@
                     <ComboBox x:Name="SessionComboBox"
                               materialDesign:HintAssist.Hint="Cari atau pilih sesi..."
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              Height="44" Margin="0,0,0,20" VerticalContentAlignment="Center"
+                              Height="44" Padding="12,8" Margin="0,0,0,20" VerticalContentAlignment="Center"
                               IsEditable="True"/>
                     
                     <!-- Actions -->

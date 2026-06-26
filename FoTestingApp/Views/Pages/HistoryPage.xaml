@@ -18,11 +18,11 @@
                 Effect="{DynamicResource MaterialDesignShadowDepth2}" Margin="0,0,0,16">
             <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="42" Margin="0,0,12,4"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="44" Padding="12,8" Margin="0,0,12,4"/>
                 <DatePicker x:Name="ToDatePicker" materialDesign:HintAssist.Hint="Sampai Tanggal"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="42" Margin="0,0,12,4"/>
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Width="160" Height="44" Padding="12,8" Margin="0,0,12,4"/>
                 <ComboBox x:Name="StatusFilter" materialDesign:HintAssist.Hint="Status Pengujian"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="160" Height="42" Margin="0,0,12,4">
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="160" Height="44" Padding="12,8" Margin="0,0,12,4">
                     <ComboBoxItem Content="Semua Status"/>
                     <ComboBoxItem Content="PASS"/>
                     <ComboBoxItem Content="FAIL"/>
@@ -30,8 +30,8 @@
                 </ComboBox>
                 <Button Content="Terapkan Filter" Style="{StaticResource MaterialDesignRaisedButton}"
                         Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                        Foreground="White" Click="FilterBtn_Click" Margin="0,0,0,4" Height="42"
-                        materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonCornerRadius}">
+                        Foreground="White" Click="FilterBtn_Click" Margin="0,0,0,4" Height="44"
+                        materialDesign:ButtonAssist.CornerRadius="8">
                     <Button.ContentTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

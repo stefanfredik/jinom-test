@@ -132,7 +132,7 @@
                                     Style="{StaticResource MaterialDesignRaisedButton}"
                                     materialDesign:ButtonAssist.CornerRadius="8"
                                     Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                                    Foreground="White" FontWeight="Bold" Height="40" HorizontalAlignment="Stretch"/>
+                                    Foreground="White" FontWeight="Bold" Height="44" HorizontalAlignment="Stretch"/>
                         </StackPanel>
                     </Border>
 
@@ -154,7 +154,7 @@
                                     Style="{StaticResource MaterialDesignRaisedButton}"
                                     materialDesign:ButtonAssist.CornerRadius="8"
                                     Background="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
-                                    Foreground="White" FontWeight="Bold" Height="40" HorizontalAlignment="Stretch"/>
+                                    Foreground="White" FontWeight="Bold" Height="44" HorizontalAlignment="Stretch"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -213,7 +213,7 @@
                                           materialDesign:HintAssist.Hint="Ketik untuk mencari POP..."
                                           materialDesign:HintAssist.IsFloating="False"
                                           materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
-                                          Height="44" FontSize="14"
+                                          Height="44" FontSize="14" Padding="12,8"
                                           SelectionChanged="PopComboBox_SelectionChanged"
                                           HorizontalContentAlignment="Stretch"
                                           VerticalContentAlignment="Center"
@@ -248,7 +248,7 @@
                                           materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
                                           materialDesign:HintAssist.IsFloating="False"
                                           materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
-                                          Height="44" FontSize="14"
+                                          Height="44" FontSize="14" Padding="12,8"
                                           SelectionChanged="CustomerComboBox_SelectionChanged"
                                           HorizontalContentAlignment="Stretch"
                                           VerticalContentAlignment="Center"
@@ -332,7 +332,7 @@
                                 <TextBox x:Name="FullNameBox"
                                          materialDesign:HintAssist.Hint="Masukkan nama"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="44" FontSize="14"
+                                         Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Account"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
@@ -344,7 +344,7 @@
                                 <TextBox x:Name="PackageMbpsBox"
                                          materialDesign:HintAssist.Hint="Contoh: 100 Mbps"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="44" FontSize="14"
+                                         Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
@@ -357,7 +357,7 @@
                                 <TextBox x:Name="AddressBox"
                                          materialDesign:HintAssist.Hint="Masukkan alamat pelanggan"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="44" FontSize="14"
+                                         Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="MapMarker"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
@@ -370,7 +370,7 @@
                                 <TextBox x:Name="NotesBox"
                                          materialDesign:HintAssist.Hint="Catatan tambahan (opsional)"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Height="68" FontSize="14"
+                                         Height="68" FontSize="14" Padding="12,8"
                                          TextWrapping="Wrap"
                                          AcceptsReturn="True"
                                          VerticalContentAlignment="Top"
