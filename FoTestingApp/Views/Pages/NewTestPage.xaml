@@ -4,6 +4,22 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Title="Pengujian Baru">
 
+    <Page.Resources>
+        <Style x:Key="HoverCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderLightBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource PrimaryLightBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
     <Grid Background="{DynamicResource AppBackgroundBrush}">
 
         <!-- ═══ Stage 1: Landing — Big circular start button ═══ -->
@@ -64,8 +80,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- POP Card -->
-                    <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16"
-                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Cursor="Hand"
+                    <Border Grid.Column="0" Style="{StaticResource HoverCardStyle}"
                             MouseLeftButtonUp="PopCard_Click">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="Black" Opacity="0.06"/>
@@ -87,8 +102,7 @@
                     </Border>
 
                     <!-- CPE Card -->
-                    <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="16"
-                            BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Cursor="Hand"
+                    <Border Grid.Column="2" Style="{StaticResource HoverCardStyle}"
                             MouseLeftButtonUp="CpeCard_Click">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="Black" Opacity="0.06"/>
@@ -480,15 +494,20 @@
                     </Border>
 
                     <!-- Diagnostic Log List -->
-                    <StackPanel>
+                    <StackPanel Margin="0,0,0,16">
                         <Grid Margin="4,0,4,8">
                             <TextBlock Text="DIAGNOSTIC LOG" FontSize="12" FontWeight="Black" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Left"/>
                             <TextBlock Text="Real-time updates" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                         
-                        <StackPanel x:Name="DiagnosticLogsPanel">
-                            <!-- Logs injected here dynamically by code-->
-                        </StackPanel>
+                        <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="12" Padding="12"
+                                BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
+                            <ScrollViewer x:Name="LogsScrollViewer" Height="300" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="DiagnosticLogsPanel">
+                                    <!-- Logs injected here dynamically by code-->
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
                     </StackPanel>
 
                     <!-- Action Area -->

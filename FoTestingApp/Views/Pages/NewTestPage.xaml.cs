@@ -24,6 +24,7 @@ public partial class NewTestPage : Page
     public NewTestPage()
     {
         InitializeComponent();
+        DiagnosticLogsPanel.SizeChanged += DiagnosticLogsPanel_SizeChanged;
     }
 
     // ── Stage Navigation ──────────────────────────────────────────────────────
@@ -303,6 +304,11 @@ public partial class NewTestPage : Page
         NameFieldPanel.Visibility = Visibility.Visible;
         PackageFieldPanel.Visibility = Visibility.Visible;
         AddressFieldPanel.Visibility = Visibility.Visible;
+    }
+
+    private void DiagnosticLogsPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        LogsScrollViewer.ScrollToEnd();
     }
 
     private async void StartTestBtn_Click(object sender, RoutedEventArgs e)
