@@ -38,7 +38,7 @@ Untuk konsistensi visual, batasi variasi ukuran font ke skala berikut:
 
 * **Page Title (Judul Halaman)**: `FontSize="24"`, `FontWeight="Bold"` atau `Black` (Margin Bottom: `8` atau `12`).
 * **Section / Card Header**: `FontSize="16"` atau `18"`, `FontWeight="Bold"`.
-* **Field Labels (Label Input)**: `FontSize="11"`, `FontWeight="Bold"`, `Foreground="{DynamicResource TextLightBrush}"` (Karakter Uppercase).
+* **Field Labels (Label Input)**: Ditiadakan (dihapus). Wajib menggunakan **Floating Hint** (`materialDesign:HintAssist.IsFloating="True"`) pada masing-masing control input untuk mengurangi visual noise (*clutter*) dan menghemat ruang vertikal.
 * **Body / Normal Text**: `FontSize="13"` atau `14"`.
 * **Captions / Small Status**: `FontSize="11"` atau `12"`.
 
@@ -56,6 +56,7 @@ Untuk menyelaraskan tampilan UI dan meminimalkan scrolling, dimensi input dan to
 ### B. Formulir & Input
 * **Tinggi Input (Height)**: **Harus tepat `44px`** untuk semua `TextBox`, `ComboBox`, `PasswordBox`, dan `DatePicker` standard.
 * **Padding Konten Input**: **Wajib menggunakan `Padding="12,8"`** pada semua input (`TextBox`, `PasswordBox`, `ComboBox`, dan `DatePicker`) yang bertinggi `44px`. Padding vertikal bawaan Material Design terlalu tebal dan akan menyebabkan tulisan terpotong (*clipping*) di dalam form.
+* **Label & Floating Hint**: **Dilarang menggunakan TextBlock label statis di atas kolom input**. Semua input wajib menggunakan **Floating Hint** (`materialDesign:HintAssist.IsFloating="True"`) dengan properti `materialDesign:HintAssist.Hint` yang deskriptif. Jika kode-behind mendesak memerlukan variabel label, buat elemen label tersebut bertipe hidden/collapsed (`Visibility="Collapsed"`).
 * **Desain Dropdown (ComboBox)**: Wajib menggunakan style `Style="{StaticResource JinomComboBoxStyle}"` untuk memastikan keseragaman tinggi `44px`, padding `12,8`, teks `FontSize="13"`, perataan vertikal terpusat, dan **minimalisasi efek bayangan** dengan properti `materialDesign:ShadowAssist.ShadowDepth="Depth1"`.
 * **Item Dropdown (ComboBoxItem)**: Menggunakan gaya implisit (tanpa x:Key) dengan `FontSize="13"`, `Padding="12,8"`, teks `TextDarkBrush`, latar belakang default transparan, dan transisi warna dinamis saat hover/seleksi.
 * **Tinggi Tombol Aksi (Button Height)**: **Harus tepat `44px`** untuk semua tombol halaman (Login, Cetak, Mulai Pengujian, Simpan).

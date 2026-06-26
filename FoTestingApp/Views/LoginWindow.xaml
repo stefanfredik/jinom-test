@@ -32,7 +32,6 @@
                     </RadialGradientBrush>
                 </Ellipse.Fill>
             </Ellipse>
-
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="48,0">
                 <!-- Brand Logo & Name -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,32">
@@ -44,26 +43,7 @@
                 </StackPanel>
 
                 <!-- Headline -->
-                <TextBlock Text="Jinom Sertifikasi Network Test" FontSize="32" FontWeight="Black" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,36"/>
-
-                <!-- Features bullets -->
-                <StackPanel>
-                    <!-- Bullet 1 -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <materialDesign:PackIcon Kind="CheckCircle" Foreground="#22C55E" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <TextBlock Text="Automated ping &amp; routing checks" FontSize="14" Foreground="#D1D5DB" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <!-- Bullet 2 -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <materialDesign:PackIcon Kind="CheckCircle" Foreground="#22C55E" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <TextBlock Text="Fast.com bandwidth measurements" FontSize="14" Foreground="#D1D5DB" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <!-- Bullet 3 -->
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="CheckCircle" Foreground="#22C55E" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <TextBlock Text="PDF certification report generation" FontSize="14" Foreground="#D1D5DB" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </StackPanel>
+                <TextBlock Text="Jinom Sertifikasi Network Test" FontSize="32" FontWeight="Black" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,12"/>
             </StackPanel>
 
             <!-- Left Side Footer -->
@@ -81,9 +61,9 @@
 
                 <!-- Email Input -->
                 <StackPanel Margin="0,0,0,14">
-                    <TextBlock Text="ALAMAT EMAIL" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,6"/>
                     <TextBox x:Name="EmailTextBox"
-                             materialDesign:HintAssist.Hint="nama@jinom.net"
+                             materialDesign:HintAssist.Hint="Alamat Email (nama@jinom.net)"
+                             materialDesign:HintAssist.IsFloating="True"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              Height="44" FontSize="14" Padding="12,8"
                              VerticalContentAlignment="Center"
@@ -94,9 +74,9 @@
 
                 <!-- Password Input -->
                 <StackPanel Margin="0,0,0,14">
-                    <TextBlock Text="PASSWORD" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,6"/>
                     <PasswordBox x:Name="PasswordBox"
-                                 materialDesign:HintAssist.Hint="••••••••"
+                                 materialDesign:HintAssist.Hint="Password"
+                                 materialDesign:HintAssist.IsFloating="True"
                                  Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
                                  Height="44" FontSize="14" Padding="12,8"
                                  VerticalContentAlignment="Center"
@@ -115,14 +95,14 @@
 
                 <!-- Submit Button -->
                 <Button x:Name="LoginButton"
-                        Height="44"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="8"
-                        Foreground="White"
-                        Click="LoginButton_Click"
-                        BorderBrush="Transparent"
-                        Cursor="Hand"
-                        Margin="0,0,0,12">
+                         Height="44"
+                         Style="{StaticResource MaterialDesignRaisedButton}"
+                         materialDesign:ButtonAssist.CornerRadius="8"
+                         Foreground="White"
+                         Click="LoginButton_Click"
+                         BorderBrush="Transparent"
+                         Cursor="Hand"
+                         Margin="0,0,0,12">
                     <Button.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                             <GradientStop Color="#22C55E" Offset="0.0"/>
@@ -142,14 +122,6 @@
                              Visibility="Collapsed"
                              Foreground="{DynamicResource PrimaryBrush}"
                              Margin="0,0,0,12"/>
-
-                <!-- Security Badges -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0" Opacity="0.4">
-                    <TextBlock Text="SECURE INFRASTRUCTURE" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>
-                    <TextBlock Text="•" FontSize="9" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>
-                    <TextBlock Text="ISO 27001" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>
-                    <TextBlock Text="•" FontSize="9" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,12,0"/>
-                    <TextBlock Text="SOC 2" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}"/>
                 </StackPanel>
 
             </StackPanel>

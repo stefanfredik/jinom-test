@@ -28,9 +28,9 @@
                     </StackPanel>
 
                     <!-- Input Section -->
-                    <TextBlock Text="Sesi Pengujian (ID Sertifikasi)" Foreground="{DynamicResource TextLightBrush}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,6"/>
                     <ComboBox x:Name="SessionComboBox"
-                              materialDesign:HintAssist.Hint="Cari atau pilih sesi..."
+                              materialDesign:HintAssist.Hint="Sesi Pengujian (ID Sertifikasi)"
+                              materialDesign:HintAssist.IsFloating="True"
                               Style="{StaticResource JinomComboBoxStyle}"
                               Margin="0,0,0,20"
                               IsEditable="True"/>

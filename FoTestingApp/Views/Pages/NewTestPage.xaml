@@ -171,8 +171,8 @@
             <StackPanel Margin="24,20,24,20">
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,16">
-                    <TextBlock x:Name="FormTitle" Text="Customer Network Test" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
-                    <TextBlock x:Name="FormSubtitle" Text="DIAGNOSTIC SUITE FOR CPE VERIFICATION" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="FormTitle" Text="Pengujian Kualitas Jaringan" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
+                    <TextBlock x:Name="FormSubtitle" Text="DIAGNOSTIC SUITE" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextLightBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
 
                 <!-- Customer Configuration Panel -->
@@ -204,14 +204,13 @@
 
                             <!-- Row 0: Search/Select ComboBoxes (Spans both columns) -->
                             <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="PopSelectionPanel" Margin="0,0,0,12" Visibility="Collapsed">
-                                <TextBlock Text="PILIH POP" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <ComboBox x:Name="PopComboBox"
                                           IsEditable="True"
                                           TextSearch.TextPath="DisplayName"
                                           TextBoxBase.TextChanged="PopComboBox_TextChanged"
                                           Style="{StaticResource JinomComboBoxStyle}"
-                                          materialDesign:HintAssist.Hint="Ketik untuk mencari POP..."
-                                          materialDesign:HintAssist.IsFloating="False"
+                                          materialDesign:HintAssist.Hint="Pilih POP (Ketik untuk mencari...)"
+                                          materialDesign:HintAssist.IsFloating="True"
                                           materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
                                           SelectionChanged="PopComboBox_SelectionChanged"
                                           HorizontalContentAlignment="Stretch">
@@ -235,14 +234,13 @@
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="CustomerSelectionPanel" Margin="0,0,0,12" Visibility="Collapsed">
-                                <TextBlock Text="PILIH PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <ComboBox x:Name="CustomerComboBox"
                                           IsEditable="True"
                                           TextSearch.TextPath="DisplayName"
                                           TextBoxBase.TextChanged="CustomerComboBox_TextChanged"
                                           Style="{StaticResource JinomComboBoxStyle}"
-                                          materialDesign:HintAssist.Hint="Ketik untuk mencari pelanggan..."
-                                          materialDesign:HintAssist.IsFloating="False"
+                                          materialDesign:HintAssist.Hint="Pilih Pelanggan (Ketik untuk mencari...)"
+                                          materialDesign:HintAssist.IsFloating="True"
                                           materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
                                           SelectionChanged="CustomerComboBox_SelectionChanged"
                                           HorizontalContentAlignment="Stretch">
@@ -320,9 +318,10 @@
 
                             <!-- Row 2: Name and Package Fields (Side-by-Side) -->
                             <StackPanel Grid.Row="2" Grid.Column="0" x:Name="NameFieldPanel" Margin="0,0,0,12">
-                                <TextBlock x:Name="NameFieldLabel" Text="NAMA PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="NameFieldLabel" Visibility="Collapsed"/>
                                 <TextBox x:Name="FullNameBox"
-                                         materialDesign:HintAssist.Hint="Masukkan nama"
+                                         materialDesign:HintAssist.Hint="Nama Pelanggan"
+                                         materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
@@ -332,9 +331,10 @@
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="2" x:Name="PackageFieldPanel" Margin="0,0,0,12">
-                                <TextBlock x:Name="PackageFieldLabel" Text="PAKET INTERNET" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="PackageFieldLabel" Visibility="Collapsed"/>
                                 <TextBox x:Name="PackageMbpsBox"
-                                         materialDesign:HintAssist.Hint="Contoh: 100 Mbps"
+                                         materialDesign:HintAssist.Hint="Paket Internet (Mbps)"
+                                         materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
@@ -345,9 +345,9 @@
 
                             <!-- Row 3: Address Field (Spans both columns) -->
                             <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AddressFieldPanel" Margin="0,0,0,12">
-                                <TextBlock Text="ALAMAT PELANGGAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="AddressBox"
-                                         materialDesign:HintAssist.Hint="Masukkan alamat pelanggan"
+                                         materialDesign:HintAssist.Hint="Alamat Pelanggan"
+                                         materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
@@ -358,9 +358,9 @@
 
                             <!-- Row 4: Notes Field (Spans both columns) -->
                             <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" x:Name="NotesFieldPanel" Margin="0,4,0,0">
-                                <TextBlock Text="CATATAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextLightBrush}" Margin="0,0,0,4"/>
                                 <TextBox x:Name="NotesBox"
-                                         materialDesign:HintAssist.Hint="Catatan tambahan (opsional)"
+                                         materialDesign:HintAssist.Hint="Catatan (Opsional)"
+                                         materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="68" FontSize="14" Padding="12,8"
                                          TextWrapping="Wrap"
