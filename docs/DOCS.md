@@ -44,34 +44,44 @@ Sebelum build, sesuaikan `FoTestingApp/appsettings.json` dengan environment:
 
 ## Langkah 2 — Build Aplikasi
 
-### Opsi A — Via Visual Studio 2022 (paling mudah)
+### ⭐ Opsi A — Single-file `.exe` (Direkomendasikan untuk distribusi)
 
-1. Buka `FoTestingApp/FoTestingApp.csproj` di Visual Studio 2022
-2. Visual Studio otomatis me-restore semua NuGet packages
-3. Tekan **F5** untuk debug, atau **Ctrl+Shift+B** untuk build saja
-4. Output debug ada di `FoTestingApp/bin/Debug/net8.0-windows/`
-
-### Opsi B — Via Command Line (dotnet CLI)
+Menghasilkan **satu file `.exe` tunggal** yang langsung bisa dikopi dan dijalankan di PC manapun tanpa install .NET:
 
 ```powershell
 cd FoTestingApp
 
-# Jalankan langsung (mode debug)
-dotnet run
+dotnet publish -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true `
+  -o ..\dist
+```
 
-# Build release (tanpa publish)
-dotnet build -c Release
+Output: `dist\FoTestingApp.exe` (~100–150 MB, sudah termasuk seluruh .NET runtime)
 
-# Publish self-contained — semua dependensi jadi satu folder (DIREKOMENDASIKAN)
+### Opsi B — Folder publish (lebih kecil, butuh folder utuh)
+
+```powershell
+cd FoTestingApp
+
 dotnet publish -c Release -r win-x64 --self-contained true -o ..\publish
 ```
 
-Output publish tersimpan di folder `publish/` (satu level di atas `FoTestingApp/`).
+Seluruh isi folder `publish\` harus dikopi bersama-sama (tidak bisa hanya `.exe`-nya saja).
 
-> **Single-file exe:** Tambahkan flag `-p:PublishSingleFile=true` jika ingin satu file `.exe` tunggal:
-> ```powershell
-> dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ..\publish
-> ```
+### Opsi C — Via Visual Studio 2022
+
+1. Buka `FoTestingApp/FoTestingApp.csproj` di Visual Studio 2022
+2. Visual Studio otomatis me-restore semua NuGet packages
+3. Tekan **F5** untuk debug, atau **Ctrl+Shift+B** untuk build release
+4. Untuk publish: **Build → Publish → Folder** lalu konfigurasi sesuai opsi A/B di atas
+
+### Opsi D — Development (debug lokal)
+
+```powershell
+cd FoTestingApp
+dotnet run
+```
 
 ---
 
