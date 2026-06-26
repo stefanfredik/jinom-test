@@ -168,7 +168,7 @@
 
         <!-- ═══ Stage 3: Form Area — Customer data input ═══ -->
         <ScrollViewer x:Name="FormContainer" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-            <StackPanel Margin="24,20,24,20">
+            <StackPanel Margin="24,20,24,20" MaxWidth="720" HorizontalAlignment="Center">
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,16">
                     <TextBlock x:Name="FormTitle" Text="Pengujian Kualitas Jaringan" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}"/>
@@ -332,6 +332,7 @@
                                          materialDesign:TextFieldAssist.LeadingIcon="Account"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
                                          Background="Transparent"
+                                         Foreground="{DynamicResource TextDarkBrush}"
                                          TextChanged="FullNameBox_TextChanged"/>
                             </StackPanel>
 
@@ -346,6 +347,7 @@
                                          materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
                                          Background="Transparent"
+                                         Foreground="{DynamicResource TextDarkBrush}"
                                          TextChanged="PackageMbpsBox_TextChanged"/>
                                 <TextBlock x:Name="PackageWarningText" 
                                            Text="* Kecepatan paket belum terisi. Harap masukkan kecepatan paket pelanggan (Mbps)." 
@@ -367,6 +369,7 @@
                                          materialDesign:TextFieldAssist.LeadingIcon="MapMarker"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
                                          Background="Transparent"
+                                         Foreground="{DynamicResource TextDarkBrush}"
                                          TextChanged="AddressBox_TextChanged"/>
                             </StackPanel>
 
@@ -382,7 +385,8 @@
                                          VerticalContentAlignment="Top"
                                          materialDesign:TextFieldAssist.LeadingIcon="NoteTextOutline"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="Transparent"/>
+                                         Background="Transparent"
+                                         Foreground="{DynamicResource TextDarkBrush}"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>

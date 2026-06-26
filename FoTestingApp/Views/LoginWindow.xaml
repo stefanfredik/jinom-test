@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Jinom Test — Login"
-        Height="700" Width="1200"
+        Height="600" Width="960"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
@@ -69,7 +69,8 @@
                              VerticalContentAlignment="Center"
                              materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
                              BorderBrush="{DynamicResource BorderLightBrush}"
-                             Background="Transparent"/>
+                             Background="Transparent"
+                             Foreground="{DynamicResource TextDarkBrush}"/>
                 </StackPanel>
 
                 <!-- Password Input -->
@@ -83,6 +84,7 @@
                                  materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
                                  BorderBrush="{DynamicResource BorderLightBrush}"
                                  Background="Transparent"
+                                 Foreground="{DynamicResource TextDarkBrush}"
                                  KeyDown="PasswordBox_KeyDown"/>
                 </StackPanel>
 
