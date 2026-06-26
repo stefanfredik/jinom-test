@@ -13,7 +13,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="20"
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{DynamicResource CardCornerRadius}" Padding="20"
                     BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                 <StackPanel>
                     <!-- Icon Header inside Card -->

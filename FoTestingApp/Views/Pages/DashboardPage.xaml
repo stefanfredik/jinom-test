@@ -48,7 +48,7 @@
             </Grid>
 
             <!-- Filters -->
-            <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="12"
+            <Border Grid.Row="1" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{DynamicResource CardCornerRadius}" Padding="12"
                     BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1" Margin="0,0,0,12">
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <DatePicker x:Name="FromDatePicker" materialDesign:HintAssist.Hint="Dari Tanggal"
@@ -75,7 +75,7 @@
             </Border>
 
             <!-- Sessions Table -->
-            <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{StaticResource CardCornerRadius}" Padding="0"
+            <Border Grid.Row="2" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="{DynamicResource CardCornerRadius}" Padding="0"
                     BorderBrush="{DynamicResource BorderLightBrush}" BorderThickness="1">
                 <DataGrid x:Name="SessionsGrid"
                           AutoGenerateColumns="False" IsReadOnly="True"
