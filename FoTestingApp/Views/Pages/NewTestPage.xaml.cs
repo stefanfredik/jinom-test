@@ -118,6 +118,8 @@ public partial class NewTestPage : Page
             PopComboBox.SelectedItem = null;
             PopStatusText.Text = string.Empty;
             BtnEditDetails.Visibility = Visibility.Collapsed;
+
+            _ = LoadAvailablePopsAsync();
         }
         else
         {
@@ -160,24 +162,26 @@ public partial class NewTestPage : Page
         try
         {
             _isLoadingPops = true;
-            PopStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP sesuai company login..." : "Mencari POP...";
+            if (PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Visible;
+            PopStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP..." : $"Mencari POP: '{query}'...";
 
             var pops = await _api.GetAvailablePopsAsync(query);
             PopComboBox.ItemsSource = pops;
 
             PopStatusText.Text = pops.Count > 0
                 ? $"{pops.Count} POP tersedia."
-                : "Tidak ada POP yang tersedia untuk company ini.";
+                : "Tidak ada POP yang tersedia.";
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load available POPs");
-            PopStatusText.Text = "Gagal memuat daftar POP.";
+            PopStatusText.Text = "Gagal memuat daftar POP. Silakan coba lagi.";
             PopComboBox.ItemsSource = null;
         }
         finally
         {
             _isLoadingPops = false;
+            if (PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -221,6 +225,14 @@ public partial class NewTestPage : Page
         }
     }
 
+    private async void PopComboBox_DropDownOpened(object sender, EventArgs e)
+    {
+        if (PopComboBox.ItemsSource == null && !_isLoadingPops)
+        {
+            await LoadAvailablePopsAsync();
+        }
+    }
+
     private async Task LoadAvailableCustomersAsync(string query = "")
     {
         if (_isLoadingCustomers) return;
@@ -228,7 +240,8 @@ public partial class NewTestPage : Page
         try
         {
             _isLoadingCustomers = true;
-            CustomerStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar pelanggan..." : "Mencari pelanggan...";
+            if (CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Visible;
+            CustomerStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar pelanggan..." : $"Mencari pelanggan: '{query}'...";
             
             var customers = await _api.SearchCustomersAsync(query);
             CustomerComboBox.ItemsSource = customers;
@@ -240,11 +253,12 @@ public partial class NewTestPage : Page
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load customers");
-            CustomerStatusText.Text = "Gagal memuat pelanggan.";
+            CustomerStatusText.Text = "Gagal memuat pelanggan. Silakan coba lagi.";
         }
         finally
         {
             _isLoadingCustomers = false;
+            if (CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -356,6 +370,14 @@ public partial class NewTestPage : Page
                     await LoadAvailableCustomersAsync(cb.Text);
                 }
             }
+        }
+    }
+
+    private async void CustomerComboBox_DropDownOpened(object sender, EventArgs e)
+    {
+        if (CustomerComboBox.ItemsSource == null && !_isLoadingCustomers)
+        {
+            await LoadAvailableCustomersAsync();
         }
     }
 

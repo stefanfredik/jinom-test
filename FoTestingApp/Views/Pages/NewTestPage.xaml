@@ -213,6 +213,7 @@
                                           materialDesign:HintAssist.IsFloating="True"
                                           materialDesign:TextFieldAssist.LeadingIcon="ServerNetwork"
                                           SelectionChanged="PopComboBox_SelectionChanged"
+                                          DropDownOpened="PopComboBox_DropDownOpened"
                                           HorizontalContentAlignment="Stretch">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
@@ -230,6 +231,7 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
+                                <ProgressBar x:Name="PopLoadingBar" Height="2" IsIndeterminate="True" Foreground="{DynamicResource PrimaryBrush}" Visibility="Collapsed" Margin="0,2,0,0"/>
                                 <TextBlock x:Name="PopStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
                             </StackPanel>
 
@@ -243,6 +245,7 @@
                                           materialDesign:HintAssist.IsFloating="True"
                                           materialDesign:TextFieldAssist.LeadingIcon="DatabaseSearch"
                                           SelectionChanged="CustomerComboBox_SelectionChanged"
+                                          DropDownOpened="CustomerComboBox_DropDownOpened"
                                           HorizontalContentAlignment="Stretch">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
@@ -260,6 +263,7 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
+                                <ProgressBar x:Name="CustomerLoadingBar" Height="2" IsIndeterminate="True" Foreground="{DynamicResource PrimaryBrush}" Visibility="Collapsed" Margin="0,2,0,0"/>
                                 <TextBlock x:Name="CustomerStatusText" FontSize="11" Foreground="{DynamicResource TextLightBrush}" Margin="0,6,0,0"/>
                             </StackPanel>
 
