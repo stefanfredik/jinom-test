@@ -35,8 +35,8 @@
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="48,0">
                 <!-- Brand Logo & Name -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,32">
-                    <Border Background="#FFFFFF" CornerRadius="12" Padding="6">
-                        <Image Source="/Resources/jinom_logo.png" Width="36" Height="36"/>
+                    <Border Background="Transparent" Padding="0">
+                        <Image Source="pack://application:,,,/Resources/jinom_logo.png" Width="48" Height="48"/>
                     </Border>
                     <TextBlock Text="Jinom" FontSize="26" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="16,0,0,0"/>
                     <TextBlock Text="Test" FontSize="26" FontWeight="Light" Foreground="#A7F3D0" VerticalAlignment="Center" Margin="4,0,0,0"/>
