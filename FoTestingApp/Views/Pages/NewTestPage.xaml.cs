@@ -20,6 +20,7 @@ public partial class NewTestPage : Page
     private bool _isLoadingCustomers;
 
     private string _testMode = "customer";
+    private bool _enableRealTimeValidation = false;
 
     public NewTestPage()
     {
@@ -83,6 +84,18 @@ public partial class NewTestPage : Page
     private void ApplyTestMode()
     {
         SelectedDetailsCard.Visibility = Visibility.Collapsed;
+        _enableRealTimeValidation = false;
+
+        // Reset borders
+        var borderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
+        FullNameBox.BorderBrush = borderBrush;
+        PackageMbpsBox.BorderBrush = borderBrush;
+        AddressBox.BorderBrush = borderBrush;
+
+        if (PackageWarningText != null)
+        {
+            PackageWarningText.Visibility = Visibility.Collapsed;
+        }
 
         if (_testMode == "pop")
         {
@@ -113,9 +126,10 @@ public partial class NewTestPage : Page
             FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountPlus;
             FormSectionTitle.Text = "Data Pelanggan";
             NameFieldLabel.Text = "NAMA PELANGGAN";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Masukkan nama pelanggan");
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Nama Pelanggan *");
             PackageFieldLabel.Text = "PAKET INTERNET";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Contoh: 100 Mbps");
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Kecepatan Paket (Mbps) *");
+            MaterialDesignThemes.Wpf.HintAssist.SetHint(AddressBox, "Alamat Pelanggan *");
             PopSelectionPanel.Visibility = Visibility.Collapsed;
             CustomerSelectionPanel.Visibility = Visibility.Visible;
             NameFieldPanel.Visibility = Visibility.Visible;
@@ -236,6 +250,19 @@ public partial class NewTestPage : Page
 
     private void CustomerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        _enableRealTimeValidation = false;
+        
+        // Reset borders
+        var borderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
+        FullNameBox.BorderBrush = borderBrush;
+        PackageMbpsBox.BorderBrush = borderBrush;
+        AddressBox.BorderBrush = borderBrush;
+        
+        if (PackageWarningText != null)
+        {
+            PackageWarningText.Visibility = Visibility.Collapsed;
+        }
+
         if (CustomerComboBox.SelectedItem is not FoCustomer selectedCustomer)
         {
             SelectedDetailsCard.Visibility = Visibility.Collapsed;
@@ -246,6 +273,10 @@ public partial class NewTestPage : Page
             PackageMbpsBox.Text = string.Empty;
             AddressBox.Text = string.Empty;
             NotesBox.Text = string.Empty;
+            
+            // Reset grid column
+            Grid.SetColumn(PackageFieldPanel, 2);
+            Grid.SetColumnSpan(PackageFieldPanel, 1);
             return;
         }
 
@@ -283,6 +314,35 @@ public partial class NewTestPage : Page
         NameFieldPanel.Visibility = string.IsNullOrWhiteSpace(FullNameBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         PackageFieldPanel.Visibility = string.IsNullOrWhiteSpace(PackageMbpsBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         AddressFieldPanel.Visibility = string.IsNullOrWhiteSpace(AddressBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+
+        // Apply visual states and layout adjustments if package is missing
+        if (PackageFieldPanel.Visibility == Visibility.Visible && string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
+        {
+            _enableRealTimeValidation = true;
+            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
+            if (PackageWarningText != null)
+            {
+                PackageWarningText.Text = "* Kecepatan paket belum terisi. Harap masukkan kecepatan paket pelanggan (Mbps).";
+                PackageWarningText.Visibility = Visibility.Visible;
+            }
+
+            // Span full width if Name is collapsed but Package is visible
+            if (NameFieldPanel.Visibility == Visibility.Collapsed)
+            {
+                Grid.SetColumn(PackageFieldPanel, 0);
+                Grid.SetColumnSpan(PackageFieldPanel, 3);
+            }
+            else
+            {
+                Grid.SetColumn(PackageFieldPanel, 2);
+                Grid.SetColumnSpan(PackageFieldPanel, 1);
+            }
+        }
+        else
+        {
+            Grid.SetColumn(PackageFieldPanel, 2);
+            Grid.SetColumnSpan(PackageFieldPanel, 1);
+        }
     }
 
     private async void CustomerComboBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -304,6 +364,21 @@ public partial class NewTestPage : Page
         NameFieldPanel.Visibility = Visibility.Visible;
         PackageFieldPanel.Visibility = Visibility.Visible;
         AddressFieldPanel.Visibility = Visibility.Visible;
+
+        // Reset grid column span
+        Grid.SetColumn(PackageFieldPanel, 2);
+        Grid.SetColumnSpan(PackageFieldPanel, 1);
+
+        if (string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
+        {
+            _enableRealTimeValidation = true;
+            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
+            if (PackageWarningText != null)
+            {
+                PackageWarningText.Text = "* Kecepatan paket belum terisi. Harap masukkan kecepatan paket pelanggan (Mbps).";
+                PackageWarningText.Visibility = Visibility.Visible;
+            }
+        }
     }
 
     private void DiagnosticLogsPanel_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -477,22 +552,98 @@ public partial class NewTestPage : Page
         }
         else
         {
-            if (string.IsNullOrWhiteSpace(FullNameBox.Text) ||
-                string.IsNullOrWhiteSpace(PackageMbpsBox.Text) ||
-                string.IsNullOrWhiteSpace(AddressBox.Text))
+            _enableRealTimeValidation = true;
+
+            bool isNameEmpty = string.IsNullOrWhiteSpace(FullNameBox.Text);
+            bool isPackageEmpty = string.IsNullOrWhiteSpace(PackageMbpsBox.Text);
+            bool isAddressEmpty = string.IsNullOrWhiteSpace(AddressBox.Text);
+
+            var borderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
+            var failBrush = (SolidColorBrush)FindResource("FailRedBrush");
+
+            // Reset borders first
+            FullNameBox.BorderBrush = borderBrush;
+            PackageMbpsBox.BorderBrush = borderBrush;
+            AddressBox.BorderBrush = borderBrush;
+
+            if (isNameEmpty || isPackageEmpty || isAddressEmpty)
             {
+                if (isNameEmpty) FullNameBox.BorderBrush = failBrush;
+                if (isAddressEmpty) AddressBox.BorderBrush = failBrush;
+                if (isPackageEmpty)
+                {
+                    PackageMbpsBox.BorderBrush = failBrush;
+                    if (PackageWarningText != null)
+                    {
+                        PackageWarningText.Text = "* Kecepatan paket wajib diisi.";
+                        PackageWarningText.Visibility = Visibility.Visible;
+                    }
+                }
+
                 MessageBox.Show("Nama, Paket, dan Alamat wajib diisi.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             if (!int.TryParse(PackageMbpsBox.Text, out var pkg) || pkg <= 0)
             {
+                PackageMbpsBox.BorderBrush = failBrush;
+                if (PackageWarningText != null)
+                {
+                    PackageWarningText.Text = "* Kecepatan harus berupa angka positif (Mbps).";
+                    PackageWarningText.Visibility = Visibility.Visible;
+                }
                 MessageBox.Show("Paket harus berupa angka positif (Mbps).", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
         }
 
         return true;
+    }
+
+    private void FullNameBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_enableRealTimeValidation || FullNameBox == null) return;
+        
+        bool isEmpty = string.IsNullOrWhiteSpace(FullNameBox.Text);
+        FullNameBox.BorderBrush = isEmpty 
+            ? (SolidColorBrush)FindResource("FailRedBrush") 
+            : (SolidColorBrush)FindResource("BorderLightBrush");
+    }
+
+    private void PackageMbpsBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_enableRealTimeValidation || PackageMbpsBox == null || PackageWarningText == null) return;
+
+        bool isEmpty = string.IsNullOrWhiteSpace(PackageMbpsBox.Text);
+        bool isValidNumber = int.TryParse(PackageMbpsBox.Text, out var pkg) && pkg > 0;
+
+        if (isEmpty)
+        {
+            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
+            PackageWarningText.Text = "* Kecepatan paket wajib diisi.";
+            PackageWarningText.Visibility = Visibility.Visible;
+        }
+        else if (!isValidNumber)
+        {
+            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
+            PackageWarningText.Text = "* Kecepatan harus berupa angka positif (Mbps).";
+            PackageWarningText.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
+            PackageWarningText.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void AddressBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_enableRealTimeValidation || AddressBox == null) return;
+        
+        bool isEmpty = string.IsNullOrWhiteSpace(AddressBox.Text);
+        AddressBox.BorderBrush = isEmpty 
+            ? (SolidColorBrush)FindResource("FailRedBrush") 
+            : (SolidColorBrush)FindResource("BorderLightBrush");
     }
 
     private void SaveReportBtn_Click(object sender, RoutedEventArgs e)

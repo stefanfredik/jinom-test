@@ -320,40 +320,50 @@
                             <StackPanel Grid.Row="2" Grid.Column="0" x:Name="NameFieldPanel" Margin="0,0,0,12">
                                 <TextBlock x:Name="NameFieldLabel" Visibility="Collapsed"/>
                                 <TextBox x:Name="FullNameBox"
-                                         materialDesign:HintAssist.Hint="Nama Pelanggan"
+                                         materialDesign:HintAssist.Hint="Nama Pelanggan *"
                                          materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Account"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="Transparent"/>
+                                         Background="Transparent"
+                                         TextChanged="FullNameBox_TextChanged"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="2" x:Name="PackageFieldPanel" Margin="0,0,0,12">
                                 <TextBlock x:Name="PackageFieldLabel" Visibility="Collapsed"/>
                                 <TextBox x:Name="PackageMbpsBox"
-                                         materialDesign:HintAssist.Hint="Paket Internet (Mbps)"
+                                         materialDesign:HintAssist.Hint="Kecepatan Paket (Mbps) *"
                                          materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="Transparent"/>
+                                         Background="Transparent"
+                                         TextChanged="PackageMbpsBox_TextChanged"/>
+                                <TextBlock x:Name="PackageWarningText" 
+                                           Text="* Kecepatan paket belum terisi. Harap masukkan kecepatan paket pelanggan (Mbps)." 
+                                           Foreground="{DynamicResource FailRedBrush}" 
+                                           FontSize="11" 
+                                           Margin="4,6,0,0" 
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed"/>
                             </StackPanel>
 
                             <!-- Row 3: Address Field (Spans both columns) -->
                             <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" x:Name="AddressFieldPanel" Margin="0,0,0,12">
                                 <TextBox x:Name="AddressBox"
-                                         materialDesign:HintAssist.Hint="Alamat Pelanggan"
+                                         materialDesign:HintAssist.Hint="Alamat Pelanggan *"
                                          materialDesign:HintAssist.IsFloating="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Height="44" FontSize="14" Padding="12,8"
                                          VerticalContentAlignment="Center"
                                          materialDesign:TextFieldAssist.LeadingIcon="MapMarker"
                                          BorderBrush="{DynamicResource BorderLightBrush}"
-                                         Background="Transparent"/>
+                                         Background="Transparent"
+                                         TextChanged="AddressBox_TextChanged"/>
                             </StackPanel>
 
                             <!-- Row 4: Notes Field (Spans both columns) -->
