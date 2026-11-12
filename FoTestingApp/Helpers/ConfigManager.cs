@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -7,7 +9,7 @@ namespace FoTestingApp.Helpers;
 
 /// <summary>
 /// Mengelola konfigurasi aplikasi dari appsettings.json.
-/// Mendukung read dan write parameter tanpa rebuild.
+/// Mendukung konfigurasi embedded di dalam .exe dan file eksternal.
 /// </summary>
 public static class ConfigManager
 {
@@ -17,101 +19,34 @@ public static class ConfigManager
     public static void Initialize()
     {
         _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-        
-        // Jika file tidak ada, buat file default
-        if (!File.Exists(_configPath))
-        {
-            CreateDefaultConfig();
-        }
-        
         Reload();
-    }
-
-    private static void CreateDefaultConfig()
-    {
-        var defaultConfig = new
-        {
-            OpenAccessApiUrl = "https://infra.jinom.net/api/v1",
-            App = new
-            {
-                SessionTimeoutMinutes = 30
-            },
-            NetworkTest = new
-            {
-                PingGateway = new
-                {
-                    Target = "",
-                    Count = 100,
-                    ThresholdAvgMs = 10,
-                    MaxRto = 0
-                },
-                PingDns = new
-                {
-                    Targets = new[] { "103.122.65.66", "8.8.8.8", "1.1.1.1" },
-                    Count = 100,
-                    ThresholdAvgMs = 35,
-                    MaxRto = 0
-                },
-                NslookupNasional = new
-                {
-                    Domains = new[] { "jinom.net", "kompas.com", "detik.com" },
-                    TimeoutSeconds = 10
-                },
-                NslookupInternasional = new
-                {
-                    Domains = new[] { "google.com", "facebook.com", "amazon.com" },
-                    TimeoutSeconds = 10
-                },
-                PingDomainLokal = new
-                {
-                    Domains = new[] { "jinom.net", "kompas.com" },
-                    Count = 35,
-                    ThresholdAvgMs = 35,
-                    MaxRto = 0
-                }
-            },
-            AppTest = new
-            {
-                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                Browsing = new
-                {
-                    Urls = new[] { "https://kompas.com", "https://jinom.net" },
-                    ThresholdSeconds = 10
-                },
-                Streaming = new
-                {
-                    Urls = new[] { "https://youtube.com", "https://tiktok.com" },
-                    ThresholdSeconds = 30
-                },
-                SocialMedia = new
-                {
-                    Urls = new[] { "https://whatsapp.com", "https://facebook.com" },
-                    ThresholdSeconds = 30
-                }
-            },
-            Speedtest = new
-            {
-                JinomServer = "https://speedtest.jinom.net",
-                ThresholdPercentage = 85,
-                OoklaCliUrl = "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-win64.zip"
-            },
-            Logging = new
-            {
-                LogDirectory = "Logs",
-                RetainedFileDays = 30
-            }
-        };
-
-        var json = JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(_configPath, json);
     }
 
     private static void Reload()
     {
-        _config = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .Build();
+        var builder = new ConfigurationBuilder();
+
+        // 1. Load embedded resource appsettings.json sebagai konfigurasi dasar / default
+        var assembly = typeof(ConfigManager).Assembly;
+        var resourceName = assembly.GetManifestResourceNames()
+            .FirstOrDefault(n => n.EndsWith("appsettings.json", StringComparison.OrdinalIgnoreCase));
+
+        using Stream? stream = resourceName != null
+            ? assembly.GetManifestResourceStream(resourceName)
+            : null;
+
+        if (stream != null)
+        {
+            builder.AddJsonStream(stream);
+        }
+
+        // 2. Load file eksternal appsettings.json jika ada (untuk override pengaturan tanpa rebuild)
+        if (File.Exists(_configPath))
+        {
+            builder.AddJsonFile(_configPath, optional: true, reloadOnChange: false);
+        }
+
+        _config = builder.Build();
     }
 
     /// <summary>
@@ -119,8 +54,38 @@ public static class ConfigManager
     /// </summary>
     public static void SaveSettings(Dictionary<string, object> changes)
     {
-        var json = File.ReadAllText(_configPath);
-        var root = JsonNode.Parse(json)!.AsObject();
+        JsonObject root;
+
+        if (File.Exists(_configPath))
+        {
+            var json = File.ReadAllText(_configPath);
+            root = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
+        }
+        else
+        {
+            var assembly = typeof(ConfigManager).Assembly;
+            var resourceName = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith("appsettings.json", StringComparison.OrdinalIgnoreCase));
+
+            if (resourceName != null)
+            {
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream != null)
+                {
+                    using var reader = new StreamReader(stream);
+                    var defaultJson = reader.ReadToEnd();
+                    root = JsonNode.Parse(defaultJson)?.AsObject() ?? new JsonObject();
+                }
+                else
+                {
+                    root = new JsonObject();
+                }
+            }
+            else
+            {
+                root = new JsonObject();
+            }
+        }
 
         foreach (var (keyPath, value) in changes)
         {
