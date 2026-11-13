@@ -16,7 +16,7 @@ Aplikasi ini mencakup modul-modul utama berikut:
 •	Eksekusi pengujian jaringan: Ping Gateway, Ping DNS, NSLookup, Ping Domain Lokal
 •	Pengujian aplikasi: Browsing, Streaming, dan Social Media
 •	Speedtest menggunakan Jinom Speedtest dan Ookla Speedtest
-•	Penyimpanan hasil pengujian ke database terpusat
+•	Penyimpanan hasil pengujian ke jinom-assets lewat API
 •	Pembuatan laporan hasil sertifikasi dalam format cetak/PDF
 •	Dashboard monitoring riwayat pengujian
 
@@ -40,12 +40,12 @@ Commissioning	Proses validasi dan penerimaan instalasi jaringan sebelum diserahk
  
 2. Deskripsi Umum Sistem
 2.1 Perspektif Produk
-Aplikasi FO Testing & Commissioning adalah aplikasi desktop Windows yang berdiri sendiri (standalone) namun terhubung ke database server terpusat. Aplikasi ini menggantikan proses pencatatan manual hasil pengujian oleh teknisi lapangan dan menyediakan laporan terstandarisasi yang dapat dicetak atau diekspor sebagai bukti sertifikasi layanan kepada pelanggan.
+Aplikasi FO Testing & Commissioning adalah aplikasi desktop Windows yang berdiri sendiri (standalone) namun terhubung ke jinom-assets lewat API. Aplikasi tidak pernah terhubung langsung ke database mana pun (lihat docs/PLATFORM_CONTRACT.md, aturan A10). Aplikasi ini menggantikan proses pencatatan manual hasil pengujian oleh teknisi lapangan dan menyediakan laporan terstandarisasi yang dapat dicetak atau diekspor sebagai bukti sertifikasi layanan kepada pelanggan.
 
 Arsitektur sistem terdiri dari:
 •	Client Layer: Aplikasi desktop Windows (.exe) pada perangkat teknisi
 •	Network Layer: Koneksi ke jaringan lokal/internet untuk eksekusi pengujian
-•	Data Layer: Database terpusat (SQL Server / PostgreSQL) untuk penyimpanan hasil
+•	Data Layer: API jinom-assets (login dan /reseller-certification/fo-test) untuk penyimpanan hasil; database-nya milik jinom-assets
 •	Reporting Layer: Modul generasi laporan PDF/cetak
 
 2.2 Fungsi Utama Produk
@@ -53,7 +53,7 @@ Fungsi utama yang harus disediakan aplikasi:
 1.	Input data identitas pelanggan dan detail instalasi
 2.	Eksekusi otomatis paket pengujian jaringan lengkap
 3.	Penampilan hasil pengujian secara real-time
-4.	Penyimpanan hasil ke database dengan timestamp dan ID teknisi
+4.	Penyimpanan hasil ke jinom-assets lewat API, dengan timestamp dan ID teknisi
 5.	Generasi laporan sertifikasi dalam format standar perusahaan
 6.	Riwayat dan pencarian data pengujian sebelumnya
 
@@ -66,7 +66,7 @@ Admin Sistem	Manajemen pengguna, konfigurasi sistem, backup data	Akses penuh ter
 2.4 Asumsi & Ketergantungan
 •	Perangkat teknisi menjalankan Windows 10/11 (64-bit)
 •	Koneksi internet tersedia di lokasi untuk menjalankan pengujian
-•	Database server dapat diakses melalui jaringan internal Jinom
+•	API jinom-assets dapat diakses dari perangkat teknisi
 •	Aplikasi speedtest eksternal (Ookla) dapat diakses dari lokasi instalasi
 
  
@@ -74,7 +74,7 @@ Admin Sistem	Manajemen pengguna, konfigurasi sistem, backup data	Akses penuh ter
 3.1 Modul Login & Autentikasi
 FR-001: Login Pengguna
 •	Sistem menyediakan form login dengan field username dan password
-•	Autentikasi dilakukan terhadap database pengguna terpusat
+•	Autentikasi dilakukan lewat API login jinom-assets
 •	Sesi login disimpan selama aplikasi aktif
 •	Sistem mencatat log aktivitas login (waktu, user, perangkat)
 
@@ -158,8 +158,8 @@ FR-041: Ookla Speedtest
 •	Digunakan sebagai pembanding hasil Jinom Speedtest
 
 3.6 Modul Penyimpanan & Laporan
-FR-050: Simpan Hasil ke Database
-•	Semua hasil pengujian disimpan otomatis ke database setelah sesi selesai
+FR-050: Simpan Hasil ke jinom-assets
+•	Semua hasil pengujian dikirim otomatis ke API jinom-assets setelah sesi selesai
 •	Data yang disimpan: ID Pelanggan, ID Teknisi, Timestamp, semua nilai hasil pengujian, Status kelulusan per-test
 •	Sistem menghasilkan ID Sertifikasi unik per sesi pengujian
 
@@ -185,14 +185,14 @@ NF-04	Respons UI	Tidak ada freeze selama eksekusi pengujian (async)
 
 4.2 Keandalan
 •	Aplikasi harus mampu beroperasi minimal 8 jam terus-menerus tanpa crash
-•	Jika koneksi database terputus, aplikasi menyimpan hasil sementara secara lokal dan menyinkronkan saat koneksi pulih
+•	Jika koneksi ke API jinom-assets terputus, aplikasi menyimpan hasil sementara secara lokal dan menyinkronkan saat koneksi pulih
 •	Semua error ditangkap dan dicatat ke log dengan pesan yang informatif
 •	Tidak ada kehilangan data hasil pengujian akibat kegagalan sistem
 
 4.3 Keamanan
 •	Autentikasi wajib sebelum akses ke fitur apapun
 •	Password disimpan dalam format hash (bcrypt atau setara)
-•	Koneksi ke database menggunakan enkripsi TLS/SSL
+•	Koneksi ke API jinom-assets menggunakan HTTPS
 •	Akses fitur berdasarkan peran pengguna (Role-Based Access Control)
 •	Sesi otomatis berakhir setelah 30 menit tidak aktif
 
@@ -207,7 +207,7 @@ NF-04	Respons UI	Tidak ada freeze selama eksekusi pengujian (async)
 •	Platform: Windows 10 (build 1903+) dan Windows 11
 •	Arsitektur: 64-bit
 •	Framework: .NET 6+ atau Electron (sesuai stack yang dipilih)
-•	Database: SQL Server 2019+ atau PostgreSQL 14+
+•	Penyimpanan: API jinom-assets; aplikasi tidak memasang atau mengakses database sendiri
 •	Tidak memerlukan instalasi perangkat lunak tambahan oleh pengguna akhir
 
 4.6 Pemeliharaan
@@ -217,9 +217,10 @@ NF-04	Respons UI	Tidak ada freeze selama eksekusi pengujian (async)
 •	Pembaruan aplikasi dapat di-deploy tanpa uninstall manual
 
  
-5. Desain Database
+5. Desain Data
+Catatan: tabel-tabel di bawah ini berada di jinom-assets dan dikelola oleh jinom-assets. Aplikasi ini membacanya dan menulisnya hanya lewat API jinom-assets; skema di sini adalah acuan isi data, bukan database milik aplikasi.
 5.1 Skema Tabel Utama
-Berikut adalah entitas-entitas database utama yang dibutuhkan sistem:
+Berikut adalah entitas-entitas data utama yang dibutuhkan sistem:
 
 Tabel: users
 Kolom	Tipe	Constraint	Keterangan
@@ -335,8 +336,7 @@ Koneksi	Ethernet / WiFi ke jaringan Jinom	Ethernet (lebih stabil)
 9.2 Stack Teknologi yang Direkomendasikan
 •	Frontend/UI: C# WPF (.NET 8) dengan Material Design atau Electron.js + React
 •	Backend Logic: C# (.NET 8) atau Node.js
-•	Database ORM: Entity Framework Core (untuk C#) atau Sequelize (untuk Node.js)
-•	Database Server: PostgreSQL 14+ (disarankan) atau SQL Server 2019+
+•	Penyimpanan: API jinom-assets lewat HTTPS (tanpa ORM dan tanpa database di sisi aplikasi)
 •	PDF Generation: iTextSharp (.NET) atau Puppeteer (Node.js)
 •	Network Commands: System.Net.NetworkInformation (.NET) atau child_process (Node.js)
 
@@ -356,7 +356,7 @@ FR-031	Pengujian Streaming	WAJIB	Sprint 2	Belum Dimulai
 FR-032	Pengujian Social Media	WAJIB	Sprint 2	Belum Dimulai
 FR-040	Jinom Speedtest	WAJIB	Sprint 2	Belum Dimulai
 FR-041	Ookla Speedtest	TINGGI	Sprint 2	Belum Dimulai
-FR-050	Simpan Hasil ke Database	WAJIB	Sprint 2	Belum Dimulai
+FR-050	Simpan Hasil ke jinom-assets	WAJIB	Sprint 2	Belum Dimulai
 FR-051	Generasi Laporan PDF	WAJIB	Sprint 3	Belum Dimulai
 FR-052	Riwayat Pengujian	TINGGI	Sprint 3	Belum Dimulai
 

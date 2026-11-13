@@ -3,6 +3,8 @@
 **Stack:** C# / WPF · .NET 8 · Windows-only  
 **Versi:** 1.0.0 · Jinom AI
 
+Peran aplikasi ini di antara sistem Jinom — ia hanya berbicara ke API jinom-assets, tidak pernah ke database — ada di [`PLATFORM_CONTRACT.md`](PLATFORM_CONTRACT.md) (isi sama di semua repo Jinom).
+
 > **⚠️ Penting:** Aplikasi ini menggunakan WPF yang merupakan teknologi **Windows-only**.
 > Build **tidak bisa** dilakukan di Linux/macOS. Gunakan mesin Windows atau Windows VM.
 
