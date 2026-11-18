@@ -56,6 +56,9 @@ public partial class App : Application
         // Initialize configuration
         ConfigManager.Initialize();
 
+        // The technician's light/dark choice (or Windows' mode) before the first window appears.
+        ThemeService.ApplySaved();
+
         Log.Information("FO Testing App started");
 
         // Show login window

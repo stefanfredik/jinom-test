@@ -12,6 +12,23 @@ namespace FoTestingApp.Services;
 /// </summary>
 public class ReportService
 {
+    /// <summary>The app's light theme tokens (Themes/Tokens.Light.xaml), so the certificate matches the app.</summary>
+    private static class Brand
+    {
+        public static readonly Color Primary = Color.FromHex("#006C49");
+        public static readonly Color SurfaceLow = Color.FromHex("#F2F4F0");
+        public static readonly Color OnSurfaceVariant = Color.FromHex("#404943");
+        public static readonly Color OutlineVariant = Color.FromHex("#C0C9C1");
+        public static readonly Color Pass = Color.FromHex("#146C2E");
+        public static readonly Color Fail = Color.FromHex("#BA1A1A");
+        public static readonly Color PassContainer = Color.FromHex("#B4F1BD");
+        public static readonly Color OnPassContainer = Color.FromHex("#002109");
+        public static readonly Color PartialContainer = Color.FromHex("#FFDEA1");
+        public static readonly Color OnPartialContainer = Color.FromHex("#261900");
+        public static readonly Color FailContainer = Color.FromHex("#FFDAD6");
+        public static readonly Color OnFailContainer = Color.FromHex("#410002");
+    }
+
     static ReportService()
     {
         // QuestPDF Community licence: free for organisations under USD 1M annual revenue — check
@@ -57,21 +74,21 @@ public class ReportService
 
     private static void ComposeHeader(IContainer container, FoTestSession session)
     {
-        container.PaddingBottom(10).BorderBottom(1).BorderColor(Colors.Green.Medium).Row(row =>
+        container.PaddingBottom(10).BorderBottom(1).BorderColor(Brand.Primary).Row(row =>
         {
             row.RelativeItem().Column(col =>
             {
-                col.Item().Text("JINOM TEST").FontSize(18).Bold().FontColor(Color.FromHex("#16a34a"));
+                col.Item().Text("JINOM TEST").FontSize(18).Bold().FontColor(Brand.Primary);
                 col.Item().Text("Laporan Hasil Pengujian Jaringan Fiber Optik")
-                   .FontSize(11).FontColor(Colors.Grey.Darken2);
+                   .FontSize(11).FontColor(Brand.OnSurfaceVariant);
             });
 
             row.ConstantItem(120).AlignRight().Column(col =>
             {
-                col.Item().Text("Jinom Test").FontSize(9).FontColor(Colors.Grey.Darken1);
+                col.Item().Text("Jinom Test").FontSize(9).FontColor(Brand.OnSurfaceVariant);
                 // The test's date; the print date is only a footnote.
                 col.Item().Text($"Tanggal uji: {session.TestDate:dd MMMM yyyy}").FontSize(9);
-                col.Item().Text($"Dicetak: {DateTime.Now:dd MMM yyyy HH:mm}").FontSize(7).FontColor(Colors.Grey.Darken1);
+                col.Item().Text($"Dicetak: {DateTime.Now:dd MMM yyyy HH:mm}").FontSize(7).FontColor(Brand.OnSurfaceVariant);
             });
         });
     }
@@ -83,18 +100,20 @@ public class ReportService
         container.PaddingTop(10).Column(col =>
         {
             // Test ID badge
-            col.Item().Background(Color.FromHex("#16a34a")).Padding(8).Row(row =>
+            col.Item().Background(Brand.Primary).Padding(8).Row(row =>
             {
                 row.RelativeItem().Text($"ID PENGUJIAN: {session.CertificationId}")
                    .FontColor(Colors.White).Bold().FontSize(11);
-                row.ConstantItem(120).AlignRight().Text($"Status: {session.OverallStatus.ToString().ToUpperInvariant()}")
-                   .FontColor(session.OverallStatus switch
-                   {
-                       TestOverallStatus.Pass => Colors.Green.Lighten3,
-                       TestOverallStatus.Partial => Colors.Yellow.Lighten2,
-                       _ => Colors.Red.Lighten3,
-                   })
-                   .Bold().FontSize(11);
+                // The status as a chip, in the app's status container colours.
+                var (chip, onChip) = session.OverallStatus switch
+                {
+                    TestOverallStatus.Pass => (Brand.PassContainer, Brand.OnPassContainer),
+                    TestOverallStatus.Partial => (Brand.PartialContainer, Brand.OnPartialContainer),
+                    _ => (Brand.FailContainer, Brand.OnFailContainer),
+                };
+                row.AutoItem().AlignRight().AlignMiddle().Background(chip).PaddingVertical(2).PaddingHorizontal(8)
+                   .Text($"Status: {session.OverallStatus.ToString().ToUpperInvariant()}")
+                   .FontColor(onChip).Bold().FontSize(10);
             });
 
             col.Item().PaddingTop(10);
@@ -103,10 +122,10 @@ public class ReportService
             col.Item().Row(row =>
             {
                 // Left: Customer Info
-                row.RelativeItem().BorderRight(1).BorderColor(Colors.Grey.Lighten2).PaddingRight(8)
+                row.RelativeItem().BorderRight(1).BorderColor(Brand.OutlineVariant).PaddingRight(8)
                    .Column(c =>
                    {
-                       c.Item().Text("DATA PELANGGAN").Bold().FontSize(9).FontColor(Colors.Grey.Darken2);
+                       c.Item().Text("DATA PELANGGAN").Bold().FontSize(9).FontColor(Brand.OnSurfaceVariant);
                        c.Item().PaddingTop(4);
                        if (session.Customer is not null)
                        {
@@ -122,7 +141,7 @@ public class ReportService
                 // Right: Session Info
                 row.RelativeItem().PaddingLeft(8).Column(c =>
                 {
-                    c.Item().Text("DATA PENGUJIAN").Bold().FontSize(9).FontColor(Colors.Grey.Darken2);
+                    c.Item().Text("DATA PENGUJIAN").Bold().FontSize(9).FontColor(Brand.OnSurfaceVariant);
                     c.Item().PaddingTop(4);
                     c.Item().Row(r => InfoRow(r, "Teknisi", session.Technician?.Name ?? "-"));
                     c.Item().Row(r => InfoRow(r, "Mulai", (session.StartTime ?? session.TestDate).ToString("dd/MM/yyyy HH:mm")));
@@ -136,7 +155,7 @@ public class ReportService
             col.Item().PaddingTop(12);
 
             // Results Table
-            col.Item().Text("HASIL PENGUJIAN").Bold().FontSize(10).FontColor(Color.FromHex("#16a34a"));
+            col.Item().Text("HASIL PENGUJIAN").Bold().FontSize(10).FontColor(Brand.Primary);
             col.Item().PaddingTop(4);
             col.Item().Element(c => ComposeResultsTable(c, session.Results));
 
@@ -148,7 +167,7 @@ public class ReportService
                 row.RelativeItem().Column(c =>
                 {
                     c.Item().Text("Catatan Tambahan:").Bold().FontSize(9);
-                    c.Item().PaddingTop(32).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
+                    c.Item().PaddingTop(32).BorderBottom(1).BorderColor(Brand.OutlineVariant);
                 });
 
                 row.ConstantItem(20);
@@ -156,9 +175,9 @@ public class ReportService
                 row.ConstantItem(160).Column(c =>
                 {
                     c.Item().Text("Tanda Tangan Teknisi:").Bold().FontSize(9);
-                    c.Item().PaddingTop(32).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
+                    c.Item().PaddingTop(32).BorderBottom(1).BorderColor(Brand.OutlineVariant);
                     c.Item().PaddingTop(4).Text(session.Technician?.Name ?? "").FontSize(9).Italic();
-                    c.Item().Text(session.TestDate.ToString("dd MMMM yyyy")).FontSize(8).FontColor(Colors.Grey.Darken1);
+                    c.Item().Text(session.TestDate.ToString("dd MMMM yyyy")).FontSize(8).FontColor(Brand.OnSurfaceVariant);
                 });
             });
         });
@@ -166,7 +185,7 @@ public class ReportService
 
     private static void InfoRow(RowDescriptor row, string label, string value)
     {
-        row.ConstantItem(90).Text($"{label}:").FontSize(9).FontColor(Colors.Grey.Darken2);
+        row.ConstantItem(90).Text($"{label}:").FontSize(9).FontColor(Brand.OnSurfaceVariant);
         row.RelativeItem().Text(value).FontSize(9);
     }
 
@@ -192,15 +211,15 @@ public class ReportService
             // Header
             table.Header(header =>
             {
-                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
+                header.Cell().Background(Brand.Primary).Padding(5)
                       .Text("No").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
+                header.Cell().Background(Brand.Primary).Padding(5)
                       .Text("Jenis Pengujian").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
+                header.Cell().Background(Brand.Primary).Padding(5)
                       .Text("Target").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
+                header.Cell().Background(Brand.Primary).Padding(5)
                       .Text("Detail Hasil").FontColor(Colors.White).Bold().FontSize(9);
-                header.Cell().Background(Color.FromHex("#16a34a")).Padding(5)
+                header.Cell().Background(Brand.Primary).Padding(5)
                       .Text("Status").FontColor(Colors.White).Bold().FontSize(9);
             });
 
@@ -208,8 +227,8 @@ public class ReportService
             foreach (var result in results)
             {
                 i++;
-                var bg = i % 2 == 0 ? Color.FromHex("#F4F6FA") : Colors.White;
-                var statusColor = result.Status == TestStatus.Pass ? Colors.Green.Darken2 : Colors.Red.Darken2;
+                var bg = i % 2 == 0 ? Brand.SurfaceLow : Colors.White;
+                var statusColor = result.Status == TestStatus.Pass ? Brand.Pass : Brand.Fail;
                 // Plain words: Arial has no check mark glyph.
                 var statusText = result.Status == TestStatus.Pass ? "PASS" : "FAIL";
                 var detail = ExtractDetailText(result);
@@ -228,15 +247,15 @@ public class ReportService
 
     private static void ComposeFooter(IContainer container)
     {
-        container.PaddingTop(6).BorderTop(1).BorderColor(Colors.Grey.Lighten2).Row(row =>
+        container.PaddingTop(6).BorderTop(1).BorderColor(Brand.OutlineVariant).Row(row =>
         {
             row.RelativeItem().Text("Jinom Test | Laporan Pengujian Jaringan | Rahasia")
-               .FontSize(8).FontColor(Colors.Grey.Darken1);
+               .FontSize(8).FontColor(Brand.OnSurfaceVariant);
             row.ConstantItem(80).AlignRight().Text(text =>
             {
-                text.Span("Halaman ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                text.Span("Halaman ").FontSize(8).FontColor(Brand.OnSurfaceVariant);
                 text.CurrentPageNumber().FontSize(8);
-                text.Span(" dari ").FontSize(8).FontColor(Colors.Grey.Darken1);
+                text.Span(" dari ").FontSize(8).FontColor(Brand.OnSurfaceVariant);
                 text.TotalPages().FontSize(8);
             });
         });

@@ -132,6 +132,8 @@ dotnet test FoTestingApp.Tests
 
 Build aplikasi WPF di Linux/CI (compile saja, tidak bisa dijalankan): `dotnet build FoTestingApp -p:EnableWindowsTargeting=true`.
 
+`UiContractTests` menjaga kontrak desain di [`DESIGN.md`](../DESIGN.md): semua key resource yang dipakai terdefinisi, token terang & gelap sepadan, nama ikon `PackIconKind` valid, dan Views bebas warna hex, `FontSize` literal, bayangan, emoji dan `MessageBox`. Tes ini membaca `MaterialDesignThemes.Wpf.dll` dari cache NuGet, jadi `FoTestingApp` harus sudah di-restore/build lebih dulu.
+
 ---
 
 ## Struktur Output

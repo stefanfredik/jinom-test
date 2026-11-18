@@ -1,0 +1,263 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <!--
+      Jinom M3 components, the WPF counterparts of jinom-assets' (DESIGN.md Kontrak §6–§9):
+      - Buttons are full pills, 40 px tall; state layers (8 % hover, 12 % press/focus) are drawn in the
+        button's own content colour; disabled is 38 %.
+      - Cards are 12 px, separated by tone or a 1 px outline-variant line, never by a shadow. Only what
+        floats (FAB, dialogs, menus, snackbars) casts one.
+      - Text fields are outlined with a 4 px corner; chips 8 px; dialogs 28 px.
+      Screens use these styles by key and never set colours or font sizes of their own.
+
+      Styles based on MaterialDesignInXAML's (text fields, progress, table) live in App.xaml: a
+      StaticResource here could not see the MaterialDesign dictionaries merged beside this one.
+    -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Typography.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- ── Shape ─────────────────────────────────────────────────────────────── -->
+    <CornerRadius x:Key="Shape.Field">4</CornerRadius>
+    <CornerRadius x:Key="Shape.Chip">8</CornerRadius>
+    <CornerRadius x:Key="Shape.Card">12</CornerRadius>
+    <CornerRadius x:Key="Shape.Fab">16</CornerRadius>
+    <CornerRadius x:Key="Shape.Sheet">28</CornerRadius>
+    <CornerRadius x:Key="Shape.Pill">20</CornerRadius>
+
+    <!-- ── Buttons ───────────────────────────────────────────────────────────── -->
+    <ControlTemplate x:Key="M3.ButtonTemplate" TargetType="ButtonBase">
+        <Grid x:Name="Root" SnapsToDevicePixels="True">
+            <Border x:Name="FocusRing" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource PrimaryBrush}"
+                    CornerRadius="{TemplateBinding materialDesign:ButtonAssist.CornerRadius}" Visibility="Collapsed"/>
+            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding materialDesign:ButtonAssist.CornerRadius}"/>
+            <Border x:Name="StateLayer" Background="{TemplateBinding Foreground}" Opacity="0"
+                    CornerRadius="{TemplateBinding materialDesign:ButtonAssist.CornerRadius}"/>
+            <ContentPresenter Margin="{TemplateBinding Padding}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True"/>
+        </Grid>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="StateLayer" Property="Opacity" Value="0.08"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="StateLayer" Property="Opacity" Value="0.12"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="StateLayer" Property="Opacity" Value="0.12"/>
+                <Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Root" Property="Opacity" Value="0.38"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <Style x:Key="M3.ButtonBase" TargetType="ButtonBase">
+        <Setter Property="Template" Value="{StaticResource M3.ButtonTemplate}"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="Padding" Value="24,0"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="{StaticResource Shape.Pill}"/>
+    </Style>
+
+    <!-- The one primary action of a screen. -->
+    <Style x:Key="M3.FilledButton" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
+    </Style>
+
+    <!-- A secondary action that still deserves weight. -->
+    <Style x:Key="M3.TonalButton" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="{DynamicResource SecondaryContainerBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainerBrush}"/>
+    </Style>
+
+    <Style x:Key="M3.OutlinedButton" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <Style x:Key="M3.TextButton" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="Padding" Value="12,0"/>
+    </Style>
+
+    <!-- A destructive action in a dialog (Batal pengujian, Keluar). -->
+    <Style x:Key="M3.ErrorTextButton" TargetType="Button" BasedOn="{StaticResource M3.TextButton}">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+    </Style>
+
+    <!-- Icon only: always give it ToolTip and AutomationProperties.Name. -->
+    <Style x:Key="M3.IconButton" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariantBrush}"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <!-- Floating, so it casts the one shadow a screen may have. -->
+    <Style x:Key="M3.ExtendedFab" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="{DynamicResource PrimaryContainerBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnPrimaryContainerBrush}"/>
+        <Setter Property="MinHeight" Value="56"/>
+        <Setter Property="Padding" Value="16,0,20,0"/>
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="{StaticResource Shape.Fab}"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Direction="270" Opacity="0.25" Color="Black"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Navigation drawer item (as the web app's sidebar) ─────────────────── -->
+    <Style x:Key="M3.NavItem" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariantBrush}"/>
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="Padding" Value="16,0,24,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid SnapsToDevicePixels="True">
+                        <Border x:Name="Indicator" CornerRadius="28" Background="Transparent"/>
+                        <Border x:Name="StateLayer" CornerRadius="28" Background="{TemplateBinding Foreground}" Opacity="0"/>
+                        <Border x:Name="FocusRing" CornerRadius="28" BorderThickness="2" BorderBrush="{DynamicResource PrimaryBrush}" Visibility="Collapsed"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Indicator" Property="Background" Value="{DynamicResource SecondaryContainerBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainerBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="StateLayer" Property="Opacity" Value="0.08"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Filter chip: one choice of a few (status filter) ──────────────────── -->
+    <Style x:Key="M3.FilterChip" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariantBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OutlineBrush}"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Padding" Value="16,0"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid SnapsToDevicePixels="True">
+                        <Border x:Name="Container" CornerRadius="{StaticResource Shape.Chip}" BorderThickness="1"
+                                BorderBrush="{TemplateBinding BorderBrush}" Background="Transparent"/>
+                        <Border x:Name="StateLayer" CornerRadius="{StaticResource Shape.Chip}" Background="{TemplateBinding Foreground}" Opacity="0"/>
+                        <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}" VerticalAlignment="Center">
+                            <materialDesign:PackIcon x:Name="Check" Kind="Check" Width="18" Height="18" Margin="-8,0,8,0" Visibility="Collapsed"
+                                                     VerticalAlignment="Center"/>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Container" Property="Background" Value="{DynamicResource SecondaryContainerBrush}"/>
+                            <Setter TargetName="Container" Property="BorderBrush" Value="Transparent"/>
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
+                            <Setter Property="Foreground" Value="{DynamicResource OnSecondaryContainerBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="StateLayer" Property="Opacity" Value="0.08"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="StateLayer" Property="Opacity" Value="0.12"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ── Containers ────────────────────────────────────────────────────────── -->
+    <!-- Outlined card: the default wrapper for a list or a group of fields. -->
+    <Style x:Key="M3.Card" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource SurfaceContainerLowestBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OutlineVariantBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource Shape.Card}"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- Filled card: a tile or a quiet block set apart by tone. -->
+    <Style x:Key="M3.FilledCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource SurfaceContainerLowBrush}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource Shape.Card}"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- A card that is one big choice (Pelanggan / POP). -->
+    <Style x:Key="M3.ChoiceCard" TargetType="Button" BasedOn="{StaticResource M3.ButtonBase}">
+        <Setter Property="Background" Value="{DynamicResource SurfaceContainerLowestBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource OutlineVariantBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="24"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="{StaticResource Shape.Card}"/>
+    </Style>
+
+    <!-- Small label in a box: tags such as a service number or a package. -->
+    <Style x:Key="M3.Tag" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource SurfaceContainerHighBrush}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource Shape.Chip}"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- A circle holding an icon at the start of a row. -->
+    <Style x:Key="M3.LeadingIcon" TargetType="Border">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceContainerHighBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="M3.Divider" TargetType="Rectangle">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Fill" Value="{DynamicResource OutlineVariantBrush}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+</ResourceDictionary>

@@ -1,10 +1,7 @@
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media.Animation;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
@@ -13,6 +10,11 @@ using MaterialDesignThemes.Wpf;
 
 namespace FoTestingApp.Views.Pages;
 
+/// <summary>
+/// A test session from start to finish: pick where (customer or POP), confirm the site's data, run
+/// every test (cancellable), then the verdict and every result. Colours come from the M3 roles by
+/// resource reference only, so the page follows light and dark mode.
+/// </summary>
 public partial class NewTestPage : Page
 {
     private readonly ApiService _api = new();
@@ -22,21 +24,21 @@ public partial class NewTestPage : Page
     private CancellationTokenSource? _popSearch;
     private CancellationTokenSource? _customerSearch;
 
-    /// <summary>The run in progress: cancelled by "Batal" and by leaving the page, so it never goes on unseen.</summary>
+    /// <summary>The run in progress: cancelled by "Batalkan" and by leaving the page, so it never goes on unseen.</summary>
     private CancellationTokenSource? _runCts;
 
-    /// <summary>The site last tested, for "Uji Ulang" (a new session for the same site).</summary>
+    /// <summary>The site last tested, for "Uji ulang" (a new session for the same site).</summary>
     private FoCustomer? _lastCustomer;
 
     private string _testMode = "customer";
-    private bool _enableRealTimeValidation = false;
+    private bool _enableRealTimeValidation;
 
     private bool IsRunning => _runCts is not null;
 
     public NewTestPage()
     {
         InitializeComponent();
-        DiagnosticLogsPanel.SizeChanged += DiagnosticLogsPanel_SizeChanged;
+        DiagnosticLogsPanel.SizeChanged += (_, _) => LogsScrollViewer.ScrollToEnd();
         Unloaded += (_, _) =>
         {
             _runCts?.Cancel();
@@ -45,124 +47,58 @@ public partial class NewTestPage : Page
         };
     }
 
-    // ── Stage Navigation ──────────────────────────────────────────────────────
+    // ── Step 1: where ─────────────────────────────────────────────────────────
 
-    private void StartLandingBtn_Click(object sender, RoutedEventArgs e)
-    {
-        LandingContainer.Visibility = Visibility.Collapsed;
-        LocationContainer.Visibility = Visibility.Visible;
-    }
+    private void CustomerChoice_Click(object sender, RoutedEventArgs e) => SelectMode("customer");
 
-    private async void PopCard_Click(object sender, RoutedEventArgs e)
-    {
-        await SelectTestModeAsync("pop");
-    }
+    private void PopChoice_Click(object sender, RoutedEventArgs e) => SelectMode("pop");
 
-    private async void PopCard_Click(object sender, MouseButtonEventArgs e)
-    {
-        await SelectTestModeAsync("pop");
-    }
-
-    private async void CpeCard_Click(object sender, RoutedEventArgs e)
-    {
-        await SelectTestModeAsync("customer");
-    }
-
-    private async void CpeCard_Click(object sender, MouseButtonEventArgs e)
-    {
-        await SelectTestModeAsync("customer");
-    }
-
-    private async Task SelectTestModeAsync(string mode)
+    private void SelectMode(string mode)
     {
         _testMode = mode;
-        LocationContainer.Visibility = Visibility.Collapsed;
-        FormContainer.Visibility = Visibility.Visible;
+        ShowStage(FormContainer);
         ApplyTestMode();
-
-        // ApplyTestMode starts loading the list for the mode.
-        await Task.CompletedTask;
     }
 
-    private void BackToLanding_Click(object sender, RoutedEventArgs e)
+    private void BackToLocation_Click(object sender, RoutedEventArgs e) => ShowStage(LocationContainer);
+
+    private void ShowStage(FrameworkElement stage)
     {
-        LocationContainer.Visibility = Visibility.Collapsed;
-        LandingContainer.Visibility = Visibility.Visible;
+        foreach (var candidate in new FrameworkElement[] { LocationContainer, FormContainer, ProgressContainer, ResultsContainer })
+        {
+            candidate.Visibility = ReferenceEquals(candidate, stage) ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
-    private void BackToLocation_Click(object sender, RoutedEventArgs e)
-    {
-        FormContainer.Visibility = Visibility.Collapsed;
-        LocationContainer.Visibility = Visibility.Visible;
-    }
+    // ── Step 2: who ───────────────────────────────────────────────────────────
 
     private void ApplyTestMode()
     {
-        SelectedDetailsCard.Visibility = Visibility.Collapsed;
         _enableRealTimeValidation = false;
+        ClearErrors();
+        SelectedDetailsCard.Visibility = Visibility.Collapsed;
+        FullNameBox.Text = PackageMbpsBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
+        PopComboBox.ItemsSource = null;
+        PopComboBox.SelectedItem = null;
+        PopStatusText.Text = string.Empty;
+        CustomerComboBox.SelectedItem = null;
+        PlacePackageField(nameVisible: true);
 
-        // Reset borders
-        var borderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
-        FullNameBox.BorderBrush = borderBrush;
-        PackageMbpsBox.BorderBrush = borderBrush;
-        AddressBox.BorderBrush = borderBrush;
+        var isPop = _testMode == "pop";
+        FormTitle.Text = isPop ? "Uji di POP" : "Uji di pelanggan";
+        FormSubtitle.Text = isPop ? "Pilih POP yang diuji, lalu mulai." : "Cari pelanggan, periksa datanya, lalu mulai.";
+        PopSelectionPanel.Visibility = isPop ? Visibility.Visible : Visibility.Collapsed;
+        CustomerSelectionPanel.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
+        // A POP is chosen, not typed; it has no package.
+        NameFieldPanel.Visibility = PackageFieldPanel.Visibility = AddressFieldPanel.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
+        BtnEditDetails.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
 
-        if (PackageWarningText != null) PackageWarningText.Visibility = Visibility.Collapsed;
-        if (NameWarningText != null) NameWarningText.Visibility = Visibility.Collapsed;
-        if (AddressWarningText != null) AddressWarningText.Visibility = Visibility.Collapsed;
-
-        if (_testMode == "pop")
+        if (isPop)
         {
-            FormTitle.Text = "Pengujian di POP";
-            FormSubtitle.Text = "PENGUJIAN JARINGAN POP";
-            FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.ServerNetwork;
-            FormSectionTitle.Text = "Data POP";
-            PopSelectionPanel.Visibility = Visibility.Visible;
-            CustomerSelectionPanel.Visibility = Visibility.Collapsed;
-            NameFieldPanel.Visibility = Visibility.Collapsed;
-            PackageFieldPanel.Visibility = Visibility.Collapsed;
-            AddressFieldPanel.Visibility = Visibility.Collapsed;
-            NotesFieldPanel.Visibility = Visibility.Visible;
-            FullNameBox.IsReadOnly = true;
-            // A POP has no package: its speedtest is judged on a measured speed alone.
-            PackageMbpsBox.Text = string.Empty;
-            FullNameBox.Text = string.Empty;
-            AddressBox.Text = string.Empty;
-            NotesBox.Text = string.Empty;
-            PopComboBox.ItemsSource = null;
-            PopComboBox.SelectedItem = null;
-            PopStatusText.Text = string.Empty;
-            BtnEditDetails.Visibility = Visibility.Collapsed;
-
             _ = LoadAvailablePopsAsync();
         }
         else
         {
-            FormTitle.Text = "Pengujian Kualitas Jaringan di Pelanggan";
-            FormSubtitle.Text = "PENGUJIAN JARINGAN CPE";
-            FormSectionIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountPlus;
-            FormSectionTitle.Text = "Data Pelanggan";
-            NameFieldLabel.Text = "NAMA PELANGGAN";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(FullNameBox, "Nama Pelanggan *");
-            PackageFieldLabel.Text = "PAKET INTERNET";
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(PackageMbpsBox, "Kecepatan Paket (Mbps) *");
-            MaterialDesignThemes.Wpf.HintAssist.SetHint(AddressBox, "Alamat Pelanggan *");
-            PopSelectionPanel.Visibility = Visibility.Collapsed;
-            CustomerSelectionPanel.Visibility = Visibility.Visible;
-            NameFieldPanel.Visibility = Visibility.Visible;
-            PackageFieldPanel.Visibility = Visibility.Visible;
-            AddressFieldPanel.Visibility = Visibility.Visible;
-            NotesFieldPanel.Visibility = Visibility.Visible;
-            FullNameBox.IsReadOnly = false;
-            PackageMbpsBox.Text = string.Empty;
-            FullNameBox.Text = string.Empty;
-            AddressBox.Text = string.Empty;
-            NotesBox.Text = string.Empty;
-            PopComboBox.ItemsSource = null;
-            PopComboBox.SelectedItem = null;
-            PopStatusText.Text = string.Empty;
-            BtnEditDetails.Visibility = Visibility.Visible;
-
             _ = LoadAvailableCustomersAsync();
         }
     }
@@ -179,13 +115,13 @@ public partial class NewTestPage : Page
         try
         {
             if (!string.IsNullOrEmpty(query)) await Task.Delay(300, search.Token);
-            if (PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Visible;
-            PopStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP..." : $"Mencari POP: '{query}'...";
+            PopLoadingBar.Visibility = Visibility.Visible;
+            SetStatus(PopStatusText, string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP..." : $"Mencari \"{query}\"...");
 
             var pops = await _api.GetAvailablePopsAsync(query, search.Token);
             if (search.IsCancellationRequested) return;
             PopComboBox.ItemsSource = pops;
-            PopStatusText.Text = pops.Count > 0 ? $"{pops.Count} POP tersedia." : "Tidak ada POP yang tersedia.";
+            SetStatus(PopStatusText, pops.Count > 0 ? $"{pops.Count} POP tersedia." : "Tidak ada POP yang cocok.");
         }
         catch (OperationCanceledException)
         {
@@ -193,52 +129,42 @@ public partial class NewTestPage : Page
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load available POPs");
-            PopStatusText.Text = ex is ApiException ? ex.Message : "Gagal memuat daftar POP. Silakan coba lagi.";
+            SetStatus(PopStatusText, ex is ApiException ? ex.Message : "Daftar POP gagal dimuat. Coba lagi.", error: true);
             PopComboBox.ItemsSource = null;
         }
         finally
         {
-            if (ReferenceEquals(_popSearch, search) && PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Collapsed;
+            if (ReferenceEquals(_popSearch, search)) PopLoadingBar.Visibility = Visibility.Hidden;
         }
     }
 
     private void PopComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (PopComboBox.SelectedItem is not PopOption selectedPop)
+        if (PopComboBox.SelectedItem is not PopOption pop)
         {
-            FullNameBox.Text = string.Empty;
-            AddressBox.Text = string.Empty;
-            NotesBox.Text = string.Empty;
             SelectedDetailsCard.Visibility = Visibility.Collapsed;
             return;
         }
 
-        FullNameBox.Text = selectedPop.DisplayName;
-        AddressBox.Text = selectedPop.Address ?? string.Empty;
-        NotesBox.Text = string.Empty;
+        FullNameBox.Text = pop.DisplayName;
+        AddressBox.Text = pop.Address ?? string.Empty;
+        SetStatus(PopStatusText, string.Empty);
 
-        // Show read-only details card
         DetailsCardIcon.Kind = PackIconKind.ServerNetwork;
-        DetailsNameText.Text = selectedPop.Name;
-        DetailsSiteIdText.Text = selectedPop.SiteId;
-        DetailsSiteIdBadge.Visibility = string.IsNullOrWhiteSpace(selectedPop.SiteId) ? Visibility.Collapsed : Visibility.Visible;
+        DetailsNameText.Text = pop.Name;
+        DetailsSiteIdText.Text = $"POP #{pop.SiteId}";
+        DetailsSiteIdBadge.Visibility = Visibility.Visible;
         DetailsPackageBadge.Visibility = Visibility.Collapsed;
-        DetailsAddressText.Text = selectedPop.Address ?? "-";
-        DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(selectedPop.Address) ? Visibility.Collapsed : Visibility.Visible;
+        DetailsAddressText.Text = pop.Address ?? "-";
+        DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(pop.Address) ? Visibility.Collapsed : Visibility.Visible;
         SelectedDetailsCard.Visibility = Visibility.Visible;
     }
 
     private async void PopComboBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is ComboBox cb)
+        if (sender is ComboBox { IsDropDownOpen: true, SelectedItem: null } box)
         {
-            if (cb.IsDropDownOpen)
-            {
-                if (cb.SelectedItem == null)
-                {
-                    await LoadAvailablePopsAsync(cb.Text);
-                }
-            }
+            await LoadAvailablePopsAsync(box.Text);
         }
     }
 
@@ -259,13 +185,13 @@ public partial class NewTestPage : Page
         try
         {
             if (!string.IsNullOrEmpty(query)) await Task.Delay(300, search.Token);
-            if (CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Visible;
-            CustomerStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar pelanggan..." : $"Mencari pelanggan: '{query}'...";
+            CustomerLoadingBar.Visibility = Visibility.Visible;
+            SetStatus(CustomerStatusText, string.IsNullOrWhiteSpace(query) ? "Memuat daftar pelanggan..." : $"Mencari \"{query}\"...");
 
             var customers = await _api.SearchCustomersAsync(query, search.Token);
             if (search.IsCancellationRequested) return;
             CustomerComboBox.ItemsSource = customers;
-            CustomerStatusText.Text = customers.Count > 0 ? $"{customers.Count} pelanggan ditemukan." : "Pelanggan tidak ditemukan.";
+            SetStatus(CustomerStatusText, customers.Count > 0 ? $"{customers.Count} pelanggan ditemukan." : "Pelanggan tidak ditemukan.");
         }
         catch (OperationCanceledException)
         {
@@ -273,123 +199,70 @@ public partial class NewTestPage : Page
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load customers");
-            CustomerStatusText.Text = ex is ApiException ? ex.Message : "Gagal memuat pelanggan. Silakan coba lagi.";
+            SetStatus(CustomerStatusText, ex is ApiException ? ex.Message : "Daftar pelanggan gagal dimuat. Coba lagi.", error: true);
         }
         finally
         {
-            if (ReferenceEquals(_customerSearch, search) && CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Collapsed;
+            if (ReferenceEquals(_customerSearch, search)) CustomerLoadingBar.Visibility = Visibility.Hidden;
         }
     }
 
     private void CustomerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _enableRealTimeValidation = false;
-        
-        // Reset borders
-        var borderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
-        FullNameBox.BorderBrush = borderBrush;
-        PackageMbpsBox.BorderBrush = borderBrush;
-        AddressBox.BorderBrush = borderBrush;
-        
-        if (PackageWarningText != null) PackageWarningText.Visibility = Visibility.Collapsed;
-        if (NameWarningText != null) NameWarningText.Visibility = Visibility.Collapsed;
-        if (AddressWarningText != null) AddressWarningText.Visibility = Visibility.Collapsed;
+        ClearErrors();
 
-        if (CustomerComboBox.SelectedItem is not FoCustomer selectedCustomer)
+        if (CustomerComboBox.SelectedItem is not FoCustomer customer)
         {
             SelectedDetailsCard.Visibility = Visibility.Collapsed;
-            NameFieldPanel.Visibility = Visibility.Visible;
-            PackageFieldPanel.Visibility = Visibility.Visible;
-            AddressFieldPanel.Visibility = Visibility.Visible;
-            FullNameBox.Text = string.Empty;
-            PackageMbpsBox.Text = string.Empty;
-            AddressBox.Text = string.Empty;
-            NotesBox.Text = string.Empty;
-            
-            // Reset grid column
-            Grid.SetColumn(PackageFieldPanel, 2);
-            Grid.SetColumnSpan(PackageFieldPanel, 1);
+            NameFieldPanel.Visibility = PackageFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Visible;
+            FullNameBox.Text = PackageMbpsBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
+            PlacePackageField(nameVisible: true);
             return;
         }
 
-        FullNameBox.Text = selectedCustomer.FullName;
-        PackageMbpsBox.Text = selectedCustomer.PackageMbps > 0 ? selectedCustomer.PackageMbps.ToString() : "";
-        AddressBox.Text = selectedCustomer.Address ?? string.Empty;
+        FullNameBox.Text = customer.FullName;
+        PackageMbpsBox.Text = customer.PackageMbps > 0 ? customer.PackageMbps.ToString() : string.Empty;
+        AddressBox.Text = customer.Address ?? string.Empty;
         NotesBox.Text = string.Empty;
 
-        // Show read-only details card
         DetailsCardIcon.Kind = PackIconKind.Account;
-        DetailsNameText.Text = selectedCustomer.FullName;
+        DetailsNameText.Text = customer.FullName;
         // The service number tells two customers of the same name apart.
-        DetailsSiteIdText.Text = selectedCustomer.ServiceNumber ?? string.Empty;
-        DetailsSiteIdBadge.Visibility = string.IsNullOrWhiteSpace(selectedCustomer.ServiceNumber) ? Visibility.Collapsed : Visibility.Visible;
-        
-        if (!string.IsNullOrWhiteSpace(selectedCustomer.PackageName))
-        {
-            DetailsPackageText.Text = selectedCustomer.PackageName;
-            DetailsPackageBadge.Visibility = Visibility.Visible;
-        }
-        else if (selectedCustomer.PackageMbps > 0)
-        {
-            DetailsPackageText.Text = $"{selectedCustomer.PackageMbps} Mbps";
-            DetailsPackageBadge.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            DetailsPackageBadge.Visibility = Visibility.Collapsed;
-        }
-        
-        DetailsAddressText.Text = selectedCustomer.Address ?? "-";
-        DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(selectedCustomer.Address) ? Visibility.Collapsed : Visibility.Visible;
-        
+        DetailsSiteIdText.Text = customer.ServiceNumber ?? string.Empty;
+        DetailsSiteIdBadge.Visibility = string.IsNullOrWhiteSpace(customer.ServiceNumber) ? Visibility.Collapsed : Visibility.Visible;
+        DetailsPackageText.Text = !string.IsNullOrWhiteSpace(customer.PackageName) ? customer.PackageName
+            : customer.PackageMbps > 0 ? $"{customer.PackageMbps} Mbps" : string.Empty;
+        DetailsPackageBadge.Visibility = string.IsNullOrWhiteSpace(DetailsPackageText.Text) ? Visibility.Collapsed : Visibility.Visible;
+        DetailsAddressText.Text = customer.Address ?? "-";
+        DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(customer.Address) ? Visibility.Collapsed : Visibility.Visible;
         SelectedDetailsCard.Visibility = Visibility.Visible;
-        
-        // Keep input panels visible if the details are empty or missing so they can be filled manually
+
+        // Only what billing left empty is asked for.
         NameFieldPanel.Visibility = string.IsNullOrWhiteSpace(FullNameBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         PackageFieldPanel.Visibility = string.IsNullOrWhiteSpace(PackageMbpsBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         AddressFieldPanel.Visibility = string.IsNullOrWhiteSpace(AddressBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        PlacePackageField(NameFieldPanel.Visibility == Visibility.Visible);
 
-        // Apply visual states and layout adjustments if package is missing
-        if (PackageFieldPanel.Visibility == Visibility.Visible && string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
+        if (PackageFieldPanel.Visibility == Visibility.Visible)
         {
             _enableRealTimeValidation = true;
-            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
-            if (PackageWarningText != null)
-            {
-                PackageWarningText.Text = "* Kecepatan paket belum terisi. Harap masukkan kecepatan paket pelanggan (Mbps).";
-                PackageWarningText.Visibility = Visibility.Visible;
-            }
+            SetError(PackageMbpsBox, PackageWarningText, "Paket pelanggan belum tercatat. Isi kecepatannya (Mbps).");
+        }
+    }
 
-            // Span full width if Name is collapsed but Package is visible
-            if (NameFieldPanel.Visibility == Visibility.Collapsed)
-            {
-                Grid.SetColumn(PackageFieldPanel, 0);
-                Grid.SetColumnSpan(PackageFieldPanel, 3);
-            }
-            else
-            {
-                Grid.SetColumn(PackageFieldPanel, 2);
-                Grid.SetColumnSpan(PackageFieldPanel, 1);
-            }
-        }
-        else
-        {
-            Grid.SetColumn(PackageFieldPanel, 2);
-            Grid.SetColumnSpan(PackageFieldPanel, 1);
-        }
+    /// <summary>The package field takes the whole row when the name field is not asked for.</summary>
+    private void PlacePackageField(bool nameVisible)
+    {
+        Grid.SetColumn(PackageFieldPanel, nameVisible ? 2 : 0);
+        Grid.SetColumnSpan(PackageFieldPanel, nameVisible ? 1 : 3);
     }
 
     private async void CustomerComboBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is ComboBox cb)
+        if (sender is ComboBox { IsDropDownOpen: true, SelectedItem: null } box)
         {
-            if (cb.IsDropDownOpen)
-            {
-                if (cb.SelectedItem == null)
-                {
-                    await LoadAvailableCustomersAsync(cb.Text);
-                }
-            }
+            await LoadAvailableCustomersAsync(box.Text);
         }
     }
 
@@ -403,36 +276,100 @@ public partial class NewTestPage : Page
 
     private void BtnEditDetails_Click(object sender, RoutedEventArgs e)
     {
-        NameFieldPanel.Visibility = Visibility.Visible;
-        PackageFieldPanel.Visibility = Visibility.Visible;
-        AddressFieldPanel.Visibility = Visibility.Visible;
-
-        // Reset grid column span
-        Grid.SetColumn(PackageFieldPanel, 2);
-        Grid.SetColumnSpan(PackageFieldPanel, 1);
-
-        if (string.IsNullOrWhiteSpace(PackageMbpsBox.Text))
-        {
-            _enableRealTimeValidation = true;
-            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
-            if (PackageWarningText != null)
-            {
-                PackageWarningText.Text = "* Kecepatan paket belum terisi. Harap masukkan kecepatan paket pelanggan (Mbps).";
-                PackageWarningText.Visibility = Visibility.Visible;
-            }
-        }
+        NameFieldPanel.Visibility = PackageFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Visible;
+        PlacePackageField(nameVisible: true);
+        FullNameBox.Focus();
     }
 
-    private void DiagnosticLogsPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    // ── Validation ─────────────────────────────────────────────────────────────
+
+    /// <summary>A field in error: outlined in the error colour, the message under it.</summary>
+    private static void SetError(Control field, TextBlock message, string? text)
     {
-        LogsScrollViewer.ScrollToEnd();
+        if (text is null)
+        {
+            field.ClearValue(Control.BorderBrushProperty);
+            message.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        field.SetResourceReference(Control.BorderBrushProperty, "ErrorBrush");
+        message.Text = text;
+        message.Visibility = Visibility.Visible;
     }
+
+    private void ClearErrors()
+    {
+        SetError(FullNameBox, NameWarningText, null);
+        SetError(PackageMbpsBox, PackageWarningText, null);
+        SetError(AddressBox, AddressWarningText, null);
+    }
+
+    /// <summary>A status line under a picker; in the error colour when something went wrong.</summary>
+    private static void SetStatus(TextBlock line, string text, bool error = false)
+    {
+        line.Text = text;
+        line.SetResourceReference(TextBlock.ForegroundProperty, error ? "ErrorBrush" : "OnSurfaceVariantBrush");
+    }
+
+    private static string? NameError(string text) => string.IsNullOrWhiteSpace(text) ? "Nama pelanggan wajib diisi." : null;
+
+    private static string? AddressError(string text) => string.IsNullOrWhiteSpace(text) ? "Alamat pelanggan wajib diisi." : null;
+
+    private static string? PackageError(string text) =>
+        string.IsNullOrWhiteSpace(text) ? "Kecepatan paket wajib diisi."
+        : !int.TryParse(text.Trim(), out var mbps) || mbps <= 0 ? "Kecepatan harus angka bulat positif (Mbps)."
+        : null;
+
+    private bool ValidateForm()
+    {
+        if (_testMode == "pop")
+        {
+            if (PopComboBox.SelectedItem is PopOption) return true;
+            SetStatus(PopStatusText, "Pilih POP dari daftar terlebih dahulu.", error: true);
+            PopComboBox.Focus();
+            return false;
+        }
+
+        _enableRealTimeValidation = true;
+        var nameError = NameError(FullNameBox.Text);
+        var packageError = PackageError(PackageMbpsBox.Text);
+        var addressError = AddressError(AddressBox.Text);
+        SetError(FullNameBox, NameWarningText, nameError);
+        SetError(PackageMbpsBox, PackageWarningText, packageError);
+        SetError(AddressBox, AddressWarningText, addressError);
+
+        // A field in error that was hidden behind the details card is shown.
+        if (nameError is not null) NameFieldPanel.Visibility = Visibility.Visible;
+        if (packageError is not null) PackageFieldPanel.Visibility = Visibility.Visible;
+        if (addressError is not null) AddressFieldPanel.Visibility = Visibility.Visible;
+        PlacePackageField(NameFieldPanel.Visibility == Visibility.Visible);
+
+        return nameError is null && packageError is null && addressError is null;
+    }
+
+    private void FullNameBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_enableRealTimeValidation) SetError(FullNameBox, NameWarningText, NameError(FullNameBox.Text));
+    }
+
+    private void PackageMbpsBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_enableRealTimeValidation) SetError(PackageMbpsBox, PackageWarningText, PackageError(PackageMbpsBox.Text));
+    }
+
+    private void AddressBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_enableRealTimeValidation) SetError(AddressBox, AddressWarningText, AddressError(AddressBox.Text));
+    }
+
+    // ── Step 3: running ────────────────────────────────────────────────────────
 
     private async void StartTestBtn_Click(object sender, RoutedEventArgs e)
     {
         if (IsRunning)
         {
-            MessageBox.Show("Pengujian sebelumnya masih dihentikan. Tunggu beberapa detik lalu coba lagi.", "Tunggu", MessageBoxButton.OK, MessageBoxImage.Information);
+            Ui.Notify("Pengujian sebelumnya masih dihentikan. Tunggu beberapa detik lalu coba lagi.");
             return;
         }
         if (!ValidateForm()) { return; }
@@ -466,7 +403,7 @@ public partial class NewTestPage : Page
 
     /// <summary>
     /// One full test session for a site: store the site, open a session, run every test, close the
-    /// session with its status, show the results. Cancelled ("Batal", or leaving the page), the
+    /// session with its status, show the results. Cancelled ("Batalkan", or leaving the page), the
     /// session is closed as FAIL with a note saying so, and no results screen appears.
     /// </summary>
     private async Task RunSessionAsync(FoCustomer customer)
@@ -474,10 +411,7 @@ public partial class NewTestPage : Page
         _lastCustomer = customer;
         _currentSessionId = null;
         ResetProgressUi();
-        FormContainer.Visibility = Visibility.Collapsed;
-        ResultsContainer.Visibility = Visibility.Collapsed;
-        ProgressContainer.Visibility = Visibility.Visible;
-        StartStepPulse(Step1Circle);
+        ShowStage(ProgressContainer);
 
         using var cts = new CancellationTokenSource();
         _runCts = cts;
@@ -517,7 +451,8 @@ public partial class NewTestPage : Page
             Serilog.Log.Error(ex, "Test execution failed");
             CurrentActivityText.Text = "Pengujian gagal";
             SubTaskDetailText.Text = ex is ApiException ? ex.Message : $"Terjadi kesalahan: {ex.Message}";
-            EndTestBtnText.Text = "TUTUP";
+            SubTaskDetailText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
+            EndTestBtnText.Text = "Tutup";
             if (_currentSessionId is { } sessionId && run is not null)
             {
                 await CloseSessionAsync(sessionId, run.OverallStatus, $"Pengujian terhenti: {ex.Message}");
@@ -526,7 +461,6 @@ public partial class NewTestPage : Page
         finally
         {
             _runCts = null;
-            StartStepPulse(null);
         }
     }
 
@@ -547,34 +481,45 @@ public partial class NewTestPage : Page
     /// <summary>Why the session's final status did not reach the server, for the results screen.</summary>
     private string? UnsavedStatusError { get; set; }
 
+    private enum StepState { Pending, Active, Done }
+
+    /// <summary>A stepper step: pending (tonal, muted), active (primary), done (primary with a check).</summary>
+    private static void SetStep(Border circle, PackIcon icon, TextBlock label, StepState state, PackIconKind kind)
+    {
+        var active = state != StepState.Pending;
+        circle.SetResourceReference(Border.BackgroundProperty, active ? "PrimaryBrush" : "SurfaceContainerHighestBrush");
+        icon.SetResourceReference(Control.ForegroundProperty, active ? "OnPrimaryBrush" : "OnSurfaceVariantBrush");
+        label.SetResourceReference(TextBlock.ForegroundProperty, active ? "OnSurfaceBrush" : "OnSurfaceVariantBrush");
+        icon.Kind = state == StepState.Done ? PackIconKind.Check : kind;
+    }
+
+    private void SetSteps(StepState network, StepState apps, StepState bandwidth)
+    {
+        SetStep(Step1Circle, Step1Icon, Step1Text, network, PackIconKind.LanConnect);
+        SetStep(Step2Circle, Step2Icon, Step2Text, apps, PackIconKind.Web);
+        SetStep(Step3Circle, Step3Icon, Step3Text, bandwidth, PackIconKind.Speedometer);
+    }
+
     private void ResetProgressUi()
     {
         UnsavedStatusError = null;
         DiagnosticLogsPanel.Children.Clear();
-        Line1.Value = 0; Line2.Value = 0;
         AnimateProgressBar(Line1, 0);
         AnimateProgressBar(Line2, 0);
-
-        foreach (var (circle, icon, text) in new[] { (Step2Circle, Step2Icon, Step2Text), (Step3Circle, Step3Icon, Step3Text) })
-        {
-            circle.Background = (Brush)FindResource("AppBackgroundBrush");
-            circle.BorderBrush = (Brush)FindResource("BorderLightBrush");
-            icon.Foreground = (Brush)FindResource("TextLightBrush");
-            text.Foreground = (Brush)FindResource("TextLightBrush");
-        }
+        AnimateProgressBar(SubTaskProgressBar, 0);
+        SetSteps(StepState.Active, StepState.Pending, StepState.Pending);
 
         CurrentActivityText.Text = "Menyiapkan pengujian...";
         TaskCountText.Text = "Task 1 of 7";
-        SubTaskProgressBar.Value = 0;
-        AnimateProgressBar(SubTaskProgressBar, 0);
         SubTaskDetailText.Text = "Menyiapkan mesin diagnostik...";
+        SubTaskDetailText.SetResourceReference(TextBlock.ForegroundProperty, "OnSurfaceVariantBrush");
         SaveReportBtn.Visibility = Visibility.Collapsed;
-        EndTestBtnText.Text = "BATAL";
+        EndTestBtnText.Text = "Batalkan pengujian";
     }
 
     private IProgress<(int percent, string status)> CreateProgress() => new Progress<(int percent, string status)>(p =>
     {
-        // Progress posts asynchronously: an update arriving after the run ended must not restart the stepper.
+        // Progress posts asynchronously: an update arriving after the run ended changes nothing.
         if (!IsRunning) return;
         SessionManager.RecordActivity();
 
@@ -594,185 +539,60 @@ public partial class NewTestPage : Page
 
         if (taskNum <= 5)
         {
-            StartStepPulse(Step1Circle);
+            SetSteps(StepState.Active, StepState.Pending, StepState.Pending);
             AnimateProgressBar(Line1, taskNum / 5.0 * 100);
-            return;
         }
-
-        StartStepPulse(taskNum == 6 ? Step2Circle : Step3Circle);
-        AnimateProgressBar(Line1, 100);
-        AnimateProgressBar(Line2, taskNum == 6 ? 50 : 100);
-        MarkStepActive(Step2Circle, Step2Icon, Step2Text);
-        if (taskNum == 7) MarkStepActive(Step3Circle, Step3Icon, Step3Text);
+        else if (taskNum == 6)
+        {
+            SetSteps(StepState.Done, StepState.Active, StepState.Pending);
+            AnimateProgressBar(Line1, 100);
+            AnimateProgressBar(Line2, 50);
+        }
+        else
+        {
+            var finished = p.percent >= 100;
+            SetSteps(StepState.Done, StepState.Done, finished ? StepState.Done : StepState.Active);
+            AnimateProgressBar(Line1, 100);
+            AnimateProgressBar(Line2, 100);
+        }
     });
 
-    private void MarkStepActive(Border circle, PackIcon icon, TextBlock text)
-    {
-        circle.Background = (Brush)FindResource("PrimaryBrush");
-        circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
-        icon.Foreground = Brushes.White;
-        text.Foreground = (Brush)FindResource("PrimaryBrush");
-    }
-
-    private bool ValidateForm()
-    {
-        if (_testMode == "pop")
+    private static void AnimateProgressBar(ProgressBar bar, double toValue) =>
+        bar.BeginAnimation(RangeBase.ValueProperty, new DoubleAnimation
         {
-            if (PopComboBox.SelectedItem is not PopOption)
-            {
-                MessageBox.Show("Silakan pilih POP yang tersedia.", "Validasi", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-        }
-        else
-        {
-            _enableRealTimeValidation = true;
+            To = toValue,
+            Duration = TimeSpan.FromMilliseconds(300),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+        });
 
-            bool isNameEmpty = string.IsNullOrWhiteSpace(FullNameBox.Text);
-            bool isPackageEmpty = string.IsNullOrWhiteSpace(PackageMbpsBox.Text);
-            bool isAddressEmpty = string.IsNullOrWhiteSpace(AddressBox.Text);
-
-            var borderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
-            var failBrush = (SolidColorBrush)FindResource("FailRedBrush");
-
-            // Reset borders first
-            FullNameBox.BorderBrush = borderBrush;
-            PackageMbpsBox.BorderBrush = borderBrush;
-            AddressBox.BorderBrush = borderBrush;
-
-            if (isNameEmpty || isPackageEmpty || isAddressEmpty)
-            {
-                if (isNameEmpty)
-                {
-                    FullNameBox.BorderBrush = failBrush;
-                    if (NameWarningText != null)
-                    {
-                        NameWarningText.Text = "* Nama pelanggan wajib diisi.";
-                        NameWarningText.Visibility = Visibility.Visible;
-                    }
-                }
-                if (isAddressEmpty)
-                {
-                    AddressBox.BorderBrush = failBrush;
-                    if (AddressWarningText != null)
-                    {
-                        AddressWarningText.Text = "* Alamat pelanggan wajib diisi.";
-                        AddressWarningText.Visibility = Visibility.Visible;
-                    }
-                }
-                if (isPackageEmpty)
-                {
-                    PackageMbpsBox.BorderBrush = failBrush;
-                    if (PackageWarningText != null)
-                    {
-                        PackageWarningText.Text = "* Kecepatan paket wajib diisi.";
-                        PackageWarningText.Visibility = Visibility.Visible;
-                    }
-                }
-                return false;
-            }
-
-            if (!int.TryParse(PackageMbpsBox.Text, out var pkg) || pkg <= 0)
-            {
-                PackageMbpsBox.BorderBrush = failBrush;
-                if (PackageWarningText != null)
-                {
-                    PackageWarningText.Text = "* Kecepatan harus berupa angka positif (Mbps).";
-                    PackageWarningText.Visibility = Visibility.Visible;
-                }
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void FullNameBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_enableRealTimeValidation || FullNameBox == null) return;
-
-        bool isEmpty = string.IsNullOrWhiteSpace(FullNameBox.Text);
-        FullNameBox.BorderBrush = isEmpty
-            ? (SolidColorBrush)FindResource("FailRedBrush")
-            : (SolidColorBrush)FindResource("BorderLightBrush");
-
-        if (NameWarningText != null)
-            NameWarningText.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void PackageMbpsBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_enableRealTimeValidation || PackageMbpsBox == null || PackageWarningText == null) return;
-
-        bool isEmpty = string.IsNullOrWhiteSpace(PackageMbpsBox.Text);
-        bool isValidNumber = int.TryParse(PackageMbpsBox.Text, out var pkg) && pkg > 0;
-
-        if (isEmpty)
-        {
-            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
-            PackageWarningText.Text = "* Kecepatan paket wajib diisi.";
-            PackageWarningText.Visibility = Visibility.Visible;
-        }
-        else if (!isValidNumber)
-        {
-            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("FailRedBrush");
-            PackageWarningText.Text = "* Kecepatan harus berupa angka positif (Mbps).";
-            PackageWarningText.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            PackageMbpsBox.BorderBrush = (SolidColorBrush)FindResource("BorderLightBrush");
-            PackageWarningText.Visibility = Visibility.Collapsed;
-        }
-    }
-
-    private void AddressBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_enableRealTimeValidation || AddressBox == null) return;
-
-        bool isEmpty = string.IsNullOrWhiteSpace(AddressBox.Text);
-        AddressBox.BorderBrush = isEmpty
-            ? (SolidColorBrush)FindResource("FailRedBrush")
-            : (SolidColorBrush)FindResource("BorderLightBrush");
-
-        if (AddressWarningText != null)
-            AddressWarningText.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void SaveReportBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentSessionId.HasValue)
-        {
-            NavigationService?.Navigate(new ReportPage(_currentSessionId.Value));
-        }
-    }
-
-    /// <summary>"Batal" while running cancels the run (after a yes); afterwards it closes the screen.</summary>
-    private void EndTestBtn_Click(object sender, RoutedEventArgs e)
+    /// <summary>"Batalkan" while running cancels the run (after a yes); afterwards it closes the screen.</summary>
+    private async void EndTestBtn_Click(object sender, RoutedEventArgs e)
     {
         if (IsRunning)
         {
-            var confirm = MessageBox.Show("Hentikan pengujian yang sedang berjalan? Sesi akan dicatat sebagai dibatalkan (FAIL).",
-                "Batalkan Pengujian", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes) return;
+            var stop = await Ui.ConfirmAsync("Hentikan pengujian?",
+                "Pengujian yang sedang berjalan dihentikan dan sesinya dicatat sebagai dibatalkan (FAIL).",
+                "Hentikan", cancelText: "Lanjutkan", destructive: true);
+            if (!stop) return;
 
-            CurrentActivityText.Text = "Membatalkan...";
-            SubTaskDetailText.Text = "Menghentikan pengujian yang sedang berjalan...";
             _runCts?.Cancel();
+            Ui.Notify("Pengujian dihentikan.");
         }
 
-        StartStepPulse(null);
-        ProgressContainer.Visibility = Visibility.Collapsed;
-        LocationContainer.Visibility = Visibility.Visible;
+        ShowStage(LocationContainer);
     }
 
-    private void NewTestFromResults_Click(object sender, RoutedEventArgs e)
+    // ── Step 4: results ────────────────────────────────────────────────────────
+
+    private void NewTestFromResults_Click(object sender, RoutedEventArgs e) => ShowStage(LocationContainer);
+
+    private void SaveReportBtn_Click(object sender, RoutedEventArgs e)
     {
-        ResultsContainer.Visibility = Visibility.Collapsed;
-        LocationContainer.Visibility = Visibility.Visible;
+        if (_currentSessionId is { } id && Window.GetWindow(this) is MainShell shell)
+        {
+            shell.OpenReport(id);
+        }
     }
-
-    // ── Results Display ───────────────────────────────────────────────────────
 
     /// <summary>
     /// The results of the run just finished, as measured here — the same list and verdict that were
@@ -782,20 +602,19 @@ public partial class NewTestPage : Page
     {
         var results = run.Results.ToList();
         var passCount = results.Count(r => r.Status == TestStatus.Pass);
-        var status = run.OverallStatus;
+        var status = StatusVisual.Of(run.OverallStatus);
 
-        ProgressContainer.Visibility = Visibility.Collapsed;
-        ResultsContainer.Visibility = Visibility.Visible;
+        ShowStage(ResultsContainer);
         ResultCardsPanel.Children.Clear();
 
-        ResultSummaryText.Text = $"{results.Count} pengujian dilakukan — {DateTime.Now:dd MMM yyyy, HH:mm}";
-        ResultScoreText.Text = $"{passCount}/{results.Count} test lulus";
-        (ResultStatusText.Text, ResultStatusText.Foreground) = status switch
-        {
-            TestOverallStatus.Pass => ("PASS", (Brush)FindResource("PassGreenBrush")),
-            TestOverallStatus.Partial => ("PARTIAL", (Brush)FindResource("WarnYellowBrush")),
-            _ => ("FAIL", (Brush)FindResource("FailRedBrush")),
-        };
+        ResultSummaryText.Text = $"{_lastCustomer?.FullName} · {results.Count} pengujian · {DateTime.Now:dd MMM yyyy, HH:mm}";
+        ResultStatusText.Text = status.Label;
+        ResultScoreText.Text = $"{passCount} dari {results.Count} lulus";
+        ResultStatusIcon.Kind = status.Icon;
+        ResultStatusBadge.SetResourceReference(Border.BackgroundProperty, status.ContainerKey);
+        ResultStatusIcon.SetResourceReference(Control.ForegroundProperty, status.OnContainerKey);
+        ResultStatusText.SetResourceReference(TextBlock.ForegroundProperty, status.OnContainerKey);
+        ResultScoreText.SetResourceReference(TextBlock.ForegroundProperty, status.OnContainerKey);
 
         var problems = new List<string>();
         if (run.Unsaved.Count > 0)
@@ -810,9 +629,9 @@ public partial class NewTestPage : Page
         UnsavedWarning.Visibility = problems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         SaveReportBtn.Visibility = Visibility.Visible;
-        RetryFailedBtn.Visibility = status == TestOverallStatus.Pass ? Visibility.Collapsed : Visibility.Visible;
+        RetryFailedBtn.Visibility = run.OverallStatus == TestOverallStatus.Pass ? Visibility.Collapsed : Visibility.Visible;
 
-        PopulateResultsWithExpanders(results);
+        AddResultGroups(results);
     }
 
     /// <summary>
@@ -824,9 +643,9 @@ public partial class NewTestPage : Page
     {
         if (_lastCustomer is null || IsRunning) return;
 
-        var confirm = MessageBox.Show("Jalankan ulang seluruh pengujian untuk lokasi ini sebagai sesi baru? Sesi sebelumnya tetap tersimpan di riwayat.",
-            "Uji Ulang", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (confirm != MessageBoxResult.Yes) return;
+        var retry = await Ui.ConfirmAsync("Uji ulang lokasi ini?",
+            "Seluruh pengujian dijalankan lagi sebagai sesi baru. Sesi sebelumnya tetap tersimpan di riwayat.", "Uji ulang");
+        if (!retry) return;
 
         RetryFailedBtn.IsEnabled = false;
         try
@@ -839,328 +658,155 @@ public partial class NewTestPage : Page
         }
     }
 
-    private void PopulateResultsWithExpanders(List<FoTestResult> results)
+    private void AddResultGroups(List<FoTestResult> results)
     {
-        var networkTypes = new[] { TestTypes.PingGateway, TestTypes.PingDns, TestTypes.NslookupNasional, TestTypes.NslookupInternasional, TestTypes.PingDomainLokal };
-        var appTypes = new[] { TestTypes.BrowsingTest, TestTypes.StreamingTest, TestTypes.SocialMediaTest };
-        var bandwidthTypes = new[] { TestTypes.SpeedtestFast, TestTypes.SpeedtestOokla };
+        var groups = new (string Name, string[] Types, bool Open)[]
+        {
+            ("Jaringan", [TestTypes.PingGateway, TestTypes.PingDns, TestTypes.NslookupNasional, TestTypes.NslookupInternasional, TestTypes.PingDomainLokal], true),
+            ("Aplikasi", [TestTypes.BrowsingTest, TestTypes.StreamingTest, TestTypes.SocialMediaTest], false),
+            ("Bandwidth", [TestTypes.SpeedtestFast, TestTypes.SpeedtestOokla], false),
+        };
 
-        var netResults = results.Where(r => networkTypes.Contains(r.TestType)).ToList();
-        var appResults = results.Where(r => appTypes.Contains(r.TestType)).ToList();
-        var bwResults = results.Where(r => bandwidthTypes.Contains(r.TestType)).ToList();
-
-        if (netResults.Any())
-            ResultCardsPanel.Children.Add(CreateExpanderGroup("Network & Routing Tests", netResults, true));
-
-        if (appResults.Any())
-            ResultCardsPanel.Children.Add(CreateExpanderGroup("Application Health", appResults, false));
-
-        if (bwResults.Any())
-            ResultCardsPanel.Children.Add(CreateExpanderGroup("Bandwidth Capacity", bwResults, false));
+        foreach (var (name, types, open) in groups)
+        {
+            var groupResults = results.Where(r => types.Contains(r.TestType)).ToList();
+            if (groupResults.Count > 0)
+            {
+                ResultCardsPanel.Children.Add(CreateGroup(name, groupResults, open));
+            }
+        }
     }
 
-    private Expander CreateExpanderGroup(string groupName, List<FoTestResult> groupResults, bool expandDefault)
+    /// <summary>A group of results in one card: name, how many passed, and each result's row.</summary>
+    private static Border CreateGroup(string name, List<FoTestResult> groupResults, bool expandByDefault)
     {
         var passCount = groupResults.Count(r => r.Status == TestStatus.Pass);
-        var totalCount = groupResults.Count;
-        var hasFailures = passCount < totalCount;
+        var allPassed = passCount == groupResults.Count;
+        var groupStatus = allPassed ? StatusVisual.Pass : passCount > 0 ? StatusVisual.Partial : StatusVisual.Fail;
 
-        var headerBrush = hasFailures ? (Brush)FindResource("FailRedBrush") : (Brush)FindResource("PassGreenBrush");
+        var header = new Grid { Margin = new Thickness(0, 4, 0, 4) };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var title = Ui.Text(name, "Text.TitleMedium");
+        title.VerticalAlignment = VerticalAlignment.Center;
+        var chip = Ui.StatusChip(groupStatus with { Label = $"{passCount}/{groupResults.Count} lulus" });
+        Grid.SetColumn(chip, 1);
+        header.Children.Add(title);
+        header.Children.Add(chip);
 
-        var headerStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 8) };
-        headerStack.Children.Add(new TextBlock 
-        { 
-            Text = groupName, 
-            FontSize = 16, 
-            FontWeight = FontWeights.Bold,
-            Foreground = (Brush)FindResource("TextDarkBrush"),
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = 250 // Align badges strictly
-        });
-        
-        var badgeBorder = new Border
+        var rows = new StackPanel();
+        foreach (var result in groupResults)
         {
-            Background = hasFailures 
-                ? new SolidColorBrush(Color.FromArgb(0x15, 0xEF, 0x44, 0x44))
-                : new SolidColorBrush(Color.FromArgb(0x15, 0x22, 0xC5, 0x5E)),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(12, 4, 12, 4),
-            Margin = new Thickness(16, 0, 0, 0),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        badgeBorder.Child = new TextBlock
-        {
-            Text = $"{passCount}/{totalCount} Passed",
-            FontSize = 12,
-            FontWeight = FontWeights.Bold,
-            Foreground = headerBrush
-        };
-        headerStack.Children.Add(badgeBorder);
-
-        var cardsPanel = new StackPanel { Margin = new Thickness(0, 8, 0, 16) };
-        foreach (var r in groupResults)
-        {
-            cardsPanel.Children.Add(BuildResultCard(r));
+            rows.Children.Add(BuildResultRow(result));
         }
 
-        return new Expander
+        var expander = new Expander
         {
-            Header = headerStack,
-            Content = cardsPanel,
-            IsExpanded = hasFailures || expandDefault, // Otomatis kebuka jika gagal/network
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0, 0, 0, 1),
-            BorderBrush = (Brush)FindResource("BorderLightBrush"),
-            Margin = new Thickness(0, 0, 0, 8),
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
-    }
-
-    private Border BuildResultCard(FoTestResult result)
-    {
-        var isPassed = result.Status == TestStatus.Pass;
-        var statusBrush = isPassed
-            ? (Brush)FindResource("PassGreenBrush")
-            : (Brush)FindResource("FailRedBrush");
-        var bgTint = isPassed
-            ? new SolidColorBrush(Color.FromArgb(0x0D, 0x22, 0xC5, 0x5E))
-            : new SolidColorBrush(Color.FromArgb(0x0D, 0xEF, 0x44, 0x44));
-
-        var card = new Border
-        {
-            Background = (Brush)FindResource("CardBackgroundBrush"),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(20),
-            Margin = new Thickness(0, 0, 0, 12),
-            BorderBrush = (Brush)FindResource("BorderLightBrush"),
-            BorderThickness = new Thickness(1),
+            Header = header,
+            Content = rows,
+            // A group with a failure opens by itself.
+            IsExpanded = !allPassed || expandByDefault,
+            Background = System.Windows.Media.Brushes.Transparent,
         };
 
-        var outerStack = new StackPanel();
-
-        // ── Header row: icon + name + status badge + chevron
-        var headerGrid = new Grid { Cursor = System.Windows.Input.Cursors.Hand };
-        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        // Icon
-        var iconBorder = new Border
-        {
-            Width = 40, Height = 40, CornerRadius = new CornerRadius(10),
-            Background = bgTint, VerticalAlignment = VerticalAlignment.Center,
-        };
-        iconBorder.Child = new PackIcon
-        {
-            Kind = GetTestIcon(result.TestType), Width = 20, Height = 20,
-            Foreground = statusBrush,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        Grid.SetColumn(iconBorder, 0);
-        headerGrid.Children.Add(iconBorder);
-
-        // Test name + target
-        var namePanel = new StackPanel { Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
-        namePanel.Children.Add(new TextBlock
-        {
-            Text = FormatTestTypeName(result.TestType),
-            FontSize = 15, FontWeight = FontWeights.Bold,
-            Foreground = (Brush)FindResource("TextDarkBrush"),
-        });
-        if (!string.IsNullOrEmpty(result.Target))
-        {
-            namePanel.Children.Add(new TextBlock
-            {
-                Text = result.Target, FontSize = 11,
-                Foreground = (Brush)FindResource("TextLightBrush"),
-            });
-        }
-        Grid.SetColumn(namePanel, 1);
-        headerGrid.Children.Add(namePanel);
-
-        // Status chip
-        var statusChip = new Border
-        {
-            CornerRadius = new CornerRadius(8), Padding = new Thickness(12, 5, 12, 5),
-            Background = bgTint, VerticalAlignment = VerticalAlignment.Center,
-        };
-        statusChip.Child = new TextBlock
-        {
-            Text = isPassed ? "PASS" : "FAIL",
-            FontSize = 12, FontWeight = FontWeights.Bold, Foreground = statusBrush,
-        };
-        Grid.SetColumn(statusChip, 2);
-        headerGrid.Children.Add(statusChip);
-
-        // Chevron toggle icon
-        var chevron = new PackIcon
-        {
-            Kind = PackIconKind.ChevronDown,
-            Width = 22, Height = 22,
-            Foreground = (Brush)FindResource("TextLightBrush"),
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(10, 0, 0, 0),
-            RenderTransformOrigin = new Point(0.5, 0.5),
-            RenderTransform = new RotateTransform(0),
-        };
-        Grid.SetColumn(chevron, 3);
-        headerGrid.Children.Add(chevron);
-
-        outerStack.Children.Add(headerGrid);
-
-        // ── Detail data rows (collapsed by default)
-        Border? detailBorder = null;
-        if (result.ResultData is not null)
-        {
-            detailBorder = new Border
-            {
-                Background = (Brush)FindResource("AppBackgroundBrush"),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(16, 12, 16, 12),
-                Margin = new Thickness(0, 12, 0, 0),
-                Visibility = Visibility.Collapsed,
-            };
-
-            var detailPanel = new StackPanel();
-            PopulateDetailRows(detailPanel, result);
-            detailBorder.Child = detailPanel;
-            outerStack.Children.Add(detailBorder);
-        }
-
-        // ── Click handler to toggle detail visibility
-        var detail = detailBorder;
-        headerGrid.MouseLeftButtonDown += (_, _) =>
-        {
-            if (detail is null) return;
-            var rt = (RotateTransform)chevron.RenderTransform;
-            if (detail.Visibility == Visibility.Collapsed)
-            {
-                detail.Visibility = Visibility.Visible;
-                rt.Angle = 180;
-            }
-            else
-            {
-                detail.Visibility = Visibility.Collapsed;
-                rt.Angle = 0;
-            }
-        };
-
-        card.Child = outerStack;
+        var card = new Border { Child = expander, Margin = new Thickness(0, 0, 0, 16) };
+        card.SetResourceReference(FrameworkElement.StyleProperty, "M3.Card");
+        card.Padding = new Thickness(0);
         return card;
     }
 
-    private void PopulateDetailRows(StackPanel panel, FoTestResult result)
+    /// <summary>One result: its row (click for the measured values), status chip on the right.</summary>
+    private static Border BuildResultRow(FoTestResult result)
     {
-        var rows = ResultFormatter.Rows(result.TestType, result.ResultData?.RootElement);
-        if (rows.Count == 0)
+        var status = StatusVisual.Of(result.Status);
+        var detailRows = ResultFormatter.Rows(result.TestType, result.ResultData?.RootElement);
+
+        var lead = new Border { Width = 40, Height = 40, CornerRadius = new CornerRadius(20), Margin = new Thickness(0, 0, 16, 0), VerticalAlignment = VerticalAlignment.Center };
+        lead.SetResourceReference(Border.BackgroundProperty, status.ContainerKey);
+        var leadIcon = new PackIcon { Kind = GetTestIcon(result.TestType), Width = 20, Height = 20, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        leadIcon.SetResourceReference(Control.ForegroundProperty, status.OnContainerKey);
+        lead.Child = leadIcon;
+
+        var names = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        names.Children.Add(Ui.Text(ResultFormatter.TestName(result.TestType), "Text.BodyLarge"));
+        if (!string.IsNullOrEmpty(result.Target))
         {
-            panel.Children.Add(new TextBlock
-            {
-                Text = "Data tidak tersedia", FontSize = 12,
-                Foreground = (Brush)FindResource("TextLightBrush"), FontStyle = FontStyles.Italic,
-            });
-            return;
+            names.Children.Add(Ui.Text(result.Target, "Text.Supporting"));
         }
 
-        foreach (var (label, value) in rows)
+        var chevron = new PackIcon
         {
-            AddDetailRow(panel, label, value);
+            Kind = PackIconKind.ChevronDown, Width = 20, Height = 20, Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = detailRows.Count > 0 ? Visibility.Visible : Visibility.Hidden,
+        };
+        chevron.SetResourceReference(Control.ForegroundProperty, "OnSurfaceVariantBrush");
+
+        var head = new Grid { Background = System.Windows.Media.Brushes.Transparent, Cursor = detailRows.Count > 0 ? System.Windows.Input.Cursors.Hand : null };
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var statusChip = Ui.StatusChip(status);
+        Grid.SetColumn(names, 1);
+        Grid.SetColumn(statusChip, 2);
+        Grid.SetColumn(chevron, 3);
+        head.Children.Add(lead);
+        head.Children.Add(names);
+        head.Children.Add(statusChip);
+        head.Children.Add(chevron);
+
+        var body = new StackPanel();
+        body.Children.Add(head);
+
+        if (detailRows.Count > 0)
+        {
+            var details = new Border { Margin = new Thickness(56, 12, 0, 0), Padding = new Thickness(16, 12, 16, 12), CornerRadius = new CornerRadius(8), Visibility = Visibility.Collapsed };
+            details.SetResourceReference(Border.BackgroundProperty, "SurfaceContainerLowBrush");
+            var list = new StackPanel();
+            foreach (var (label, value) in detailRows)
+            {
+                AddDetailRow(list, label, value);
+            }
+            details.Child = list;
+            body.Children.Add(details);
+
+            head.MouseLeftButtonUp += (_, _) =>
+            {
+                var open = details.Visibility != Visibility.Visible;
+                details.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+                chevron.Kind = open ? PackIconKind.ChevronUp : PackIconKind.ChevronDown;
+            };
         }
+
+        var row = new Border { Padding = new Thickness(16, 12, 16, 12), BorderThickness = new Thickness(0, 1, 0, 0), Child = body };
+        row.SetResourceReference(Border.BorderBrushProperty, "OutlineVariantBrush");
+        return row;
     }
 
-    private void AddDetailRow(StackPanel panel, string label, string value)
+    private static void AddDetailRow(StackPanel panel, string label, string value)
     {
-        var row = new Grid { Margin = new Thickness(0, 3, 0, 3) };
+        var row = new Grid { Margin = new Thickness(0, 2, 0, 2) };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        var labelTb = new TextBlock
-        {
-            Text = label, FontSize = 12, Foreground = (Brush)FindResource("TextLightBrush"),
-        };
-        Grid.SetColumn(labelTb, 0);
-        row.Children.Add(labelTb);
-
-        var valueTb = new TextBlock
-        {
-            Text = value, FontSize = 12, FontWeight = FontWeights.SemiBold,
-            Foreground = (Brush)FindResource("TextDarkBrush"),
-        };
-        Grid.SetColumn(valueTb, 1);
-        row.Children.Add(valueTb);
-
+        var labelText = Ui.Text(label, "Text.Supporting");
+        var valueText = Ui.Text(value, "Text.BodyMedium");
+        valueText.TextAlignment = TextAlignment.Right;
+        valueText.Margin = new Thickness(16, 0, 0, 0);
+        Grid.SetColumn(valueText, 1);
+        row.Children.Add(labelText);
+        row.Children.Add(valueText);
         panel.Children.Add(row);
     }
-
-    private static string FormatTestTypeName(string testType) => ResultFormatter.TestName(testType);
 
     private static PackIconKind GetTestIcon(string testType) => testType switch
     {
         TestTypes.PingGateway or TestTypes.PingDns or TestTypes.PingDomainLokal => PackIconKind.LanConnect,
         TestTypes.NslookupNasional or TestTypes.NslookupInternasional => PackIconKind.Dns,
         TestTypes.BrowsingTest => PackIconKind.Web,
-        TestTypes.StreamingTest => PackIconKind.Video,
-        TestTypes.SocialMediaTest => PackIconKind.AccountGroup,
+        TestTypes.StreamingTest => PackIconKind.PlayCircleOutline,
+        TestTypes.SocialMediaTest => PackIconKind.AccountGroupOutline,
         TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla => PackIconKind.Speedometer,
         _ => PackIconKind.TestTube,
     };
-
-    private void AnimateProgressBar(ProgressBar progressBar, double toValue)
-    {
-        var animation = new DoubleAnimation
-        {
-            To = toValue,
-            Duration = TimeSpan.FromMilliseconds(400),
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-        };
-        progressBar.BeginAnimation(RangeBase.ValueProperty, animation);
-    }
-
-    private void StartStepPulse(Border? circle)
-    {
-        StopStepPulse(Step1Circle);
-        StopStepPulse(Step2Circle);
-        StopStepPulse(Step3Circle);
-
-        if (circle == null) return;
-
-        if (circle.RenderTransform is not ScaleTransform)
-        {
-            circle.RenderTransform = new ScaleTransform(1, 1);
-            circle.RenderTransformOrigin = new Point(0.5, 0.5);
-        }
-
-        var scaleTransform = (ScaleTransform)circle.RenderTransform;
-
-        var anim = new DoubleAnimation(1.0, 1.12, TimeSpan.FromMilliseconds(600))
-        {
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever,
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
-        };
-
-        scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
-        scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
-
-        var borderAnim = new DoubleAnimation(1.0, 0.5, TimeSpan.FromMilliseconds(600))
-        {
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever
-        };
-        circle.BeginAnimation(UIElement.OpacityProperty, borderAnim);
-    }
-
-    private void StopStepPulse(Border circle)
-    {
-        if (circle.RenderTransform is ScaleTransform scaleTransform)
-        {
-            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-            circle.RenderTransform = null;
-        }
-        circle.BeginAnimation(UIElement.OpacityProperty, null);
-        circle.Opacity = 1.0;
-    }
 }

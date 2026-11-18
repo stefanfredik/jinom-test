@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Windows.Controls;
-using System.Windows.Media;
 using DnsClient;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
@@ -169,7 +168,7 @@ public class NetworkTestService
         var desc = stats.Received == 0
             ? $"{target}: tidak ada balasan ({stats.Sent} RTO)"
             : $"{target} — Avg: {ResultFormatter.Ms(stats.AvgMs)} | RTO: {stats.Rto}";
-        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildCard(label, desc, passed, MaterialDesignThemes.Wpf.PackIconKind.CheckCircle)));
+        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildCard(label, desc, passed, MaterialDesignThemes.Wpf.PackIconKind.LanConnect)));
     }
 
     // ── NSLookup Test ───────────────────────────────────────────────────────────
@@ -237,13 +236,6 @@ public class NetworkTestService
 
     // ── UI Card Builders ────────────────────────────────────────────────────────
 
-    internal static System.Windows.Controls.Border BuildCard(string label, string description, bool passed, MaterialDesignThemes.Wpf.PackIconKind passIcon)
-    {
-        var converter = new BrushConverter();
-        var primary = (SolidColorBrush)converter.ConvertFromString(passed ? "#22C55E" : "#EF4444")!;
-        var background = (SolidColorBrush)converter.ConvertFromString(passed ? "#1A22C55E" : "#1AEF4444")!;
-        var icon = passed ? passIcon : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
-
-        return UIHelper.CreateLogCard(label, description, primary, background, icon, passed ? "PASS" : "FAIL");
-    }
+    internal static System.Windows.Controls.Border BuildCard(string label, string description, bool passed, MaterialDesignThemes.Wpf.PackIconKind icon) =>
+        Ui.ResultRow(label, description, StatusVisual.Of(passed), icon);
 }

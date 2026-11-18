@@ -23,5 +23,8 @@ public class FoCustomer
     /// <summary>The package for a list: "-" for a site without one (a POP), never "0 Mbps".</summary>
     public string PackageText => PackageMbps > 0 ? $"{PackageMbps} Mbps" : "-";
 
+    /// <summary>The kind of site in words, for a list.</summary>
+    public string SiteTypeText => SiteType == "pop" ? "POP" : "Pelanggan";
+
     public string DisplayName => string.IsNullOrWhiteSpace(PackageName) ? FullName : $"{FullName} - {PackageName}";
 }

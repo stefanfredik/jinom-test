@@ -1,47 +1,41 @@
-using System;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using FoTestingApp.Models;
 
 namespace FoTestingApp.Helpers;
 
+/// <summary>
+/// A session's overall status as its status-container colour (the chip behind the word). Read from
+/// the current theme's roles; a list re-binds after a theme switch (ThemeService.Changed).
+/// </summary>
 public class StatusToBackgroundConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is TestOverallStatus status)
-        {
-            return status switch
-            {
-                TestOverallStatus.Pass => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1FAE5")), // Emerald 100
-                TestOverallStatus.Fail => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEE2E2")), // Red 100
-                TestOverallStatus.Partial => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7")), // Amber 100
-                _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F1F5F9")) // Slate 100
-            };
-        }
-        return new SolidColorBrush(Colors.Transparent);
-    }
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is TestOverallStatus status
+            ? Application.Current.TryFindResource(StatusVisual.Of(status).ContainerKey) as Brush ?? Brushes.Transparent
+            : Brushes.Transparent;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>A session's overall status as the text colour on its status container.</summary>
 public class StatusToForegroundConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value is TestOverallStatus status)
-        {
-            return status switch
-            {
-                TestOverallStatus.Pass => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#059669")), // Emerald 600
-                TestOverallStatus.Fail => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DC2626")), // Red 600
-                TestOverallStatus.Partial => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D97706")), // Amber 600
-                _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#475569")) // Slate 600
-            };
-        }
-        return new SolidColorBrush(Colors.Black);
-    }
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is TestOverallStatus status
+            ? Application.Current.TryFindResource(StatusVisual.Of(status).OnContainerKey) as Brush ?? SystemColors.ControlTextBrush
+            : SystemColors.ControlTextBrush;
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>A session's overall status as its icon (never colour alone).</summary>
+public class StatusToIconConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is TestOverallStatus status ? StatusVisual.Of(status).Icon : MaterialDesignThemes.Wpf.PackIconKind.HelpCircleOutline;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
 }

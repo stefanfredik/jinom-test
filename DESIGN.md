@@ -1,108 +1,88 @@
-# Kontrak Sistem Desain & Tata Letak: Jinom Test (WPF App)
+# Kontrak Desain: Jinom Test (WPF)
 
-Dokumen ini mendefinisikan standar visual, dimensi komponen, skema warna, dan aturan tata letak untuk aplikasi **Jinom Test**. Semua modifikasi, penambahan halaman baru, atau perubahan komponen UI harus mematuhi aturan (*contracts*) di bawah ini guna menjamin konsistensi, estetika modern (*Simple, Clean, & Eye-Catching*), serta meminimalkan usaha scrolling pengguna (*less scrolling effort*).
+Jinom Test memakai **Material Design 3** dengan token yang sama dengan jinom-assets (`DESIGN.md` dan `resources/css/app.css` di sana, seed `#10B981`). Teknisi yang berpindah dari web ke aplikasi ini harus melihat warna, bentuk, tipografi dan bahasa status yang sama.
 
----
-
-## 1. Filosofi Desain
-* **Simple**: Menghilangkan elemen visual yang tidak diperlukan. Fokus pada data dan tindakan penting.
-* **Clean**: Spacing yang teratur, perataan (*alignment*) yang konsisten, dan pemisahan area menggunakan bayangan (*drop shadow*) halus serta border tipis.
-* **Eye-Catching**: Aksen hijau Jinom murni yang memikat untuk tombol utama, animasi mikro (seperti kedip-kedip log dot), dan kontras warna yang tajam baik di mode terang maupun gelap.
+Kontrak ini **dijaga oleh tes**: `FoTestingApp.Tests/UiContractTests.cs` (jalan di OS apa pun, `dotnet test`). Tes gagal berarti ada pelanggaran. Jangan longgarkan tesnya; perbaiki kodenya.
 
 ---
 
-## 2. Palet Warna & Brush
-Gunakan resource warna yang terdaftar di `App.xaml` (dan pastikan kompatibilitas mode terang/gelap):
+## 1. Prinsip
 
-| Nama Resource | Kegunaan | Warna Mode Terang | Warna Mode Gelap |
-| :--- | :--- | :--- | :--- |
-| `PrimaryBrush` | Warna aksen utama (Jinom Green) | `#22C55E` | `#22C55E` |
-| `PrimaryDarkBrush` | Aksen ketika di-hover atau aktif | `#16A34A` | `#16A34A` |
-| `PrimaryLightBrush` | Background aksen tipis (badge, hover) | `#DCFCE7` | `#24C55E` (Opacity 23% / Alpha 60) |
-| `AppBackgroundBrush` | Latar belakang halaman utama | `#F8F6F6` | `#1E1E1E` |
-| `CardBackgroundBrush` | Latar belakang panel kartu / border | `#FFFFFF` | `#2D2D30` |
-| `BorderLightBrush` | Border tipis pembatas elemen | `#E2E8F0` | `#464646` |
-| `TextDarkBrush` | Teks utama / judul (sangat terbaca) | `#0F172A` | `#F0F0F0` |
-| `TextLightBrush` | Teks sekunder / keterangan / label | `#64748B` | `#A0A0A0` |
-| `PassGreenBrush` | Indikator sukses / status PASS | `#10B981` | `#10B981` |
-| `FailRedBrush` | Indikator error / status FAIL / tombol keluar | `#EF4444` | `#EF4444` |
-| `WarnYellowBrush` | Indikator peringatan / status PARTIAL | `#F59E0B` | `#F59E0B` |
+* **Data dulu, dekorasi belakangan.** Tanpa gradien, tanpa animasi hiasan, tanpa emoji. Ikon dari `PackIcon` (Material Design Icons).
+* **Tanpa bayangan**, kecuali elemen yang benar-benar melayang: FAB, dialog, snackbar, menu. Kartu dipisahkan dengan garis `OutlineVariant` atau warna `SurfaceContainer*`.
+* **Status tidak pernah hanya warna.** Setiap status tampil sebagai ikon + kata (`PASS`, `PARTIAL`, `FAIL`), lewat `Ui.StatusChip` / `StatusVisual`.
+* **Jujur soal data.** Gagal memuat ditulis sebagai pesan, bukan angka `0` atau daftar kosong. Daftar yang dipotong server diberi tahu.
+* **Teks UI Bahasa Indonesia**, istilah teknis tetap Inggris (Ping, DNS, NSLookup, Speedtest, Gateway, PASS/FAIL).
 
-> [!IMPORTANT]
-> **Aturan Mode Gelap**: Jangan menggunakan warna *hardcoded* (seperti `Black` atau `White`) untuk latar belakang atau tulisan di XAML. Selalu gunakan `{DynamicResource ...}` agar secara otomatis beralih saat mode gelap diaktifkan lewat `BtnToggleTheme_Click` di `MainShell.xaml.cs`.
+## 2. Struktur file tema
 
----
+| File | Isi |
+| :--- | :--- |
+| `Themes/Tokens.Light.xaml`, `Themes/Tokens.Dark.xaml` | Peran warna M3 (`{Peran}Color` + `{Peran}Brush`) dan override brush MaterialDesignInXAML. Kedua file **wajib punya key yang sama** (dites). |
+| `Themes/Typography.xaml` | Skala tipe `Text.*` dan `AppFont`. |
+| `Themes/Controls.xaml` | Bentuk `Shape.*`, tombol `M3.*`, chip, nav item, kartu, divider. |
+| `App.xaml` | Urutan merge (CustomColorTheme → MaterialDesign3.Defaults → Tokens.Light → Controls) dan style turunan MDIX: `M3.TextField`, `M3.PasswordField`, `M3.ComboField`, `M3.DateField`, `M3.LinearProgress`, `M3.DataGrid`. |
+| `Helpers/ThemeService.cs` | Ganti terang/gelap/ikuti Windows: menukar kamus `Tokens.*` + `PaletteHelper`. Pilihan disimpan per pengguna (`%LOCALAPPDATA%\JinomTest\preferences.json`). |
+| `Helpers/Ui.cs` | `StatusVisual`, `Ui.Text`, `Ui.StatusChip`, `Ui.ResultRow`, `Ui.Notify` (snackbar), `Ui.ConfirmAsync` / `Ui.AlertAsync` (dialog M3). |
 
-## 3. Tipografi & Ukuran Teks
-Untuk konsistensi visual, batasi variasi ukuran font ke skala berikut:
+> Style berbasis MDIX harus di `App.xaml`, bukan di kamus terpisah: `StaticResource` di kamus yang di-merge terpisah tidak melihat kamus saudara (MDIX), dan baru gagal saat aplikasi jalan.
 
-* **Page Title (Judul Halaman)**: `FontSize="24"`, `FontWeight="Bold"` atau `Black` (Margin Bottom: `8` atau `12`).
-* **Section / Card Header**: `FontSize="16"` atau `18"`, `FontWeight="Bold"`.
-* **Field Labels (Label Input)**: Ditiadakan (dihapus). Wajib menggunakan **Floating Hint** (`materialDesign:HintAssist.IsFloating="True"`) pada masing-masing control input untuk mengurangi visual noise (*clutter*) dan menghemat ruang vertikal.
-* **Body / Normal Text**: `FontSize="13"` atau `14"`.
-* **Captions / Small Status**: `FontSize="11"` atau `12"`.
+## 3. Warna
 
----
+Selalu lewat token, **tidak pernah hex di Views** (dites). Di XAML pakai `{DynamicResource XBrush}` agar ikut berganti tema; di C# pakai `SetResourceReference(..., "XBrush")`, bukan `Brushes.*` / `Color.FromRgb` (dites; `Brushes.Transparent` untuk hit-test boleh).
 
-## 4. Standar Dimensi & Kontrak Komponen (Form Sizing)
+| Peran | Pakai untuk |
+| :--- | :--- |
+| `Primary` / `OnPrimary` | Tombol utama (satu per layar), elemen aktif. Terang `#006C49`, gelap `#4EDEA3`. |
+| `PrimaryContainer`, `SecondaryContainer` (+ `On…`) | Nav item aktif, tombol tonal, avatar, sorotan lembut. |
+| `Surface`, `SurfaceContainerLowest…Highest` | Latar halaman, drawer (`Low`), dialog (`High`), kartu terisi. |
+| `OnSurface` / `OnSurfaceVariant` | Teks utama / teks pendukung & ikon sekunder. |
+| `Outline` / `OutlineVariant` | Garis field / garis kartu & divider. |
+| `Error`, `ErrorContainer` (+ `On…`) | Validasi, kegagalan aksi, tombol destruktif. |
+| `StatusOnline*` / `StatusWarning*` / `StatusOffline*` / `StatusUnknown*` | PASS / PARTIAL / FAIL / belum diketahui. Masing-masing ada aksen, `Container`, `OnContainer`. Hanya untuk status, bukan dekorasi. |
+| `Info*`, `Scrim`, `InverseSurface` | Pemberitahuan netral, overlay dialog, snackbar. |
 
-Untuk menyelaraskan tampilan UI dan meminimalkan scrolling, dimensi input dan tombol harus seragam:
+Laporan PDF (`Services/ReportService.cs`, kelas `Brand`) memakai nilai token **terang** yang sama.
 
-### A. Jendela Utama (Window)
-* Semua jendela menggunakan ukuran fixed tanpa kemampuan resize manual (kecuali minimize).
-* **MainShell Window**: `Width="1280"`, `Height="768"`, `ResizeMode="CanMinimize"`.
-* **LoginWindow**: `Width="1200"`, `Height="700"`, `ResizeMode="CanMinimize"`.
+## 4. Tipografi
 
-### B. Formulir & Input
-* **Tinggi Input (Height)**: **Harus tepat `44px`** untuk semua `TextBox`, `ComboBox`, `PasswordBox`, dan `DatePicker` standard.
-* **Padding Konten Input**: **Wajib menggunakan `Padding="12,8"`** pada semua input (`TextBox`, `PasswordBox`, `ComboBox`, dan `DatePicker`) yang bertinggi `44px`. Padding vertikal bawaan Material Design terlalu tebal dan akan menyebabkan tulisan terpotong (*clipping*) di dalam form.
-* **Label & Floating Hint**: **Dilarang menggunakan TextBlock label statis di atas kolom input**. Semua input wajib menggunakan **Floating Hint** (`materialDesign:HintAssist.IsFloating="True"`) dengan properti `materialDesign:HintAssist.Hint` yang deskriptif. Jika kode-behind mendesak memerlukan variabel label, buat elemen label tersebut bertipe hidden/collapsed (`Visibility="Collapsed"`).
-* **Desain Dropdown (ComboBox)**: Wajib menggunakan style `Style="{StaticResource JinomComboBoxStyle}"` untuk memastikan keseragaman tinggi `44px`, padding `12,8`, teks `FontSize="13"`, perataan vertikal terpusat, dan **minimalisasi efek bayangan** dengan properti `materialDesign:ElevationAssist.Elevation="Dp2"`.
-* **Item Dropdown (ComboBoxItem)**: Menggunakan gaya implisit (tanpa x:Key) dengan `FontSize="13"`, `Padding="12,8"`, teks `TextDarkBrush`, latar belakang default transparan, dan transisi warna dinamis saat hover/seleksi.
-* **Tinggi Tombol Aksi (Button Height)**: **Harus tepat `44px`** untuk semua tombol halaman (Login, Cetak, Mulai Pengujian, Simpan).
-* **Sudut Lengkung (Corner Radius)**:
-  * Tombol standar menggunakan **`CornerRadius="8"`** (`materialDesign:ButtonAssist.CornerRadius="8"`).
-  * Panel kartu utama menggunakan **`CornerRadius="12"`** atau **`CornerRadius="16"`**.
-* **Spasi Antar Elemen (Spacing)**:
-  * Margin bawah kolom input formulir: **`12px`** s.d. **`14px`** (misal: `Margin="0,0,0,12"`).
-  * Padding dalam kartu formulir: **`20px`** (atau `16px` untuk panel pengaturan yang lebih padat).
-  * Margin luar halaman dari tepi window: **`20px`** (atau `24,20,24,20`).
+Tidak ada `FontSize` / `FontFamily` literal di Views (dites); pakai style:
 
-### C. Tabel Data (DataGrid)
-* Tinggi baris data (`RowHeight`): **`44px`** s.d. **`48px`** agar mudah dibaca namun tetap menampung banyak data.
-* Header tabel (`DataGridColumnHeader`): `FontSize="12"` atau `13`, `FontWeight="SemiBold"`, `Padding="16,10"`.
-* Sel tabel (`DataGridCell`): `Padding="16,0"`, dipastikan konten di dalamnya berada di tengah secara vertikal (`VerticalAlignment="Center"`).
+| Style | Ukuran | Contoh |
+| :--- | :--- | :--- |
+| `Text.DisplaySmall` | 32/40 | Skor hasil pengujian |
+| `Text.HeadlineSmall` | 24/32 | Judul halaman, angka metrik |
+| `Text.TitleLarge` / `Text.TitleMedium` | 22/28, 16/24 | Judul panel / judul kartu |
+| `Text.BodyLarge` / `BodyMedium` / `BodySmall` | 16, 14, 12 | Isi |
+| `Text.LabelLarge` / `Medium` / `Small` | 14, 12, 11 | Tombol, chip, label tabel |
+| `Text.Supporting` | 14, `OnSurfaceVariant` | Keterangan di bawah judul/field |
+| `Text.FieldError` | 12, `Error` | Pesan validasi di bawah field |
 
----
+## 5. Bentuk & spasi
 
-## 5. Aturan Minimalisasi Scrolling (Viewport & Scrolling Contract)
+* Sudut: field 4 (`Shape.Field`), chip 8, kartu 12, FAB 16, dialog/sheet 28, tombol & nav item pil (`Shape.Pill`).
+* Kelipatan 4/8: margin halaman 24, padding kartu 16–24, jarak antar field 24 (ruang untuk helper/error text), jarak antar kartu 16.
+* Lebar konten form/pengaturan maks 840; jendela utama bisa di-resize (min 1024×680).
 
-Untuk menghemat tenaga klik dan scroll teknisi (*minimize user effort*), terapkan prinsip berikut:
+## 6. Komponen
 
-### A. Batasi Ketinggian Vertikal Pengujian
-Halaman pengujian aktif (`NewTestPage` progress) harus termuat seluruhnya dalam ruang vertikal jendela `MainShell` (**tinggi bersih area kerja ~696px**):
-* **Stepper Progress**: Tinggi lingkaran stepper maksimal `40px` dengan teks di bawahnya.
-* **Terminal Log Console**: Tinggi area log scroll viewer **maksimal `180px`** (`LogsScrollViewer Height="180"`).
-* **Margin Vertikal Kontainer**: Gunakan margin atas/bawah `12px` s.d. `16px` saja untuk progress container.
-* Gabungan seluruh elemen (Header, Stepper, Current Task Card, Log Console, Cancel Button) **tidak boleh melebihi `620px`** agar terhindar dari munculnya scrollbar halaman.
+* **Tombol** (`Controls.xaml`): `M3.FilledButton` untuk aksi utama (satu per layar/dialog), `M3.TonalButton`, `M3.OutlinedButton` untuk aksi kedua, `M3.TextButton` untuk aksi ringan/batal, `M3.ErrorTextButton` untuk destruktif, `M3.IconButton` (40×40, wajib `ToolTip` + `AutomationProperties.Name`), `M3.ExtendedFab` hanya "Pengujian baru" di Riwayat.
+* **Field**: `M3.TextField` / `M3.PasswordField` / `M3.ComboField` / `M3.DateField` (outlined, floating hint). Label statis di atas field dilarang; pakai `HintAssist.Hint`, keterangan lewat `HintAssist.HelperText`, satuan lewat `TextFieldAssist.SuffixText`. Field salah: garis `ErrorBrush` + `Text.FieldError` di bawahnya.
+* **Pilihan**: `M3.FilterChip` (RadioButton) untuk filter & pilihan pendek, `M3.ChoiceCard` untuk pilihan besar (POP vs Pelanggan).
+* **Navigasi**: drawer 280 px di `MainShell` dengan `M3.NavItem` (Pengujian baru, Riwayat, Laporan, Pengaturan), tombol tema, akun & keluar di bawah.
+* **Kartu**: `M3.Card` (garis) untuk kelompok konten, `M3.FilledCard` untuk metrik/ringkasan.
+* **Dialog & pesan**: `Ui.ConfirmAsync` (konfirmasi; `destructive: true` untuk keluar/membatalkan pengujian), `Ui.AlertAsync` (penjelasan yang harus dibaca), `Ui.Notify` (hasil aksi, hilang sendiri). `MessageBox` dilarang di Views (dites).
+* **Hasil uji**: `Ui.ResultRow` (ikon jenis uji, judul, ringkasan, chip status); dikelompokkan dalam kartu yang bisa dibuka per grup.
 
-### B. Aturan Tata Letak Grid untuk Halaman Data (Dashboard & Riwayat)
-* **DILARANG** membungkus tabel data besar (`DataGrid`) di dalam layout scrollable secara penuh (`ScrollViewer` + `StackPanel`). Hal ini menonaktifkan virtualisasi WPF dan membuat seluruh filter serta header halaman tergulung hilang saat pengguna melakukan scroll.
-* **KONTRAK LAYOUT**: Gunakan pembagian Grid terstruktur:
-  ```xml
-  <Grid Margin="20">
-      <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/> <!-- Row 0: Header Halaman & Counter Status -->
-          <RowDefinition Height="Auto"/> <!-- Row 1: Baris Filter / Pencarian -->
-          <RowDefinition Height="*"/>    <!-- Row 2: Tabel Riwayat Utama (Mengisi sisa ruang) -->
-      </Grid.RowDefinitions>
-      
-      <!-- Konten Row 0 & 1 Pinned/Sticky di atas -->
-      
-      <!-- Sessions Table Row 2 -->
-      <Border Grid.Row="2" ...>
-          <DataGrid ... /> <!-- Scroll secara internal menggunakan scrollbar vertikal bawaan grid -->
-      </Border>
-  </Grid>
-  ```
-  Ini mengunci filter pencarian dan statistik counter agar selalu terlihat, serta membatasi scrolling hanya terjadi secara internal di dalam tabel data.
+## 7. Tata letak per halaman
+
+* **Halaman data (Riwayat)**: Grid `Auto/Auto/Auto/*` — judul, metrik, filter tetap di atas; `DataGrid` mengisi sisa ruang dan scroll sendiri. **Jangan** taruh `DataGrid` di dalam `ScrollViewer` (mematikan virtualisasi, filter ikut tergulung). Detail sesi di panel kanan 400 px (list-detail).
+* **Pengujian berjalan**: Grid tanpa scroll halaman; stepper, aktivitas sekarang, lalu log yang mengisi sisa tinggi (scroll internal).
+* **Form & hasil**: `ScrollViewer` + konten maks 840 px, aksi utama di kanan bawah.
+
+## 8. Ikon & aksesibilitas
+
+* Nama ikon harus ada di `PackIconKind` versi MDIX yang dipakai (dites; nama salah baru gagal saat jalan).
+* Kontrol tanpa teks wajib `AutomationProperties.Name` dan `ToolTip`.
+* Enter di login lewat `IsDefault` tombol, bukan handler `KeyDown` (mencegah login ganda).
+* Periksa setiap perubahan di **mode terang dan gelap** di Windows.

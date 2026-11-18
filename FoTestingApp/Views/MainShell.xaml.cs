@@ -1,7 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using FoTestingApp.Helpers;
 using FoTestingApp.Services;
@@ -11,226 +9,188 @@ using MaterialDesignThemes.Wpf;
 namespace FoTestingApp.Views;
 
 /// <summary>
-/// Code-behind untuk MainShell — window utama dengan top navigation bar.
+/// The main window: navigation drawer, the page, dialogs and snackbar. Ends the session on
+/// inactivity or when the server refuses the token, and closes the app when it is closed (the app
+/// shuts down explicitly, so a window closed with its close button must say so — else the process stays alive).
 /// </summary>
 public partial class MainShell : Window
 {
     private readonly DispatcherTimer _sessionTimer;
     private readonly AuthService _auth;
+    private bool _loggingOut;
+    private bool _sessionEnding;
 
     public MainShell()
     {
         InitializeComponent();
         _auth = new AuthService(new ApiService());
 
-        // Tampilkan info user di sidebar
         var user = SessionManager.CurrentUser;
         if (user is not null)
         {
-            UserNameLabel.Text = user.Name;
+            UserNameLabel.Text = string.IsNullOrWhiteSpace(user.Name) ? "Teknisi" : user.Name;
             UserEmailLabel.Text = user.Email;
+            UserInitials.Text = Initials(user.Name);
         }
 
-        // Timer cek session timeout setiap 1 menit
         _sessionTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
         _sessionTimer.Tick += SessionTimer_Tick;
         _sessionTimer.Start();
 
-        // Track activity untuk reset timer
         MouseMove += (_, _) => SessionManager.RecordActivity();
         KeyDown += (_, _) => SessionManager.RecordActivity();
 
         // A token the server refuses (expired, revoked by a login elsewhere) ends the session here,
         // instead of every screen quietly showing nothing.
         ApiService.SessionRejected += OnSessionRejected;
-        Closed += (_, _) => ApiService.SessionRejected -= OnSessionRejected;
+        ThemeService.Changed += ShowThemeChoice;
+        Closed += (_, _) =>
+        {
+            ApiService.SessionRejected -= OnSessionRejected;
+            ThemeService.Changed -= ShowThemeChoice;
+            _sessionTimer.Stop();
+            if (!_loggingOut)
+            {
+                Application.Current.Shutdown();
+            }
+        };
 
-        // Navigate ke Pengujian Baru (NewTest) sebagai halaman awal
-        NavigateTo("NewTest");
+        // Pages are made fresh on every visit; the frame keeps no back stack of old ones.
+        ContentFrame.Navigated += (_, _) =>
+        {
+            while (ContentFrame.CanGoBack) ContentFrame.RemoveBackEntry();
+        };
+
+        ShowThemeChoice();
+        NavNewTest.IsChecked = true;
     }
 
-    private void OnSessionRejected() => Dispatcher.BeginInvoke(() =>
+    /// <summary>"Budi Santoso" → "BS"; one name → its first two letters.</summary>
+    private static string Initials(string? name)
     {
-        if (DialogOverlay.Visibility == Visibility.Visible && BtnDialogConfirm.Tag as string == "session_expired")
+        var parts = (name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var initials = parts.Length switch
         {
-            return;
-        }
-
-        _sessionTimer.Stop();
-        ShowDialog("Sesi Berakhir", "Server menolak sesi login ini (kedaluwarsa atau login di perangkat lain). Silakan login kembali.", "OK", "session_expired", false);
-    });
+            0 => "JT",
+            1 => parts[0][..Math.Min(2, parts[0].Length)],
+            _ => $"{parts[0][0]}{parts[^1][0]}",
+        };
+        return initials.ToUpperInvariant();
+    }
 
     private void SessionTimer_Tick(object? sender, EventArgs e)
     {
         if (SessionManager.IsSessionExpired())
         {
-            _sessionTimer.Stop();
-            ShowDialog("Sesi Berakhir", "Sesi Anda telah berakhir karena tidak aktif. Silakan login kembali.", "OK", "session_expired", false);
+            EndSession("Sesi berakhir", "Sesi Anda berakhir karena tidak ada aktivitas. Silakan login kembali.");
         }
     }
 
-    private void NavButton_Click(object sender, RoutedEventArgs e)
+    private void OnSessionRejected() => Dispatcher.BeginInvoke(() =>
+        EndSession("Sesi berakhir", "Server menolak sesi login ini (kedaluwarsa, atau login di perangkat lain). Silakan login kembali."));
+
+    private async void EndSession(string title, string message)
     {
-        if (sender is Button btn && btn.Tag is string page)
+        if (_sessionEnding) return;
+        _sessionEnding = true;
+        _sessionTimer.Stop();
+
+        if (DialogHost.IsDialogOpen(Ui.RootDialog))
         {
-            NavigateTo(page);
+            DialogHost.Close(Ui.RootDialog);
+        }
+        await Ui.AlertAsync(title, message, "Login kembali");
+        await LogoutAsync();
+    }
+
+    // ── Navigation ──────────────────────────────────────────────────────────────
+
+    private bool _selectingInCode;
+
+    private void Nav_Checked(object sender, RoutedEventArgs e)
+    {
+        if (!_selectingInCode && sender is RadioButton { Tag: string page })
+        {
+            Show(page);
             SessionManager.RecordActivity();
         }
     }
 
-    private void NavigateTo(string page)
+    private void Show(string page)
     {
-        // Reset all nav button styles
-        var navButtons = new[] { BtnDashboard, BtnNewTest, BtnSettings };
-        var normalStyle = (Style)FindResource("NavButtonStyle");
-        var activeStyle = (Style)FindResource("NavButtonActiveStyle");
-
-        foreach (var btn in navButtons) { btn.Style = normalStyle; }
-
-        switch (page)
+        Page content = page switch
         {
-            case "Dashboard":
-                BtnDashboard.Style = activeStyle;
-                ContentFrame.Navigate(new DashboardPage());
-                FabNewTest.Visibility = Visibility.Visible;
-                break;
-            case "NewTest":
-                BtnNewTest.Style = activeStyle;
-                ContentFrame.Navigate(new NewTestPage());
-                FabNewTest.Visibility = Visibility.Collapsed;
-                break;
-            case "Settings":
-                BtnSettings.Style = activeStyle;
-                ContentFrame.Navigate(new SettingsPage());
-                FabNewTest.Visibility = Visibility.Visible;
-                break;
+            "Dashboard" => new DashboardPage(),
+            "Report" => new ReportPage(),
+            "Settings" => new SettingsPage(),
+            _ => new NewTestPage(),
+        };
+        ContentFrame.Navigate(content);
+        FabNewTest.Visibility = page == "Dashboard" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>Selects a destination from code (e.g. a page sending the user to the report).</summary>
+    public void Select(string page)
+    {
+        var item = page switch
+        {
+            "Dashboard" => NavHistory,
+            "Report" => NavReport,
+            "Settings" => NavSettings,
+            _ => NavNewTest,
+        };
+        if (item.IsChecked == true)
+        {
+            Show(page);
+        }
+        else
+        {
+            item.IsChecked = true;
         }
     }
 
-    private void FabNewTest_Click(object sender, RoutedEventArgs e)
+    /// <summary>The report of one session, reached from its results: "Laporan" is the destination shown.</summary>
+    public void OpenReport(int sessionId)
     {
-        NavigateTo("NewTest");
-        SessionManager.RecordActivity();
+        _selectingInCode = true;
+        NavReport.IsChecked = true;
+        _selectingInCode = false;
+        ContentFrame.Navigate(new ReportPage(sessionId));
+        FabNewTest.Visibility = Visibility.Collapsed;
     }
 
-    private void LogoutButton_Click(object sender, RoutedEventArgs e)
+    private void FabNewTest_Click(object sender, RoutedEventArgs e) => Select("NewTest");
+
+    // ── Theme ───────────────────────────────────────────────────────────────────
+
+    private void ThemeToggle_Click(object sender, RoutedEventArgs e) => ThemeService.Toggle();
+
+    /// <summary>The toggle offers the other mode.</summary>
+    private void ShowThemeChoice()
     {
-        ShowDialog("Konfirmasi Keluar", "Apakah Anda yakin ingin keluar dari aplikasi?", "Keluar", "logout", true);
+        ThemeIcon.Kind = ThemeService.IsDark ? PackIconKind.WeatherSunny : PackIconKind.WeatherNight;
+        ThemeLabel.Text = ThemeService.IsDark ? "Mode terang" : "Mode gelap";
     }
 
-    private async void DoLogout()
+    // ── Logout ──────────────────────────────────────────────────────────────────
+
+    private async void LogoutButton_Click(object sender, RoutedEventArgs e)
     {
+        if (await Ui.ConfirmAsync("Keluar dari aplikasi?", "Pengujian yang sedang berjalan akan dihentikan.", "Keluar", destructive: true))
+        {
+            await LogoutAsync();
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        _loggingOut = true;
         _sessionTimer.Stop();
         // Leaving the page cancels a test still running on it.
         ContentFrame.Content = null;
         await _auth.LogoutAsync();
 
-        var login = new LoginWindow();
-        login.Show();
+        new LoginWindow().Show();
         Close();
-    }
-
-    private void ShowDialog(string title, string message, string confirmText, string actionTag, bool showCancel = true)
-    {
-        DialogTitleText.Text = title;
-        DialogMessageText.Text = message;
-        BtnDialogConfirm.Content = confirmText;
-        BtnDialogConfirm.Tag = actionTag;
-
-        BtnDialogCancel.Visibility = showCancel ? Visibility.Visible : Visibility.Collapsed;
-
-        if (!showCancel)
-        {
-            Grid.SetColumn(BtnDialogConfirm, 0);
-            Grid.SetColumnSpan(BtnDialogConfirm, 3);
-        }
-        else
-        {
-            Grid.SetColumn(BtnDialogConfirm, 2);
-            Grid.SetColumnSpan(BtnDialogConfirm, 1);
-        }
-
-        if (actionTag == "logout")
-        {
-            DialogIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Logout;
-            DialogIconBorder.Background = new SolidColorBrush(Color.FromArgb((byte)0x1F, (byte)0xEF, (byte)0x44, (byte)0x44));
-            DialogIcon.Foreground = (Brush)FindResource("FailRedBrush");
-        }
-        else
-        {
-            DialogIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.AlertCircleOutline;
-            DialogIconBorder.Background = new SolidColorBrush(Color.FromArgb((byte)0x1F, (byte)0xF5, (byte)0x9E, (byte)0x0B));
-            DialogIcon.Foreground = (Brush)FindResource("WarnYellowBrush");
-        }
-
-        DialogOverlay.Opacity = 0;
-        DialogOverlay.Visibility = Visibility.Visible;
-
-        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
-        {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-        };
-        DialogOverlay.BeginAnimation(UIElement.OpacityProperty, fadeIn);
-    }
-
-    private void BtnDialogCancel_Click(object sender, RoutedEventArgs e)
-    {
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
-        {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
-        };
-        fadeOut.Completed += (s, ev) => DialogOverlay.Visibility = Visibility.Collapsed;
-        DialogOverlay.BeginAnimation(UIElement.OpacityProperty, fadeOut);
-    }
-
-    private void BtnDialogConfirm_Click(object sender, RoutedEventArgs e)
-    {
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
-        {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
-        };
-
-        var tag = BtnDialogConfirm.Tag?.ToString();
-        fadeOut.Completed += (s, ev) =>
-        {
-            DialogOverlay.Visibility = Visibility.Collapsed;
-            if (tag == "logout" || tag == "session_expired")
-            {
-                DoLogout();
-            }
-        };
-        DialogOverlay.BeginAnimation(UIElement.OpacityProperty, fadeOut);
-    }
-
-    private void BtnToggleTheme_Click(object sender, RoutedEventArgs e)
-    {
-        var paletteHelper = new MaterialDesignThemes.Wpf.PaletteHelper();
-        var theme = paletteHelper.GetTheme();
-        
-        var isCurrentlyDark = theme.GetBaseTheme() == MaterialDesignThemes.Wpf.BaseTheme.Dark;
-        theme.SetBaseTheme(isCurrentlyDark ? MaterialDesignThemes.Wpf.BaseTheme.Light : MaterialDesignThemes.Wpf.BaseTheme.Dark);
-        paletteHelper.SetTheme(theme);
-        
-        IconTheme.Kind = isCurrentlyDark ? MaterialDesignThemes.Wpf.PackIconKind.Brightness2 : MaterialDesignThemes.Wpf.PackIconKind.WeatherSunny;
-        
-        // Ensure manual custom brushes adapt dynamically
-        if (!isCurrentlyDark) // Switching to Dark
-        {
-            Application.Current.Resources["AppBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 30, 30));
-            Application.Current.Resources["CardBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-            Application.Current.Resources["TextDarkBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 240));
-            Application.Current.Resources["TextLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(160, 160, 160));
-            Application.Current.Resources["BorderLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(70, 70, 70));
-            Application.Current.Resources["PrimaryLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)60, (byte)34, (byte)197, (byte)94));
-        }
-        else // Switching to Light
-        {
-            Application.Current.Resources["AppBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(248, 246, 246));
-            Application.Current.Resources["CardBackgroundBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
-            Application.Current.Resources["TextDarkBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(15, 23, 42));
-            Application.Current.Resources["TextLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139));
-            Application.Current.Resources["BorderLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(226, 232, 240));
-            Application.Current.Resources["PrimaryLightBrush"] = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(220, 252, 231));
-        }
     }
 }

@@ -1,34 +1,46 @@
 using System.Windows;
-using System.Windows.Input;
+using FoTestingApp.Helpers;
 using FoTestingApp.Services;
 using Serilog;
 
 namespace FoTestingApp.Views;
 
 /// <summary>
-/// Code-behind untuk LoginWindow.
+/// Sign in. Enter submits (the button is the default); the reason a sign-in failed is said as the
+/// server gave it; the last email used on this laptop is filled in. Closing this window without
+/// signing in closes the app.
 /// </summary>
 public partial class LoginWindow : Window
 {
     private readonly AuthService _auth;
+    private bool _signedIn;
 
     public LoginWindow()
     {
         InitializeComponent();
         _auth = new AuthService(new ApiService());
-        EmailTextBox.Focus();
-    }
 
-    private async void LoginButton_Click(object sender, RoutedEventArgs e) =>
-        await AttemptLoginAsync();
-
-    private async void PasswordBox_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter)
+        var lastEmail = UserPreferences.Current.LastEmail;
+        if (string.IsNullOrWhiteSpace(lastEmail))
         {
-            await AttemptLoginAsync();
+            EmailTextBox.Focus();
         }
+        else
+        {
+            EmailTextBox.Text = lastEmail;
+            Loaded += (_, _) => PasswordBox.Focus();
+        }
+
+        Closed += (_, _) =>
+        {
+            if (!_signedIn)
+            {
+                Application.Current.Shutdown();
+            }
+        };
     }
+
+    private async void LoginButton_Click(object sender, RoutedEventArgs e) => await AttemptLoginAsync();
 
     private async Task AttemptLoginAsync()
     {
@@ -42,21 +54,22 @@ public partial class LoginWindow : Window
         }
 
         SetLoading(true);
-
         try
         {
             var outcome = await _auth.LoginAsync(email, password);
-
             if (outcome.User is null)
             {
                 ShowError(outcome.Error ?? "Login gagal. Silakan coba lagi.");
                 PasswordBox.Clear();
+                PasswordBox.Focus();
                 return;
             }
 
-            // Buka MainShell dan tutup LoginWindow
-            var shell = new MainShell();
-            shell.Show();
+            UserPreferences.Current.LastEmail = email;
+            UserPreferences.Current.Save();
+
+            _signedIn = true;
+            new MainShell().Show();
             Close();
         }
         catch (Exception ex)
@@ -73,18 +86,19 @@ public partial class LoginWindow : Window
     private void ShowError(string message)
     {
         ErrorMessage.Text = message;
-        ErrorMessage.Visibility = Visibility.Visible;
+        ErrorPanel.Visibility = Visibility.Visible;
     }
 
     private void SetLoading(bool isLoading)
     {
         LoginButton.IsEnabled = !isLoading;
+        LoginButtonText.Text = isLoading ? "Memeriksa..." : "Masuk";
         EmailTextBox.IsEnabled = !isLoading;
         PasswordBox.IsEnabled = !isLoading;
-        LoadingBar.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+        LoadingBar.Visibility = isLoading ? Visibility.Visible : Visibility.Hidden;
         if (isLoading)
         {
-            ErrorMessage.Visibility = Visibility.Collapsed;
+            ErrorPanel.Visibility = Visibility.Collapsed;
         }
     }
 }

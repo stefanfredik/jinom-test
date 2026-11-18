@@ -1,7 +1,6 @@
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
 using FoTestingApp.Services.Core;
@@ -10,82 +9,112 @@ using Serilog;
 
 namespace FoTestingApp.Views.Pages;
 
+/// <summary>
+/// The history: counts by status, filters that apply as they change, the sessions, and one
+/// session's results beside the list. A failed load or a list the server capped is said, never
+/// shown as zero; a late answer for an earlier filter or row is dropped.
+/// </summary>
 public partial class DashboardPage : Page
 {
     private readonly ApiService _api = new();
 
+    /// <summary>The newest list and detail asked for; an older answer arriving late is ignored.</summary>
+    private int _listRequest;
+    private int _detailRequest;
+    private FoTestSession? _shownSession;
+
     public DashboardPage()
     {
         InitializeComponent();
-        Loaded += async (_, _) => await LoadSessionsAsync();
+        Loaded += async (_, _) =>
+        {
+            ThemeService.Changed += RepaintStatuses;
+            await LoadSessionsAsync();
+        };
+        Unloaded += (_, _) => ThemeService.Changed -= RepaintStatuses;
     }
+
+    /// <summary>The status column's colours come from converters: after a theme switch, re-run them.</summary>
+    private void RepaintStatuses() => SessionsGrid.Items.Refresh();
+
+    private string? SelectedStatus() =>
+        new[] { StatusAll }.Concat(LogicalTreeHelper.GetChildren(StatusAll.Parent).OfType<RadioButton>())
+            .FirstOrDefault(r => r.IsChecked == true)?.Tag as string is { Length: > 0 } status ? status : null;
 
     private async Task LoadSessionsAsync()
     {
+        var request = ++_listRequest;
         ListNotice.Visibility = Visibility.Collapsed;
+
+        var from = FromDatePicker.SelectedDate;
+        var to = ToDatePicker.SelectedDate;
+        if (from is not null && to is not null && from > to)
+        {
+            ShowNotice("Tanggal awal setelah tanggal akhir.", error: true);
+            return;
+        }
+
         try
         {
-            var from = FromDatePicker.SelectedDate;
-            var to = ToDatePicker.SelectedDate;
-            if (from is not null && to is not null && from > to)
-            {
-                ShowNotice("Tanggal awal setelah tanggal akhir.");
-                return;
-            }
+            var sessions = await _api.GetSessionsAsync(from, to, null, SelectedStatus());
+            if (request != _listRequest) return;
 
-            var statusText = (StatusFilter.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            var status = statusText == "Semua" ? null : statusText;
-
-            var sessions = await _api.GetSessionsAsync(from, to, null, status);
             SessionsGrid.ItemsSource = sessions;
-
-            TotalSessionCount.Text = sessions.Count.ToString();
-            TotalPassCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Pass).ToString();
-            TotalFailCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Fail).ToString();
-            TotalPartialCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Partial).ToString();
+            EmptyState.Visibility = sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            TotalSessionCount.Text = sessions.Count.ToString("N0");
+            TotalPassCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Pass).ToString("N0");
+            TotalPartialCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Partial).ToString("N0");
+            TotalFailCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Fail).ToString("N0");
 
             if (sessions.Count >= ApiService.SessionListLimit)
             {
                 // The server sends at most this many: the counts cover only the newest of them.
-                ShowNotice($"Menampilkan {ApiService.SessionListLimit} sesi terbaru saja; angka di atas hanya menghitung sesi ini. Persempit rentang tanggal untuk data lengkap.");
-                ListNotice.Foreground = (Brush)FindResource("TextLightBrush");
+                ShowNotice($"Hanya {ApiService.SessionListLimit} sesi terbaru yang tampil, dan angka di atas hanya menghitung sesi itu. Persempit rentang tanggal untuk data lengkap.", error: false);
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error in LoadSessionsAsync");
+            if (request != _listRequest) return;
+            Log.Error(ex, "Loading the history failed");
             SessionsGrid.ItemsSource = null;
+            EmptyState.Visibility = Visibility.Collapsed;
             TotalSessionCount.Text = TotalPassCount.Text = TotalFailCount.Text = TotalPartialCount.Text = "-";
-            ShowNotice(ex is ApiException ? ex.Message : $"Riwayat gagal dimuat: {ex.Message}");
+            ShowNotice(ex is ApiException ? ex.Message : $"Riwayat gagal dimuat: {ex.Message}", error: true);
         }
     }
 
-    private void ShowNotice(string text)
+    private void ShowNotice(string text, bool error)
     {
         ListNotice.Text = text;
-        ListNotice.Foreground = (Brush)FindResource("FailRedBrush");
+        ListNotice.SetResourceReference(TextBlock.ForegroundProperty, error ? "ErrorBrush" : "OnSurfaceVariantBrush");
         ListNotice.Visibility = Visibility.Visible;
     }
 
-    private async void FilterBtn_Click(object sender, RoutedEventArgs e) =>
-        await LoadSessionsAsync();
+    private async void Filter_Changed(object sender, RoutedEventArgs e)
+    {
+        // The default chip is checked while the page is still being built.
+        if (IsLoaded) await LoadSessionsAsync();
+    }
+
+    private async void Refresh_Click(object sender, RoutedEventArgs e) => await LoadSessionsAsync();
 
     private async void SessionsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SessionsGrid.SelectedItem is not FoTestSession session) return;
-        await ShowSessionDetail(session);
+        if (SessionsGrid.SelectedItem is FoTestSession session)
+        {
+            await ShowSessionDetail(session);
+        }
     }
-
-    /// <summary>The session whose detail was asked for last; an older answer arriving late is dropped.</summary>
-    private int _detailRequest;
 
     private async Task ShowSessionDetail(FoTestSession session)
     {
         var request = ++_detailRequest;
-        DetailTitle.Text = session.Customer?.FullName ?? "Detail";
-        DetailSubtitle.Text = $"{session.CertificationId} — {session.TestDate:dd MMM yyyy HH:mm}";
+        _shownSession = session;
+        DetailTitle.Text = session.Customer?.FullName ?? "Detail sesi";
+        DetailSubtitle.Text = $"{session.CertificationId} · {session.TestDate:dd MMM yyyy, HH:mm}";
+        DetailStatus.Content = Ui.StatusChip(StatusVisual.Of(session.OverallStatus));
         DetailResultsPanel.Children.Clear();
-        DetailColumn.Width = new GridLength(360);
+        DetailColumn.Width = new GridLength(400);
         DetailPanel.Visibility = Visibility.Visible;
 
         string? message = null;
@@ -104,20 +133,19 @@ public partial class DashboardPage : Page
 
         if (message is not null || results.Count == 0)
         {
-            DetailResultsPanel.Children.Add(new TextBlock
-            {
-                Text = message ?? "Tidak ada data hasil pengujian.",
-                Foreground = (Brush)FindResource(message is null ? "TextLightBrush" : "FailRedBrush"),
-                FontSize = 13,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 16, 0, 0),
-            });
+            var text = Ui.Text(message ?? "Sesi ini belum punya hasil pengujian.", "Text.BodyMedium", message is null ? "OnSurfaceVariantBrush" : "ErrorBrush");
+            text.Margin = new Thickness(16);
+            DetailResultsPanel.Children.Add(text);
             return;
         }
 
         foreach (var result in results)
         {
-            DetailResultsPanel.Children.Add(CreateResultCard(result));
+            DetailResultsPanel.Children.Add(Ui.ResultRow(
+                ResultFormatter.TestName(result.TestType),
+                ResultFormatter.Summary(result.TestType, result.ResultData?.RootElement, result.Status == TestStatus.Pass),
+                StatusVisual.Of(result.Status),
+                GetTestIcon(result.TestType)));
         }
     }
 
@@ -126,109 +154,25 @@ public partial class DashboardPage : Page
         DetailPanel.Visibility = Visibility.Collapsed;
         DetailColumn.Width = new GridLength(0);
         SessionsGrid.SelectedItem = null;
+        _shownSession = null;
     }
 
-    private Border CreateResultCard(FoTestResult result)
+    private void DetailReport_Click(object sender, RoutedEventArgs e)
     {
-        var isPassed = result.Status == TestStatus.Pass;
-        var statusColor = isPassed
-            ? (Brush)FindResource("PassGreenBrush")
-            : (Brush)FindResource("FailRedBrush");
-        var typeName = FormatTestTypeName(result.TestType);
-        var iconKind = GetTestIcon(result.TestType);
-        var detail = ExtractDetailText(result);
-
-        var card = new Border
+        if (_shownSession is { } session && Window.GetWindow(this) is MainShell shell)
         {
-            Background = (Brush)FindResource("AppBackgroundBrush"),
-            CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(14),
-            Margin = new Thickness(0, 0, 0, 8),
-        };
-
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        // Icon
-        var iconBorder = new Border
-        {
-            Width = 36, Height = 36,
-            CornerRadius = new CornerRadius(8),
-            Background = isPassed ? new SolidColorBrush(Color.FromArgb(0x1A, 0x22, 0xC5, 0x5E))
-                                  : new SolidColorBrush(Color.FromArgb(0x1A, 0xEF, 0x44, 0x44)),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        var icon = new PackIcon { Kind = iconKind, Width = 18, Height = 18, Foreground = statusColor,
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-        iconBorder.Child = icon;
-        Grid.SetColumn(iconBorder, 0);
-        grid.Children.Add(iconBorder);
-
-        // Text
-        var textPanel = new StackPanel { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
-        textPanel.Children.Add(new TextBlock
-        {
-            Text = typeName, FontSize = 13, FontWeight = FontWeights.SemiBold,
-            Foreground = (Brush)FindResource("TextDarkBrush"),
-        });
-        textPanel.Children.Add(new TextBlock
-        {
-            Text = detail, FontSize = 11,
-            Foreground = (Brush)FindResource("TextLightBrush"),
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(0, 2, 0, 0),
-        });
-        // Show target if available
-        if (!string.IsNullOrEmpty(result.Target))
-        {
-            textPanel.Children.Add(new TextBlock
-            {
-                Text = result.Target, FontSize = 10,
-                Foreground = (Brush)FindResource("TextLightBrush"),
-                FontStyle = FontStyles.Italic,
-                Margin = new Thickness(0, 1, 0, 0),
-            });
+            shell.OpenReport(session.Id);
         }
-        Grid.SetColumn(textPanel, 1);
-        grid.Children.Add(textPanel);
-
-        // Status chip
-        var statusBorder = new Border
-        {
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(8, 3, 8, 3),
-            Background = isPassed ? new SolidColorBrush(Color.FromArgb(0x1A, 0x22, 0xC5, 0x5E))
-                                  : new SolidColorBrush(Color.FromArgb(0x1A, 0xEF, 0x44, 0x44)),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        statusBorder.Child = new TextBlock
-        {
-            Text = isPassed ? "PASS" : "FAIL",
-            FontSize = 10, FontWeight = FontWeights.Bold,
-            Foreground = statusColor,
-        };
-        Grid.SetColumn(statusBorder, 2);
-        grid.Children.Add(statusBorder);
-
-        card.Child = grid;
-        return card;
     }
-
-    private static string FormatTestTypeName(string testType) => ResultFormatter.TestName(testType);
 
     private static PackIconKind GetTestIcon(string testType) => testType switch
     {
         TestTypes.PingGateway or TestTypes.PingDns or TestTypes.PingDomainLokal => PackIconKind.LanConnect,
         TestTypes.NslookupNasional or TestTypes.NslookupInternasional => PackIconKind.Dns,
         TestTypes.BrowsingTest => PackIconKind.Web,
-        TestTypes.StreamingTest => PackIconKind.Video,
-        TestTypes.SocialMediaTest => PackIconKind.AccountGroup,
+        TestTypes.StreamingTest => PackIconKind.PlayCircleOutline,
+        TestTypes.SocialMediaTest => PackIconKind.AccountGroupOutline,
         TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla => PackIconKind.Speedometer,
         _ => PackIconKind.TestTube,
     };
-
-    private static string ExtractDetailText(FoTestResult result) =>
-        ResultFormatter.Summary(result.TestType, result.ResultData?.RootElement, result.Status == TestStatus.Pass);
 }

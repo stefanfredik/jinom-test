@@ -10,6 +10,40 @@ public partial class SettingsPage : Page
     {
         InitializeComponent();
         LoadCurrentSettings();
+        ShowThemeMode();
+
+        // The drawer's switch can change the theme while this page is open.
+        Loaded += (_, _) => ThemeService.Changed += ShowThemeMode;
+        Unloaded += (_, _) => ThemeService.Changed -= ShowThemeMode;
+    }
+
+    /// <summary>Checks the chip of the current appearance, without re-applying it.</summary>
+    private void ShowThemeMode()
+    {
+        _loadingTheme = true;
+        (ThemeService.Mode switch
+        {
+            ThemeMode.Light => ThemeLight,
+            ThemeMode.Dark => ThemeDark,
+            _ => ThemeSystem,
+        }).IsChecked = true;
+        _loadingTheme = false;
+    }
+
+    private bool _loadingTheme;
+
+    private void Theme_Checked(object sender, RoutedEventArgs e)
+    {
+        if (!_loadingTheme && sender is RadioButton { Tag: string tag } && Enum.TryParse<ThemeMode>(tag, out var mode))
+        {
+            ThemeService.Apply(mode);
+        }
+    }
+
+    private void Reset_Click(object sender, RoutedEventArgs e)
+    {
+        LoadCurrentSettings();
+        Ui.Notify("Perubahan dibatalkan.");
     }
 
     private void LoadCurrentSettings()
@@ -39,7 +73,7 @@ public partial class SettingsPage : Page
         return null;
     }
 
-    private void SaveSettingsBtn_Click(object sender, RoutedEventArgs e)
+    private async void SaveSettingsBtn_Click(object sender, RoutedEventArgs e)
     {
         var errors = new List<string>();
         var dnsTargets = List(DnsTargetBox);
@@ -60,7 +94,7 @@ public partial class SettingsPage : Page
 
         if (errors.Count > 0)
         {
-            MessageBox.Show(string.Join(Environment.NewLine, errors), "Pengaturan belum disimpan", MessageBoxButton.OK, MessageBoxImage.Warning);
+            await Ui.AlertAsync("Pengaturan belum disimpan", string.Join(Environment.NewLine, errors));
             return;
         }
 
@@ -77,13 +111,11 @@ public partial class SettingsPage : Page
                 ["NetworkTest:NslookupInternasional:Domains"] = internasionalDomains,
                 ["App:SessionTimeoutMinutes"] = timeout!.Value,
             });
-            MessageBox.Show("Pengaturan berhasil disimpan. Perubahan aktif untuk sesi berikutnya.",
-                "Berhasil", MessageBoxButton.OK, MessageBoxImage.Information);
+            Ui.Notify("Pengaturan disimpan. Berlaku mulai sesi berikutnya.");
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Gagal menyimpan pengaturan: {ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            await Ui.AlertAsync("Pengaturan gagal disimpan", ex.Message);
         }
     }
 }
