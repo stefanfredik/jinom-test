@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media.Animation;
+using FoTestingApp.Controls.Charts;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
@@ -20,9 +22,11 @@ public partial class NewTestPage : Page
     private readonly ApiService _api = new();
     private int? _currentSessionId;
 
-    /// <summary>The search in flight for each picker; a newer keystroke cancels the older search.</summary>
-    private CancellationTokenSource? _popSearch;
+    /// <summary>The customer search in flight; a newer keystroke cancels the older search.</summary>
     private CancellationTokenSource? _customerSearch;
+
+    /// <summary>The session's certificate id, for the report's file name.</summary>
+    private string? _currentCertificationId;
 
     /// <summary>The run in progress: cancelled by "Batalkan" and by leaving the page, so it never goes on unseen.</summary>
     private CancellationTokenSource? _runCts;
@@ -42,7 +46,6 @@ public partial class NewTestPage : Page
         Unloaded += (_, _) =>
         {
             _runCts?.Cancel();
-            _popSearch?.Cancel();
             _customerSearch?.Cancel();
         };
     }
@@ -76,21 +79,21 @@ public partial class NewTestPage : Page
     {
         _enableRealTimeValidation = false;
         ClearErrors();
-        SelectedDetailsCard.Visibility = Visibility.Collapsed;
-        FullNameBox.Text = PackageMbpsBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
-        PopComboBox.ItemsSource = null;
-        PopComboBox.SelectedItem = null;
+        SelectedDetailsCard.Visibility = PackageNotice.Visibility = Visibility.Collapsed;
+        FullNameBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
+        PopList.ItemsSource = null;
         PopStatusText.Text = string.Empty;
         CustomerComboBox.SelectedItem = null;
-        PlacePackageField(nameVisible: true);
+        StartTestBtn.IsEnabled = true;
 
         var isPop = _testMode == "pop";
         FormTitle.Text = isPop ? "Uji di POP" : "Uji di pelanggan";
-        FormSubtitle.Text = isPop ? "Pilih POP yang diuji, lalu mulai." : "Cari pelanggan, periksa datanya, lalu mulai.";
+        FormSubtitle.Text = isPop ? "Pilih POP yang diuji, lalu mulai." : "Cari pelanggan, periksa datanya, lalu mulai. Paket diambil dari data pelanggan.";
         PopSelectionPanel.Visibility = isPop ? Visibility.Visible : Visibility.Collapsed;
         CustomerSelectionPanel.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
-        // A POP is chosen, not typed; it has no package.
-        NameFieldPanel.Visibility = PackageFieldPanel.Visibility = AddressFieldPanel.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
+        // A POP is chosen, not typed; it has no package. A customer's name and address are asked
+        // for only once one is chosen and billing left them empty.
+        NameFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Collapsed;
         BtnEditDetails.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
 
         if (isPop)
@@ -103,44 +106,32 @@ public partial class NewTestPage : Page
         }
     }
 
-    /// <summary>
-    /// Loads POPs for a search, 300 ms after the last keystroke; a newer search cancels this one, so
-    /// the list always answers the text in the box (typing "budi" never ends on the results for "b").
-    /// </summary>
-    private async Task LoadAvailablePopsAsync(string query = "")
+    /// <summary>Every POP of the company, listed at once: a partner has few, so there is nothing to search.</summary>
+    private async Task LoadAvailablePopsAsync()
     {
-        _popSearch?.Cancel();
-        var search = _popSearch = new CancellationTokenSource();
-
+        PopLoadingBar.Visibility = Visibility.Visible;
+        SetStatus(PopStatusText, "Memuat daftar POP...");
         try
         {
-            if (!string.IsNullOrEmpty(query)) await Task.Delay(300, search.Token);
-            PopLoadingBar.Visibility = Visibility.Visible;
-            SetStatus(PopStatusText, string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP..." : $"Mencari \"{query}\"...");
-
-            var pops = await _api.GetAvailablePopsAsync(query, search.Token);
-            if (search.IsCancellationRequested) return;
-            PopComboBox.ItemsSource = pops;
-            SetStatus(PopStatusText, pops.Count > 0 ? $"{pops.Count} POP tersedia." : "Tidak ada POP yang cocok.");
-        }
-        catch (OperationCanceledException)
-        {
+            var pops = await _api.GetAvailablePopsAsync();
+            PopList.ItemsSource = pops;
+            SetStatus(PopStatusText, pops.Count > 0 ? $"{pops.Count} POP." : "Belum ada POP. Tambahkan POP di Jinom Assets.", error: pops.Count == 0);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load available POPs");
             SetStatus(PopStatusText, ex is ApiException ? ex.Message : "Daftar POP gagal dimuat. Coba lagi.", error: true);
-            PopComboBox.ItemsSource = null;
+            PopList.ItemsSource = null;
         }
         finally
         {
-            if (ReferenceEquals(_popSearch, search)) PopLoadingBar.Visibility = Visibility.Hidden;
+            PopLoadingBar.Visibility = Visibility.Hidden;
         }
     }
 
-    private void PopComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void PopList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (PopComboBox.SelectedItem is not PopOption pop)
+        if (PopList.SelectedItem is not PopOption pop)
         {
             SelectedDetailsCard.Visibility = Visibility.Collapsed;
             return;
@@ -148,32 +139,15 @@ public partial class NewTestPage : Page
 
         FullNameBox.Text = pop.DisplayName;
         AddressBox.Text = pop.Address ?? string.Empty;
-        SetStatus(PopStatusText, string.Empty);
 
         DetailsCardIcon.Kind = PackIconKind.ServerNetwork;
         DetailsNameText.Text = pop.Name;
-        DetailsSiteIdText.Text = $"POP #{pop.SiteId}";
+        DetailsSiteIdText.Text = string.IsNullOrWhiteSpace(pop.Code) ? $"POP #{pop.SiteId}" : pop.Code;
         DetailsSiteIdBadge.Visibility = Visibility.Visible;
         DetailsPackageBadge.Visibility = Visibility.Collapsed;
         DetailsAddressText.Text = pop.Address ?? "-";
         DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(pop.Address) ? Visibility.Collapsed : Visibility.Visible;
         SelectedDetailsCard.Visibility = Visibility.Visible;
-    }
-
-    private async void PopComboBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (sender is ComboBox { IsDropDownOpen: true, SelectedItem: null } box)
-        {
-            await LoadAvailablePopsAsync(box.Text);
-        }
-    }
-
-    private async void PopComboBox_DropDownOpened(object sender, EventArgs e)
-    {
-        if (PopComboBox.ItemsSource == null)
-        {
-            await LoadAvailablePopsAsync();
-        }
     }
 
     /// <summary>Loads customers for a search, debounced and cancelled like the POP list.</summary>
@@ -214,15 +188,14 @@ public partial class NewTestPage : Page
 
         if (CustomerComboBox.SelectedItem is not FoCustomer customer)
         {
-            SelectedDetailsCard.Visibility = Visibility.Collapsed;
-            NameFieldPanel.Visibility = PackageFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Visible;
-            FullNameBox.Text = PackageMbpsBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
-            PlacePackageField(nameVisible: true);
+            SelectedDetailsCard.Visibility = PackageNotice.Visibility = Visibility.Collapsed;
+            NameFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Collapsed;
+            FullNameBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
+            StartTestBtn.IsEnabled = true;
             return;
         }
 
         FullNameBox.Text = customer.FullName;
-        PackageMbpsBox.Text = customer.PackageMbps > 0 ? customer.PackageMbps.ToString() : string.Empty;
         AddressBox.Text = customer.Address ?? string.Empty;
         NotesBox.Text = string.Empty;
 
@@ -231,31 +204,30 @@ public partial class NewTestPage : Page
         // The service number tells two customers of the same name apart.
         DetailsSiteIdText.Text = customer.ServiceNumber ?? string.Empty;
         DetailsSiteIdBadge.Visibility = string.IsNullOrWhiteSpace(customer.ServiceNumber) ? Visibility.Collapsed : Visibility.Visible;
-        DetailsPackageText.Text = !string.IsNullOrWhiteSpace(customer.PackageName) ? customer.PackageName
-            : customer.PackageMbps > 0 ? $"{customer.PackageMbps} Mbps" : string.Empty;
-        DetailsPackageBadge.Visibility = string.IsNullOrWhiteSpace(DetailsPackageText.Text) ? Visibility.Collapsed : Visibility.Visible;
+        DetailsPackageText.Text = PackageLabel(customer);
+        DetailsPackageBadge.Visibility = Visibility.Visible;
         DetailsAddressText.Text = customer.Address ?? "-";
         DetailsAddressPanel.Visibility = string.IsNullOrWhiteSpace(customer.Address) ? Visibility.Collapsed : Visibility.Visible;
         SelectedDetailsCard.Visibility = Visibility.Visible;
 
-        // Only what billing left empty is asked for.
+        // Only what billing left empty is asked for; the package never is.
         NameFieldPanel.Visibility = string.IsNullOrWhiteSpace(FullNameBox.Text) ? Visibility.Visible : Visibility.Collapsed;
-        PackageFieldPanel.Visibility = string.IsNullOrWhiteSpace(PackageMbpsBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         AddressFieldPanel.Visibility = string.IsNullOrWhiteSpace(AddressBox.Text) ? Visibility.Visible : Visibility.Collapsed;
-        PlacePackageField(NameFieldPanel.Visibility == Visibility.Visible);
 
-        if (PackageFieldPanel.Visibility == Visibility.Visible)
-        {
-            _enableRealTimeValidation = true;
-            SetError(PackageMbpsBox, PackageWarningText, "Paket pelanggan belum tercatat. Isi kecepatannya (Mbps).");
-        }
+        var missingSpeed = customer.PackageMbps <= 0;
+        PackageNoticeText.Text = missingSpeed
+            ? $"Kecepatan paket pelanggan ini belum tercatat di Jinom Assets{(string.IsNullOrWhiteSpace(customer.PackageName) ? "" : $" (paket \"{customer.PackageName}\")")}. " +
+              "Isi Bandwidth Down layanannya di Jinom Assets, lalu pilih pelanggan ini lagi."
+            : string.Empty;
+        PackageNotice.Visibility = missingSpeed ? Visibility.Visible : Visibility.Collapsed;
+        StartTestBtn.IsEnabled = !missingSpeed;
     }
 
-    /// <summary>The package field takes the whole row when the name field is not asked for.</summary>
-    private void PlacePackageField(bool nameVisible)
+    /// <summary>"Home 20 · 20 Mbps", or the name alone with a warning sign in words when no speed is known.</summary>
+    private static string PackageLabel(FoCustomer customer)
     {
-        Grid.SetColumn(PackageFieldPanel, nameVisible ? 2 : 0);
-        Grid.SetColumnSpan(PackageFieldPanel, nameVisible ? 1 : 3);
+        var name = string.IsNullOrWhiteSpace(customer.PackageName) ? "Paket" : customer.PackageName;
+        return customer.PackageMbps > 0 ? $"{name} · {customer.PackageMbps} Mbps" : $"{name} · kecepatan belum tercatat";
     }
 
     private async void CustomerComboBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -276,8 +248,7 @@ public partial class NewTestPage : Page
 
     private void BtnEditDetails_Click(object sender, RoutedEventArgs e)
     {
-        NameFieldPanel.Visibility = PackageFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Visible;
-        PlacePackageField(nameVisible: true);
+        NameFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Visible;
         FullNameBox.Focus();
     }
 
@@ -301,7 +272,6 @@ public partial class NewTestPage : Page
     private void ClearErrors()
     {
         SetError(FullNameBox, NameWarningText, null);
-        SetError(PackageMbpsBox, PackageWarningText, null);
         SetError(AddressBox, AddressWarningText, null);
     }
 
@@ -316,36 +286,41 @@ public partial class NewTestPage : Page
 
     private static string? AddressError(string text) => string.IsNullOrWhiteSpace(text) ? "Alamat pelanggan wajib diisi." : null;
 
-    private static string? PackageError(string text) =>
-        string.IsNullOrWhiteSpace(text) ? "Kecepatan paket wajib diisi."
-        : !int.TryParse(text.Trim(), out var mbps) || mbps <= 0 ? "Kecepatan harus angka bulat positif (Mbps)."
-        : null;
 
     private bool ValidateForm()
     {
         if (_testMode == "pop")
         {
-            if (PopComboBox.SelectedItem is PopOption) return true;
+            if (PopList.SelectedItem is PopOption) return true;
             SetStatus(PopStatusText, "Pilih POP dari daftar terlebih dahulu.", error: true);
-            PopComboBox.Focus();
+            PopList.Focus();
+            return false;
+        }
+
+        // The package is read from the customer's data, so the customer must be one from the list.
+        if (CustomerComboBox.SelectedItem is not FoCustomer customer)
+        {
+            SetStatus(CustomerStatusText, "Pilih pelanggan dari daftar terlebih dahulu.", error: true);
+            CustomerComboBox.Focus();
+            return false;
+        }
+        if (customer.PackageMbps <= 0)
+        {
+            PackageNotice.Visibility = Visibility.Visible;
             return false;
         }
 
         _enableRealTimeValidation = true;
         var nameError = NameError(FullNameBox.Text);
-        var packageError = PackageError(PackageMbpsBox.Text);
         var addressError = AddressError(AddressBox.Text);
         SetError(FullNameBox, NameWarningText, nameError);
-        SetError(PackageMbpsBox, PackageWarningText, packageError);
         SetError(AddressBox, AddressWarningText, addressError);
 
         // A field in error that was hidden behind the details card is shown.
         if (nameError is not null) NameFieldPanel.Visibility = Visibility.Visible;
-        if (packageError is not null) PackageFieldPanel.Visibility = Visibility.Visible;
         if (addressError is not null) AddressFieldPanel.Visibility = Visibility.Visible;
-        PlacePackageField(NameFieldPanel.Visibility == Visibility.Visible);
 
-        return nameError is null && packageError is null && addressError is null;
+        return nameError is null && addressError is null;
     }
 
     private void FullNameBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -353,10 +328,6 @@ public partial class NewTestPage : Page
         if (_enableRealTimeValidation) SetError(FullNameBox, NameWarningText, NameError(FullNameBox.Text));
     }
 
-    private void PackageMbpsBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_enableRealTimeValidation) SetError(PackageMbpsBox, PackageWarningText, PackageError(PackageMbpsBox.Text));
-    }
 
     private void AddressBox_TextChanged(object sender, TextChangedEventArgs e)
     {
@@ -378,7 +349,7 @@ public partial class NewTestPage : Page
         try
         {
             var isPopMode = _testMode == "pop";
-            var selectedPop = isPopMode ? PopComboBox.SelectedItem as PopOption : null;
+            var selectedPop = isPopMode ? PopList.SelectedItem as PopOption : null;
             var selectedCustomer = !isPopMode ? CustomerComboBox.SelectedItem as FoCustomer : null;
             var customer = new FoCustomer
             {
@@ -387,8 +358,9 @@ public partial class NewTestPage : Page
                 ServiceNumber = selectedCustomer?.ServiceNumber,
                 FullName = isPopMode ? selectedPop?.DisplayName ?? string.Empty : FullNameBox.Text.Trim(),
                 Address = isPopMode ? selectedPop?.Address ?? "-" : AddressBox.Text.Trim(),
-                // A POP has no package; a customer's was validated as a positive number.
-                PackageMbps = !isPopMode && int.TryParse(PackageMbpsBox.Text.Trim(), out var pkg) ? pkg : 0,
+                // A POP has no package; a customer's is the speed in their data (validated above).
+                PackageMbps = selectedCustomer?.PackageMbps ?? 0,
+                PackageName = selectedCustomer?.PackageName,
                 Email = selectedCustomer?.Email,
                 TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
             };
@@ -418,13 +390,18 @@ public partial class NewTestPage : Page
         TestRun? run = null;
         try
         {
+            // The parameters as set in Jinom Assets now, so a change there applies to this run.
+            CurrentActivityText.Text = "Memuat pengaturan pengujian...";
+            await _api.LoadTestSettingsAsync(cts.Token);
+
             CurrentActivityText.Text = "Menyimpan data lokasi...";
             customer.Id = await _api.UpsertCustomerAsync(customer);
 
             var startedAt = DateTime.Now;
+            _currentCertificationId = $"TEST-{startedAt:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpperInvariant()}";
             _currentSessionId = await _api.CreateTestSessionAsync(new FoTestSession
             {
-                CertificationId = $"TEST-{startedAt:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpperInvariant()}",
+                CertificationId = _currentCertificationId,
                 CustomerId = customer.Id,
                 TechnicianId = SessionManager.CurrentUser?.Id ?? 0,
                 TestDate = startedAt,
@@ -433,6 +410,8 @@ public partial class NewTestPage : Page
             });
 
             run = new TestRun(_api, _currentSessionId.Value, cts.Token);
+            run.PingStarted += (_, target, count, threshold) => OnUi(() => StartLivePing(target, count, threshold));
+            run.PingReplied += rtt => OnUi(() => AddLivePing(rtt));
             await new NetworkTestService().RunAllAsync(run, DiagnosticLogsPanel, CreateProgress(), customer.PackageMbps);
 
             await CloseSessionAsync(run.SessionId, run.OverallStatus, notes: null);
@@ -462,6 +441,52 @@ public partial class NewTestPage : Page
         {
             _runCts = null;
         }
+    }
+
+    private void OnUi(Action action)
+    {
+        if (Dispatcher.CheckAccess()) action();
+        else Dispatcher.BeginInvoke(action);
+    }
+
+    private int _liveReplies;
+    private int _liveLost;
+    private int _liveCount;
+    private double _liveTotalMs;
+
+    /// <summary>A ping began: the live chart is emptied for its echoes and shown.</summary>
+    private void StartLivePing(string target, int count, int thresholdMs)
+    {
+        _liveReplies = _liveLost = 0;
+        _liveTotalMs = 0;
+        _liveCount = count;
+        LivePingTitle.Text = $"Ping {target}";
+        LiveLatencyChart.Reset(count, thresholdMs);
+        UpdateLiveStats();
+        LivePingPanel.Visibility = Visibility.Visible;
+    }
+
+    private void AddLivePing(long? rttMs)
+    {
+        if (!IsRunning) return;
+        if (rttMs is { } ms)
+        {
+            _liveReplies++;
+            _liveTotalMs += ms;
+        }
+        else
+        {
+            _liveLost++;
+        }
+        LiveLatencyChart.Add(rttMs);
+        UpdateLiveStats();
+    }
+
+    private void UpdateLiveStats()
+    {
+        var sent = _liveReplies + _liveLost;
+        var avg = _liveReplies > 0 ? $" · rata-rata {_liveTotalMs / _liveReplies:0.#} ms" : string.Empty;
+        LivePingStats.Text = $"{sent}/{_liveCount} terkirim · RTO {_liveLost}{avg}";
     }
 
     /// <summary>Writes a session's final status; a failure is logged and shown, not thrown.</summary>
@@ -504,6 +529,7 @@ public partial class NewTestPage : Page
     {
         UnsavedStatusError = null;
         DiagnosticLogsPanel.Children.Clear();
+        LivePingPanel.Visibility = Visibility.Collapsed;
         AnimateProgressBar(Line1, 0);
         AnimateProgressBar(Line2, 0);
         AnimateProgressBar(SubTaskProgressBar, 0);
@@ -536,6 +562,9 @@ public partial class NewTestPage : Page
         AnimateProgressBar(SubTaskProgressBar, p.percent);
 
         if (!int.TryParse(parts[0].Replace("Task ", "").Split(' ')[0], out var taskNum)) return;
+
+        // The live chart belongs to the ping tasks (1, 2 and 5).
+        if (taskNum is not (1 or 2 or 5)) LivePingPanel.Visibility = Visibility.Collapsed;
 
         if (taskNum <= 5)
         {
@@ -586,11 +615,18 @@ public partial class NewTestPage : Page
 
     private void NewTestFromResults_Click(object sender, RoutedEventArgs e) => ShowStage(LocationContainer);
 
-    private void SaveReportBtn_Click(object sender, RoutedEventArgs e)
+    private async void SaveReportBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentSessionId is { } id && Window.GetWindow(this) is MainShell shell)
+        if (_currentSessionId is not { } id) return;
+
+        SaveReportBtn.IsEnabled = false;
+        try
         {
-            shell.OpenReport(id);
+            await ReportDownload.SaveAsync(id, _currentCertificationId, DateTime.Now);
+        }
+        finally
+        {
+            SaveReportBtn.IsEnabled = true;
         }
     }
 
@@ -607,14 +643,32 @@ public partial class NewTestPage : Page
         ShowStage(ResultsContainer);
         ResultCardsPanel.Children.Clear();
 
-        ResultSummaryText.Text = $"{_lastCustomer?.FullName} · {results.Count} pengujian · {DateTime.Now:dd MMM yyyy, HH:mm}";
+        ResultSummaryText.Text = $"{_lastCustomer?.FullName} · {_currentCertificationId} · {DateTime.Now:dd MMM yyyy, HH:mm}";
         ResultStatusText.Text = status.Label;
-        ResultScoreText.Text = $"{passCount} dari {results.Count} lulus";
+        ResultScoreText.Text = $"{passCount} dari {results.Count} pengujian lulus";
+        ResultVerdictText.Text = run.OverallStatus switch
+        {
+            TestOverallStatus.Pass => "Semua pengujian lulus. Laporan siap diunduh.",
+            TestOverallStatus.Partial => "Sebagian pengujian gagal. Periksa yang gagal di bawah, lalu uji ulang bila sudah diperbaiki.",
+            _ => "Pengujian gagal. Periksa yang gagal di bawah, lalu uji ulang bila sudah diperbaiki.",
+        };
+        ResultScoreRing.SetScore(passCount, results.Count);
         ResultStatusIcon.Kind = status.Icon;
         ResultStatusBadge.SetResourceReference(Border.BackgroundProperty, status.ContainerKey);
         ResultStatusIcon.SetResourceReference(Control.ForegroundProperty, status.OnContainerKey);
         ResultStatusText.SetResourceReference(TextBlock.ForegroundProperty, status.OnContainerKey);
-        ResultScoreText.SetResourceReference(TextBlock.ForegroundProperty, status.OnContainerKey);
+
+        var latency = ChartData.Latency(results);
+        var speed = ChartData.Download(results);
+        LatencyBullets.Items = latency;
+        SpeedBullets.Items = speed;
+        LatencyOverview.Visibility = latency.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SpeedOverview.Visibility = speed.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SpeedOverview.Margin = new Thickness(0, latency.Count > 0 ? 24 : 0, 0, 0);
+        SpeedOverviewHint.Text = speed.Any(i => i.Limit is not null)
+            ? "Garis tegak adalah kecepatan minimal dari paket pelanggan."
+            : "POP tidak punya paket: speedtest lulus bila kecepatannya terukur.";
+        OverviewCard.Visibility = latency.Count + speed.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         var problems = new List<string>();
         if (run.Unsaved.Count > 0)
@@ -764,6 +818,14 @@ public partial class NewTestPage : Page
             var details = new Border { Margin = new Thickness(56, 12, 0, 0), Padding = new Thickness(16, 12, 16, 12), CornerRadius = new CornerRadius(8), Visibility = Visibility.Collapsed };
             details.SetResourceReference(Border.BackgroundProperty, "SurfaceContainerLowBrush");
             var list = new StackPanel();
+            // A ping's every echo, when the result kept them.
+            if (ChartData.PingSamples(result) is { Length: > 0 } samples)
+            {
+                var chart = new LatencyChart { Margin = new Thickness(0, 0, 0, 12) };
+                chart.SetSamples(samples, ChartData.PingLimit(result));
+                AutomationProperties.SetName(chart, $"Waktu balasan ping {result.Target}");
+                list.Children.Add(chart);
+            }
             foreach (var (label, value) in detailRows)
             {
                 AddDetailRow(list, label, value);

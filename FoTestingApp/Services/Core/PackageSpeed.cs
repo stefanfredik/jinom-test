@@ -41,6 +41,39 @@ public static partial class PackageSpeed
     }
 
     /// <summary>
+    /// The speed written in a package's name ("PAKET INTERNET UP TO 10 MBPS", "Broadband 1 Gbps"):
+    /// only a number with its unit counts. A bare number in a name is a version or a price
+    /// ("Dijinet-grasi-1", "MM-Lite-1", "1P 200"), never a speed: 0 then.
+    /// </summary>
+    public static int ParseNameMbps(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return 0;
+        }
+
+        var match = WithUnit().Match(name);
+        if (!match.Success || !TryNumber(match.Groups[1].Value, out var value))
+        {
+            return 0;
+        }
+
+        var unit = match.Groups[2].Value.ToLowerInvariant();
+        var mbps = unit[0] switch { 'g' => value * 1000, 'k' => value / 1000, _ => value };
+        return (int)Math.Round(mbps, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// The customer's package speed: the service's download bandwidth as billing records it, else the
+    /// speed written in the package's name; 0 when neither says.
+    /// </summary>
+    public static int ForService(string? bandwidthDown, string? packageName)
+    {
+        var fromBandwidth = ParseMbps(bandwidthDown);
+        return fromBandwidth > 0 ? fromBandwidth : ParseNameMbps(packageName);
+    }
+
+    /// <summary>
     /// "1.000" (thousands) is 1000, "1,5" or "1.5" (one decimal part of one or two digits) is 1.5.
     /// </summary>
     private static bool TryNumber(string raw, out double value)

@@ -62,14 +62,15 @@ Tidak ada `FontSize` / `FontFamily` literal di Views (dites); pakai style:
 
 * Sudut: field 4 (`Shape.Field`), chip 8, kartu 12, FAB 16, dialog/sheet 28, tombol & nav item pil (`Shape.Pill`).
 * Kelipatan 4/8: margin halaman 24, padding kartu 16–24, jarak antar field 24 (ruang untuk helper/error text), jarak antar kartu 16.
-* Lebar konten form/pengaturan maks 840; jendela utama bisa di-resize (min 1024×680).
+* Lebar konten form & hasil maks 840; jendela utama bisa di-resize (min 1024×680); jendela login 440×560 tetap.
 
 ## 6. Komponen
 
 * **Tombol** (`Controls.xaml`): `M3.FilledButton` untuk aksi utama (satu per layar/dialog), `M3.TonalButton`, `M3.OutlinedButton` untuk aksi kedua, `M3.TextButton` untuk aksi ringan/batal, `M3.ErrorTextButton` untuk destruktif, `M3.IconButton` (40×40, wajib `ToolTip` + `AutomationProperties.Name`), `M3.ExtendedFab` hanya "Pengujian baru" di Riwayat.
 * **Field**: `M3.TextField` / `M3.PasswordField` / `M3.ComboField` / `M3.DateField` (outlined, floating hint). Label statis di atas field dilarang; pakai `HintAssist.Hint`, keterangan lewat `HintAssist.HelperText`, satuan lewat `TextFieldAssist.SuffixText`. Field salah: garis `ErrorBrush` + `Text.FieldError` di bawahnya.
 * **Pilihan**: `M3.FilterChip` (RadioButton) untuk filter & pilihan pendek, `M3.ChoiceCard` untuk pilihan besar (POP vs Pelanggan).
-* **Navigasi**: drawer 280 px di `MainShell` dengan `M3.NavItem` (Pengujian baru, Riwayat, Laporan, Pengaturan), tombol tema, akun & keluar di bawah.
+* **Navigasi**: drawer 280 px di `MainShell` dengan `M3.NavItem` (Pengujian baru, Riwayat), tombol tema, akun & keluar di bawah. Laporan ada di Riwayat (unduh per baris, dan di hasil pengujian); tidak ada halaman Pengaturan: parameter diatur di Jinom Assets (Integrasi → Jinom Test).
+* **Login**: hanya logo, dua field dan tombol "Masuk"; teks lain hanya alasan gagal masuk.
 * **Kartu**: `M3.Card` (garis) untuk kelompok konten, `M3.FilledCard` untuk metrik/ringkasan.
 * **Dialog & pesan**: `Ui.ConfirmAsync` (konfirmasi; `destructive: true` untuk keluar/membatalkan pengujian), `Ui.AlertAsync` (penjelasan yang harus dibaca), `Ui.Notify` (hasil aksi, hilang sendiri). `MessageBox` dilarang di Views (dites).
 * **Hasil uji**: `Ui.ResultRow` (ikon jenis uji, judul, ringkasan, chip status); dikelompokkan dalam kartu yang bisa dibuka per grup.
@@ -80,8 +81,22 @@ Tidak ada `FontSize` / `FontFamily` literal di Views (dites); pakai style:
 * **Pengujian berjalan**: Grid tanpa scroll halaman; stepper, aktivitas sekarang, lalu log yang mengisi sisa tinggi (scroll internal).
 * **Form & hasil**: `ScrollViewer` + konten maks 840 px, aksi utama di kanan bawah.
 
-## 8. Ikon & aksesibilitas
+## 8. Visualisasi data (`Controls/Charts`)
 
+Grafik digambar sendiri (`OnRender`, tanpa library) di atas `ChartBase`: warna hanya dari token (`Token("PrimaryBrush")`) dan digambar ulang saat tema berganti, teks 11/12 px, tooltip polos M3 (`InverseSurface`) saat hover. Data grafik dibaca lewat `Services/Core/ChartData.cs` (dites) dari data hasil yang sama dengan baris dan PDF.
+
+| Kontrol | Dipakai di | Isi |
+| :--- | :--- | :--- |
+| `LatencyChart` | Pengujian berjalan (live), detail hasil ping | RTT tiap echo (garis 2 px, putus di RTO), RTO ditandai merah di tepi atas, batas lulus putus-putus; hover = echo ke-n + ms. |
+| `BulletChart` | Hasil pengujian, panel detail Riwayat | Satu baris per target: batang warna status, garis batas, nilai + "gagal" (status tidak hanya warna). |
+| `SessionTrendChart` | Riwayat | Sesi per hari (per minggu bila > 9 minggu) ditumpuk PASS/PARTIAL/FAIL, celah 2 px, ujung atas membulat; hover = jumlah; klik = filter ke hari itu. Legenda ikon + kata di sampingnya. |
+| `ScoreRing` | Hasil pengujian | Lulus/total sebagai cincin; angka "7/9 lulus" di tengah. |
+
+Aturan: satu sumbu Y per grafik; warna status hanya untuk status; nilai yang tidak terukur (RTO, 0 Mbps, 9999 lama) tidak pernah digambar sebagai angka; setiap grafik punya `AutomationProperties.Name`.
+
+## 9. Ikon & aksesibilitas
+
+* Ikon aplikasi = ikon Jinom Assets (`Resources/jinom.ico`, 16–256 px dari `public/images/logo.png` assets); logo dan ikon didaftarkan sebagai `<Resource>` di csproj (tanpa itu `pack://` kosong saat jalan).
 * Nama ikon harus ada di `PackIconKind` versi MDIX yang dipakai (dites; nama salah baru gagal saat jalan).
 * Kontrol tanpa teks wajib `AutomationProperties.Name` dan `ToolTip`.
 * Enter di login lewat `IsDefault` tombol, bukan handler `KeyDown` (mencegah login ganda).

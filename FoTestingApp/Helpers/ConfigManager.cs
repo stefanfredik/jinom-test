@@ -1,179 +1,39 @@
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.Configuration;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace FoTestingApp.Helpers;
 
 /// <summary>
-/// Mengelola konfigurasi aplikasi dari appsettings.json.
-/// Mendukung konfigurasi embedded di dalam .exe dan file eksternal.
+/// What the app needs before it can reach Jinom Assets: the server's address and where logs go
+/// (appsettings.json embedded in the .exe, overridable by a file beside it). Every test parameter
+/// lives in Jinom Assets (Integrasi → Jinom Test) and is read after login: see TestSettings.
 /// </summary>
 public static class ConfigManager
 {
     private static IConfiguration? _config;
-    private static string _configPath = string.Empty;
 
     public static void Initialize()
     {
-        _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-        Reload();
-    }
-
-    private static void Reload()
-    {
         var builder = new ConfigurationBuilder();
 
-        // 1. Load embedded resource appsettings.json sebagai konfigurasi dasar / default
         var assembly = typeof(ConfigManager).Assembly;
         var resourceName = assembly.GetManifestResourceNames()
             .FirstOrDefault(n => n.EndsWith("appsettings.json", StringComparison.OrdinalIgnoreCase));
-
-        using Stream? stream = resourceName != null
-            ? assembly.GetManifestResourceStream(resourceName)
-            : null;
-
-        if (stream != null)
+        using var stream = resourceName is null ? null : assembly.GetManifestResourceStream(resourceName);
+        if (stream is not null)
         {
             builder.AddJsonStream(stream);
         }
 
-        // 2. Load file eksternal appsettings.json jika ada (untuk override pengaturan tanpa rebuild)
-        if (File.Exists(_configPath))
+        // A file beside the .exe points one laptop at another server without a rebuild.
+        var external = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+        if (File.Exists(external))
         {
-            builder.AddJsonFile(_configPath, optional: true, reloadOnChange: false);
+            builder.AddJsonFile(external, optional: true, reloadOnChange: false);
         }
 
         _config = builder.Build();
     }
 
-    /// <summary>
-    /// Simpan perubahan konfigurasi ke appsettings.json tanpa rebuild aplikasi.
-    /// </summary>
-    public static void SaveSettings(Dictionary<string, object> changes)
-    {
-        JsonObject root;
-
-        if (File.Exists(_configPath))
-        {
-            var json = File.ReadAllText(_configPath);
-            root = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
-        }
-        else
-        {
-            var assembly = typeof(ConfigManager).Assembly;
-            var resourceName = assembly.GetManifestResourceNames()
-                .FirstOrDefault(n => n.EndsWith("appsettings.json", StringComparison.OrdinalIgnoreCase));
-
-            if (resourceName != null)
-            {
-                using var stream = assembly.GetManifestResourceStream(resourceName);
-                if (stream != null)
-                {
-                    using var reader = new StreamReader(stream);
-                    var defaultJson = reader.ReadToEnd();
-                    root = JsonNode.Parse(defaultJson)?.AsObject() ?? new JsonObject();
-                }
-                else
-                {
-                    root = new JsonObject();
-                }
-            }
-            else
-            {
-                root = new JsonObject();
-            }
-        }
-
-        foreach (var (keyPath, value) in changes)
-        {
-            var parts = keyPath.Split(':');
-            var current = root;
-
-            for (var i = 0; i < parts.Length - 1; i++)
-            {
-                if (current[parts[i]] is not JsonObject nested)
-                {
-                    nested = new JsonObject();
-                    current[parts[i]] = nested;
-                }
-
-                current = nested;
-            }
-
-            current[parts[^1]] = value switch
-            {
-                int intVal => JsonValue.Create(intVal),
-                string[] arr => JsonNode.Parse(JsonSerializer.Serialize(arr)),
-                _ => JsonValue.Create(value.ToString()),
-            };
-        }
-
-        File.WriteAllText(_configPath,
-            root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
-        Reload();
-    }
-
     public static string? GetSetting(string key) => _config?[key];
-
-    public static int GetSessionTimeoutMinutes() =>
-        int.TryParse(_config!["App:SessionTimeoutMinutes"], out var v) ? v : 30;
-
-    // Network Test configs
-    public static string GetPingGatewayTarget() => _config!["NetworkTest:PingGateway:Target"] ?? string.Empty;
-    public static int GetPingGatewayCount() => int.TryParse(_config!["NetworkTest:PingGateway:Count"], out var v) ? v : 100;
-    public static int GetPingGatewayThresholdMs() => int.TryParse(_config!["NetworkTest:PingGateway:ThresholdAvgMs"], out var v) ? v : 10;
-
-    public static int GetPingGatewayMaxRto() => int.TryParse(_config!["NetworkTest:PingGateway:MaxRto"], out var v) ? v : 0;
-
-    public static string[] GetPingDnsTargets() =>
-        _config!.GetSection("NetworkTest:PingDns:Targets").Get<string[]>() ?? ["103.122.65.66", "8.8.8.8", "1.1.1.1"];
-    public static int GetPingDnsCount() => int.TryParse(_config!["NetworkTest:PingDns:Count"], out var v) ? v : 100;
-    public static int GetPingDnsThresholdMs() => int.TryParse(_config!["NetworkTest:PingDns:ThresholdAvgMs"], out var v) ? v : 35;
-    public static int GetPingDnsMaxRto() => int.TryParse(_config!["NetworkTest:PingDns:MaxRto"], out var v) ? v : 0;
-
-    public static string[] GetNslookupNasionalDomains() =>
-        _config!.GetSection("NetworkTest:NslookupNasional:Domains").Get<string[]>() ?? ["jinom.net", "kompas.com", "detik.com"];
-    public static int GetNslookupNasionalTimeoutSeconds() => int.TryParse(_config!["NetworkTest:NslookupNasional:TimeoutSeconds"], out var v) ? v : 10;
-
-    public static string[] GetNslookupInternasionalDomains() =>
-        _config!.GetSection("NetworkTest:NslookupInternasional:Domains").Get<string[]>() ?? ["google.com", "facebook.com", "amazon.com"];
-    public static int GetNslookupInternasionalTimeoutSeconds() => int.TryParse(_config!["NetworkTest:NslookupInternasional:TimeoutSeconds"], out var v) ? v : 10;
-
-    public static string[] GetPingDomainLokalDomains() =>
-        _config!.GetSection("NetworkTest:PingDomainLokal:Domains").Get<string[]>() ?? ["jinom.net", "kompas.com"];
-    public static int GetPingDomainLokalCount() => int.TryParse(_config!["NetworkTest:PingDomainLokal:Count"], out var v) ? v : 35;
-    public static int GetPingDomainLokalThresholdMs() => int.TryParse(_config!["NetworkTest:PingDomainLokal:ThresholdAvgMs"], out var v) ? v : 35;
-    public static int GetPingDomainLokalMaxRto() => int.TryParse(_config!["NetworkTest:PingDomainLokal:MaxRto"], out var v) ? v : 0;
-
-    // App Test configs
-    public static string GetAppTestUserAgent() => _config!["AppTest:UserAgent"] ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-    public static string[] GetBrowsingUrls() =>
-        _config!.GetSection("AppTest:Browsing:Urls").Get<string[]>() ?? ["https://kompas.com", "https://jinom.net"];
-    public static int GetBrowsingThresholdSeconds() => int.TryParse(_config!["AppTest:Browsing:ThresholdSeconds"], out var v) ? v : 10;
-
-    public static string[] GetStreamingUrls() =>
-        _config!.GetSection("AppTest:Streaming:Urls").Get<string[]>() ?? ["https://youtube.com", "https://tiktok.com"];
-    public static int GetStreamingThresholdSeconds() => int.TryParse(_config!["AppTest:Streaming:ThresholdSeconds"], out var v) ? v : 30;
-
-    public static string[] GetSocialMediaUrls() =>
-        _config!.GetSection("AppTest:SocialMedia:Urls").Get<string[]>() ?? ["https://whatsapp.com", "https://facebook.com"];
-    public static int GetSocialMediaThresholdSeconds() => int.TryParse(_config!["AppTest:SocialMedia:ThresholdSeconds"], out var v) ? v : 30;
-
-    /// <summary>Pause between echo requests, like ping's interval; 0 sends them back to back.</summary>
-    public static int GetPingIntervalMs() =>
-        int.TryParse(_config!["NetworkTest:PingIntervalMs"], out var v) ? Math.Clamp(v, 0, 5000) : 200;
-
-    /// <summary>The zone jinom-assets reads and writes times without an offset in (its app.timezone).</summary>
-    public static string GetServerTimeZoneId() => _config!["ServerTimeZone"] ?? "Asia/Makassar";
-
-    // Speedtest
-    /// <summary>The share of the customer's package a download must reach to pass, 1–100 %.</summary>
-    public static int GetSpeedtestThresholdPercentage() =>
-        int.TryParse(_config!["Speedtest:ThresholdPercentage"], out var v) ? Math.Clamp(v, 1, 100) : 85;
-
-    public static string GetOoklaCliUrl() => _config!["Speedtest:OoklaCliUrl"] ?? "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-win64.zip";
 }

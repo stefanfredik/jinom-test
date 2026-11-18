@@ -2,84 +2,51 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Jinom Test — Masuk"
-        Height="600" Width="960" MinHeight="560" MinWidth="760"
+        Title="Jinom Test"
+        Icon="pack://application:,,,/Resources/jinom.ico"
+        Height="560" Width="440" ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         FontFamily="{StaticResource AppFont}"
         Background="{DynamicResource SurfaceBrush}">
 
     <!--
-      Sign in with the Jinom Infra account. The brand side is a flat tonal panel (no gradient or glow,
-      DESIGN.md §4); the form has one primary action. The last email used here is filled in.
+      Sign in, nothing else: the logo, the two fields and one action. The only text that appears is
+      why a sign-in failed. The last email used on this laptop is filled in.
     -->
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="5*"/>
-            <ColumnDefinition Width="6*"/>
-        </Grid.ColumnDefinitions>
+    <StackPanel VerticalAlignment="Center" Margin="48,0">
+        <Image Source="pack://application:,,,/Resources/jinom_logo.png" Width="72" Height="72" Margin="0,0,0,40"
+               RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Jinom"/>
 
-        <!-- ═══ Brand ═══ -->
-        <Border Grid.Column="0" Background="{DynamicResource SurfaceContainerLowBrush}">
-            <Grid Margin="48">
-                <StackPanel VerticalAlignment="Center">
-                    <Image Source="pack://application:,,,/Resources/jinom_logo.png" Width="56" Height="56" HorizontalAlignment="Left" Margin="0,0,0,24"/>
-                    <TextBlock Text="Jinom Test" Style="{StaticResource Text.DisplaySmall}" Margin="0,0,0,8"/>
-                    <TextBlock Text="Pengujian dan sertifikasi jaringan pelanggan dan POP." Style="{StaticResource Text.Supporting}" Margin="0,0,0,32"/>
+        <TextBox x:Name="EmailTextBox" Style="{StaticResource M3.TextField}" Margin="0,0,0,16"
+                 materialDesign:HintAssist.Hint="Email"
+                 materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
+                 AutomationProperties.Name="Email"/>
 
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="LanConnect" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <TextBlock Text="Ping, DNS dan akses aplikasi" Style="{StaticResource Text.BodyMedium}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="Speedometer" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <TextBlock Text="Speedtest terhadap paket pelanggan" Style="{StaticResource Text.BodyMedium}"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="20" Height="20" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <TextBlock Text="Laporan PDF siap ditandatangani" Style="{StaticResource Text.BodyMedium}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
+        <PasswordBox x:Name="PasswordBox" Style="{StaticResource M3.PasswordField}"
+                     materialDesign:HintAssist.Hint="Password"
+                     materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
+                     AutomationProperties.Name="Password"/>
 
-                <TextBlock Text="© 2026 Jinom Network" Style="{StaticResource Text.BodySmall}" Foreground="{DynamicResource OnSurfaceVariantBrush}"
-                           VerticalAlignment="Bottom"/>
+        <!-- Why the last attempt failed, under the fields. -->
+        <Border x:Name="ErrorPanel" Background="{DynamicResource ErrorContainerBrush}" CornerRadius="{StaticResource Shape.Chip}"
+                Padding="12,8" Margin="0,16,0,0" Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon Kind="AlertCircleOutline" Width="18" Height="18" Foreground="{DynamicResource OnErrorContainerBrush}"
+                                         VerticalAlignment="Top" Margin="0,1,8,0"/>
+                <TextBlock x:Name="ErrorMessage" Grid.Column="1" Style="{StaticResource Text.BodyMedium}" Foreground="{DynamicResource OnErrorContainerBrush}"/>
             </Grid>
         </Border>
 
-        <!-- ═══ Form ═══ -->
-        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="380">
-            <TextBlock Text="Masuk" Style="{StaticResource Text.HeadlineSmall}" Margin="0,0,0,8"/>
-            <TextBlock Text="Gunakan email dan password akun Jinom Infra Anda." Style="{StaticResource Text.Supporting}" Margin="0,0,0,32"/>
+        <Button x:Name="LoginButton" Style="{StaticResource M3.FilledButton}" HorizontalAlignment="Stretch" Margin="0,24,0,0"
+                IsDefault="True" Click="LoginButton_Click">
+            <TextBlock x:Name="LoginButtonText" Text="Masuk"/>
+        </Button>
 
-            <TextBox x:Name="EmailTextBox" Style="{StaticResource M3.TextField}" Margin="0,0,0,16"
-                     materialDesign:HintAssist.Hint="Email"
-                     materialDesign:TextFieldAssist.LeadingIcon="EmailOutline"
-                     AutomationProperties.Name="Email"/>
-
-            <PasswordBox x:Name="PasswordBox" Style="{StaticResource M3.PasswordField}" Margin="0,0,0,8"
-                         materialDesign:HintAssist.Hint="Password"
-                         materialDesign:TextFieldAssist.LeadingIcon="LockOutline"
-                         AutomationProperties.Name="Password"/>
-
-            <!-- Why the last attempt failed, in the error colour, under the fields. -->
-            <Border x:Name="ErrorPanel" Background="{DynamicResource ErrorContainerBrush}" CornerRadius="{StaticResource Shape.Chip}"
-                    Padding="12,8" Margin="0,8,0,0" Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="AlertCircleOutline" Width="18" Height="18" Foreground="{DynamicResource OnErrorContainerBrush}"
-                                             VerticalAlignment="Top" Margin="0,1,8,0"/>
-                    <TextBlock x:Name="ErrorMessage" Style="{StaticResource Text.BodyMedium}" Foreground="{DynamicResource OnErrorContainerBrush}"
-                               MaxWidth="330"/>
-                </StackPanel>
-            </Border>
-
-            <Button x:Name="LoginButton" Style="{StaticResource M3.FilledButton}" HorizontalAlignment="Stretch" Margin="0,24,0,0"
-                    IsDefault="True" Click="LoginButton_Click">
-                <TextBlock x:Name="LoginButtonText" Text="Masuk"/>
-            </Button>
-
-            <ProgressBar x:Name="LoadingBar" Style="{StaticResource M3.LinearProgress}" IsIndeterminate="True"
-                         Visibility="Hidden" Margin="0,16,0,0"/>
-        </StackPanel>
-    </Grid>
+        <ProgressBar x:Name="LoadingBar" Style="{StaticResource M3.LinearProgress}" IsIndeterminate="True"
+                     Visibility="Hidden" Margin="0,16,0,0"/>
+    </StackPanel>
 </Window>

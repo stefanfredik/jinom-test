@@ -2,6 +2,7 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:charts="clr-namespace:FoTestingApp.Controls.Charts"
       Title="Pengujian baru">
 
     <!--
@@ -71,27 +72,32 @@
 
                 <Border Style="{StaticResource M3.Card}" Padding="24">
                     <StackPanel>
-                        <!-- Search: POP -->
+                        <!-- POP: a partner has few, so every one is listed; click to choose. -->
                         <StackPanel x:Name="PopSelectionPanel" Visibility="Collapsed" Margin="0,0,0,16">
-                            <ComboBox x:Name="PopComboBox" Style="{StaticResource M3.ComboField}"
-                                      IsEditable="True" TextSearch.TextPath="DisplayName"
-                                      materialDesign:HintAssist.Hint="POP (ketik untuk mencari)"
-                                      materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                                      TextBoxBase.TextChanged="PopComboBox_TextChanged"
-                                      SelectionChanged="PopComboBox_SelectionChanged"
-                                      DropDownOpened="PopComboBox_DropDownOpened"
-                                      HorizontalContentAlignment="Stretch"
-                                      AutomationProperties.Name="Cari POP">
-                                <ComboBox.ItemTemplate>
+                            <TextBlock Text="Pilih POP" Style="{StaticResource Text.TitleMedium}" Margin="0,0,0,8"/>
+                            <ProgressBar x:Name="PopLoadingBar" Style="{StaticResource M3.LinearProgress}" IsIndeterminate="True" Visibility="Hidden" Margin="0,0,0,4"/>
+                            <ListBox x:Name="PopList" SelectionChanged="PopList_SelectionChanged" MaxHeight="360"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch"
+                                     AutomationProperties.Name="Daftar POP">
+                                <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Margin="0,4">
-                                            <TextBlock Text="{Binding Name}" Style="{StaticResource Text.BodyLarge}"/>
-                                            <TextBlock Text="{Binding Address}" Style="{StaticResource Text.Supporting}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                        </StackPanel>
+                                        <Grid Margin="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Style="{StaticResource M3.LeadingIcon}" Background="{DynamicResource SecondaryContainerBrush}" Margin="0,0,16,0">
+                                                <materialDesign:PackIcon Kind="ServerNetwork" Width="20" Height="20" Foreground="{DynamicResource OnSecondaryContainerBrush}"
+                                                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource Text.BodyLarge}"/>
+                                                <TextBlock Text="{Binding Address}" Style="{StaticResource Text.Supporting}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                            </StackPanel>
+                                        </Grid>
                                     </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <ProgressBar x:Name="PopLoadingBar" Style="{StaticResource M3.LinearProgress}" IsIndeterminate="True" Visibility="Hidden" Margin="0,4,0,0"/>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                             <TextBlock x:Name="PopStatusText" Style="{StaticResource Text.BodySmall}" Foreground="{DynamicResource OnSurfaceVariantBrush}" Margin="16,4,16,0"/>
                         </StackPanel>
 
@@ -161,6 +167,22 @@
                             </Grid>
                         </Border>
 
+                        <!-- The package comes from the customer's data in Jinom Assets; without a speed there the
+                             speedtest has nothing to judge against, so the test cannot start. -->
+                        <Border x:Name="PackageNotice" Visibility="Collapsed" CornerRadius="{StaticResource Shape.Card}" Padding="16" Margin="0,0,0,16"
+                                Background="{DynamicResource ErrorContainerBrush}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="SpeedometerSlow" Width="20" Height="20" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                         Foreground="{DynamicResource OnErrorContainerBrush}"/>
+                                <TextBlock x:Name="PackageNoticeText" Grid.Column="1" Style="{StaticResource Text.BodyMedium}"
+                                           Foreground="{DynamicResource OnErrorContainerBrush}"/>
+                            </Grid>
+                        </Border>
+
                         <!-- Fields -->
                         <Grid x:Name="FieldsGrid">
                             <Grid.ColumnDefinitions>
@@ -174,21 +196,12 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <StackPanel x:Name="NameFieldPanel" Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
+                            <StackPanel x:Name="NameFieldPanel" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,16">
                                 <TextBox x:Name="FullNameBox" Style="{StaticResource M3.TextField}"
                                          materialDesign:HintAssist.Hint="Nama pelanggan *"
                                          materialDesign:TextFieldAssist.LeadingIcon="AccountOutline"
                                          TextChanged="FullNameBox_TextChanged" AutomationProperties.Name="Nama pelanggan"/>
                                 <TextBlock x:Name="NameWarningText" Style="{StaticResource Text.FieldError}"/>
-                            </StackPanel>
-
-                            <StackPanel x:Name="PackageFieldPanel" Grid.Row="0" Grid.Column="2" Margin="0,0,0,16">
-                                <TextBox x:Name="PackageMbpsBox" Style="{StaticResource M3.TextField}"
-                                         materialDesign:HintAssist.Hint="Kecepatan paket *"
-                                         materialDesign:TextFieldAssist.SuffixText="Mbps"
-                                         materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
-                                         TextChanged="PackageMbpsBox_TextChanged" AutomationProperties.Name="Kecepatan paket dalam Mbps"/>
-                                <TextBlock x:Name="PackageWarningText" Style="{StaticResource Text.FieldError}"/>
                             </StackPanel>
 
                             <StackPanel x:Name="AddressFieldPanel" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,16">
@@ -289,6 +302,16 @@
                         </Grid>
                         <ProgressBar x:Name="SubTaskProgressBar" Style="{StaticResource M3.LinearProgress}" Maximum="100" Margin="0,0,0,8"/>
                         <TextBlock x:Name="SubTaskDetailText" Text="Menyiapkan mesin diagnostik..." Style="{StaticResource Text.Supporting}"/>
+
+                        <!-- While a ping runs: every echo as it comes back (hover for its time). -->
+                        <StackPanel x:Name="LivePingPanel" Visibility="Collapsed" Margin="0,16,0,0">
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock x:Name="LivePingTitle" Style="{StaticResource Text.LabelLarge}"/>
+                                <TextBlock x:Name="LivePingStats" Style="{StaticResource Text.BodySmall}" Foreground="{DynamicResource OnSurfaceVariantBrush}"
+                                           HorizontalAlignment="Right"/>
+                            </Grid>
+                            <charts:LatencyChart x:Name="LiveLatencyChart" AutomationProperties.Name="Grafik waktu balasan ping"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -317,31 +340,48 @@
         <!-- ═══ 4. Results ═══ -->
         <ScrollViewer x:Name="ResultsContainer" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
             <StackPanel Margin="24" MaxWidth="840" HorizontalAlignment="Stretch">
-                <Grid Margin="0,8,0,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Pengujian selesai" Style="{StaticResource Text.HeadlineSmall}" Margin="0,0,0,4"/>
-                        <TextBlock x:Name="ResultSummaryText" Style="{StaticResource Text.Supporting}"/>
-                    </StackPanel>
+                <TextBlock Text="Pengujian selesai" Style="{StaticResource Text.HeadlineSmall}" Margin="0,8,0,4"/>
+                <TextBlock x:Name="ResultSummaryText" Style="{StaticResource Text.Supporting}" Margin="0,0,0,24"/>
 
-                    <!-- The verdict: status container, icon, word and score. -->
-                    <Border x:Name="ResultStatusBadge" Grid.Column="1" CornerRadius="{StaticResource Shape.Card}" Padding="20,12" VerticalAlignment="Top"
-                            Background="{DynamicResource StatusOnlineContainerBrush}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon x:Name="ResultStatusIcon" Kind="CheckCircle" Width="32" Height="32" VerticalAlignment="Center" Margin="0,0,12,0"
-                                                     Foreground="{DynamicResource StatusOnlineOnContainerBrush}"/>
-                            <StackPanel>
-                                <TextBlock x:Name="ResultStatusText" Text="PASS" Style="{StaticResource Text.TitleLarge}" FontWeight="Medium"
-                                           Foreground="{DynamicResource StatusOnlineOnContainerBrush}"/>
-                                <TextBlock x:Name="ResultScoreText" Text="-" Style="{StaticResource Text.BodySmall}"
-                                           Foreground="{DynamicResource StatusOnlineOnContainerBrush}"/>
-                            </StackPanel>
+                <!-- The verdict: how many passed (ring), the status in a container with icon and word. -->
+                <Border Style="{StaticResource M3.Card}" Padding="24" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <charts:ScoreRing x:Name="ResultScoreRing" Margin="0,0,24,0" AutomationProperties.Name="Jumlah pengujian yang lulus"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <Border x:Name="ResultStatusBadge" CornerRadius="{StaticResource Shape.Chip}" Padding="12,6" HorizontalAlignment="Left" Margin="0,0,0,12"
+                                    Background="{DynamicResource StatusOnlineContainerBrush}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon x:Name="ResultStatusIcon" Kind="CheckCircle" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                             Foreground="{DynamicResource StatusOnlineOnContainerBrush}"/>
+                                    <TextBlock x:Name="ResultStatusText" Text="PASS" Style="{StaticResource Text.LabelLarge}"
+                                               Foreground="{DynamicResource StatusOnlineOnContainerBrush}"/>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock x:Name="ResultScoreText" Text="-" Style="{StaticResource Text.TitleMedium}" Margin="0,0,0,4"/>
+                            <TextBlock x:Name="ResultVerdictText" Style="{StaticResource Text.Supporting}" TextWrapping="Wrap"/>
                         </StackPanel>
-                    </Border>
-                </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- At a glance: latency per target and download per speedtest, each against its limit. -->
+                <Border x:Name="OverviewCard" Style="{StaticResource M3.Card}" Padding="24" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel x:Name="LatencyOverview">
+                            <TextBlock Text="Latensi rata-rata" Style="{StaticResource Text.TitleMedium}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Garis tegak adalah batas lulus tiap target." Style="{StaticResource Text.Supporting}" Margin="0,0,0,12"/>
+                            <charts:BulletChart x:Name="LatencyBullets" AutomationProperties.Name="Latensi rata-rata per target"/>
+                        </StackPanel>
+                        <StackPanel x:Name="SpeedOverview" Margin="0,24,0,0">
+                            <TextBlock Text="Kecepatan download" Style="{StaticResource Text.TitleMedium}" Margin="0,0,0,4"/>
+                            <TextBlock x:Name="SpeedOverviewHint" Text="Garis tegak adalah kecepatan minimal dari paket pelanggan." Style="{StaticResource Text.Supporting}" Margin="0,0,0,12"/>
+                            <charts:BulletChart x:Name="SpeedBullets" AutomationProperties.Name="Kecepatan download per speedtest"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <!-- Results the server did not store: said, never hidden behind a PASS. -->
                 <Border x:Name="UnsavedWarning" Visibility="Collapsed" CornerRadius="{StaticResource Shape.Card}" Padding="16" Margin="0,0,0,16"
@@ -370,8 +410,8 @@
                     </Button>
                     <Button x:Name="SaveReportBtn" Style="{StaticResource M3.FilledButton}" Click="SaveReportBtn_Click" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18" VerticalAlignment="Center" Margin="-8,0,8,0"/>
-                            <TextBlock Text="Buka laporan" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="Download" Width="18" Height="18" VerticalAlignment="Center" Margin="-8,0,8,0"/>
+                            <TextBlock Text="Unduh laporan" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

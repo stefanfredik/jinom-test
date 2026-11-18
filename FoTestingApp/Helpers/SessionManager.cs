@@ -44,7 +44,8 @@ public static class SessionManager
     {
         if (!IsLoggedIn) { return true; }
 
-        var timeout = ConfigManager.GetSessionTimeoutMinutes();
+        // Before the parameters are loaded (just after login) the session cannot have run out.
+        var timeout = FoTestingApp.Services.Core.TestSettings.Current?.SessionTimeoutMinutes ?? int.MaxValue / 2;
         return DateTime.Now - _lastActivityAt > TimeSpan.FromMinutes(timeout);
     }
 }

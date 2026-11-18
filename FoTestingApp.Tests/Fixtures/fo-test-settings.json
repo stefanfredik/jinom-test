@@ -1,0 +1,75 @@
+{
+    "data": {
+        "session_timeout_minutes": 30,
+        "ping_interval_ms": 200,
+        "ping_gateway": {
+            "target": "",
+            "count": 100,
+            "threshold_avg_ms": 10,
+            "max_rto": 0
+        },
+        "ping_dns": {
+            "targets": [
+                "103.122.65.66",
+                "8.8.8.8",
+                "1.1.1.1"
+            ],
+            "count": 100,
+            "threshold_avg_ms": 35,
+            "max_rto": 0
+        },
+        "nslookup_nasional": {
+            "domains": [
+                "jinom.net",
+                "kompas.com",
+                "detik.com"
+            ],
+            "timeout_seconds": 10
+        },
+        "nslookup_internasional": {
+            "domains": [
+                "google.com",
+                "facebook.com",
+                "amazon.com"
+            ],
+            "timeout_seconds": 10
+        },
+        "ping_domain_lokal": {
+            "domains": [
+                "jinom.net",
+                "kompas.com"
+            ],
+            "count": 35,
+            "threshold_avg_ms": 35,
+            "max_rto": 0
+        },
+        "browsing": {
+            "urls": [
+                "https://kompas.com",
+                "https://jinom.net"
+            ],
+            "threshold_seconds": 10
+        },
+        "streaming": {
+            "urls": [
+                "https://youtube.com",
+                "https://tiktok.com"
+            ],
+            "threshold_seconds": 30
+        },
+        "social_media": {
+            "urls": [
+                "https://whatsapp.com",
+                "https://facebook.com"
+            ],
+            "threshold_seconds": 30
+        },
+        "speedtest": {
+            "threshold_percentage": 85,
+            "ookla_cli_url": "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-win64.zip"
+        },
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "server_timezone": "Asia/Makassar",
+        "updated_at": null
+    }
+}

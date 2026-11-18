@@ -105,11 +105,9 @@ public partial class MainShell : Window
 
     // ── Navigation ──────────────────────────────────────────────────────────────
 
-    private bool _selectingInCode;
-
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
-        if (!_selectingInCode && sender is RadioButton { Tag: string page })
+        if (sender is RadioButton { Tag: string page })
         {
             Show(page);
             SessionManager.RecordActivity();
@@ -121,22 +119,18 @@ public partial class MainShell : Window
         Page content = page switch
         {
             "Dashboard" => new DashboardPage(),
-            "Report" => new ReportPage(),
-            "Settings" => new SettingsPage(),
             _ => new NewTestPage(),
         };
         ContentFrame.Navigate(content);
         FabNewTest.Visibility = page == "Dashboard" ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    /// <summary>Selects a destination from code (e.g. a page sending the user to the report).</summary>
+    /// <summary>Selects a destination from code (e.g. the results sending the user to the history).</summary>
     public void Select(string page)
     {
         var item = page switch
         {
             "Dashboard" => NavHistory,
-            "Report" => NavReport,
-            "Settings" => NavSettings,
             _ => NavNewTest,
         };
         if (item.IsChecked == true)
@@ -147,16 +141,6 @@ public partial class MainShell : Window
         {
             item.IsChecked = true;
         }
-    }
-
-    /// <summary>The report of one session, reached from its results: "Laporan" is the destination shown.</summary>
-    public void OpenReport(int sessionId)
-    {
-        _selectingInCode = true;
-        NavReport.IsChecked = true;
-        _selectingInCode = false;
-        ContentFrame.Navigate(new ReportPage(sessionId));
-        FabNewTest.Visibility = Visibility.Collapsed;
     }
 
     private void FabNewTest_Click(object sender, RoutedEventArgs e) => Select("NewTest");
@@ -189,6 +173,8 @@ public partial class MainShell : Window
         // Leaving the page cancels a test still running on it.
         ContentFrame.Content = null;
         await _auth.LogoutAsync();
+        // The next technician loads the parameters afresh.
+        FoTestingApp.Services.Core.TestSettings.Clear();
 
         new LoginWindow().Show();
         Close();

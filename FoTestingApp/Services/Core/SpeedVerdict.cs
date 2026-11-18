@@ -2,7 +2,7 @@ namespace FoTestingApp.Services.Core;
 
 /// <summary>
 /// Whether a measured download speed passes for the package the customer pays for: at least
-/// <c>thresholdPercent</c> % of it (Speedtest:ThresholdPercentage). A site without a package
+/// <c>thresholdPercent</c> % of it (TestSettings.Speedtest, set in Jinom Assets). A site without a package
 /// (a POP) has nothing to compare against, so there a measured speed is all that is asked.
 /// </summary>
 public static class SpeedVerdict

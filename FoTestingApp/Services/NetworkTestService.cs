@@ -13,7 +13,7 @@ namespace FoTestingApp.Services;
 /// <summary>
 /// Runs the whole test package in order — Ping Gateway, Ping DNS, NSLookup, Ping Domain Lokal, then
 /// the application tests and the speedtests — showing each result as it comes. Every configured
-/// test produces a result: one that cannot run (no gateway found, an empty list in Settings) is a
+/// test produces a result: one that cannot run (no gateway found, an empty list in Jinom Assets) is a
 /// FAIL with its reason, never silently left out of the count.
 /// </summary>
 public class NetworkTestService
@@ -21,11 +21,13 @@ public class NetworkTestService
     public async Task RunAllAsync(TestRun run, StackPanel resultsPanel, IProgress<(int percent, string status)> progress, int packageMbps)
     {
         var ct = run.Cancellation;
+        // The parameters loaded for this run (Jinom Assets → Integrasi → Jinom Test).
+        var s = TestSettings.Require();
         progress.Report((0, "Memulai pengujian..."));
 
         // 1. Ping Gateway ISP: the configured target, else the active adapter's default gateway.
         progress.Report((5, "Task 1 of 7|Ping Gateway ISP|Mengirim paket ICMP..."));
-        var gateway = ResolveGateway();
+        var gateway = ResolveGateway(s.PingGateway.Target);
         if (gateway is null)
         {
             await FailUnrunnableAsync(run, resultsPanel, TestTypes.PingGateway, "-", "Gateway tidak ditemukan: tidak ada adapter jaringan aktif dengan default gateway.");
@@ -33,30 +35,30 @@ public class NetworkTestService
         else
         {
             await RunPingTestAsync(run, resultsPanel, TestTypes.PingGateway, gateway,
-                ConfigManager.GetPingGatewayCount(), ConfigManager.GetPingGatewayThresholdMs(), ConfigManager.GetPingGatewayMaxRto());
+                s.PingGateway.Count, s.PingGateway.ThresholdAvgMs, s.PingGateway.MaxRto);
         }
         progress.Report((20, "Task 1 of 7|Ping Gateway ISP|Selesai"));
 
         // 2. Ping DNS
         progress.Report((22, "Task 2 of 7|Ping DNS Server|Mengirim paket ICMP..."));
-        await PingEachAsync(run, resultsPanel, TestTypes.PingDns, ConfigManager.GetPingDnsTargets(),
-            ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs(), ConfigManager.GetPingDnsMaxRto());
+        await PingEachAsync(run, resultsPanel, TestTypes.PingDns, s.PingDns.Targets,
+            s.PingDns.Count, s.PingDns.ThresholdAvgMs, s.PingDns.MaxRto);
         progress.Report((40, "Task 2 of 7|Ping DNS Server|Selesai"));
 
         // 3. NSLookup Nasional
         progress.Report((42, "Task 3 of 7|NSLookup Nasional|Resolving DNS..."));
-        await RunNslookupAsync(run, resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains(), ConfigManager.GetNslookupNasionalTimeoutSeconds());
+        await RunNslookupAsync(run, resultsPanel, TestTypes.NslookupNasional, s.NslookupNasional.Domains, s.NslookupNasional.TimeoutSeconds);
         progress.Report((55, "Task 3 of 7|NSLookup Nasional|Selesai"));
 
         // 4. NSLookup Internasional
         progress.Report((57, "Task 4 of 7|NSLookup Internasional|Resolving DNS..."));
-        await RunNslookupAsync(run, resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains(), ConfigManager.GetNslookupInternasionalTimeoutSeconds());
+        await RunNslookupAsync(run, resultsPanel, TestTypes.NslookupInternasional, s.NslookupInternasional.Domains, s.NslookupInternasional.TimeoutSeconds);
         progress.Report((65, "Task 4 of 7|NSLookup Internasional|Selesai"));
 
         // 5. Ping Domain Lokal
         progress.Report((67, "Task 5 of 7|Ping Domain Lokal|Mengirim paket ICMP..."));
-        await PingEachAsync(run, resultsPanel, TestTypes.PingDomainLokal, ConfigManager.GetPingDomainLokalDomains(),
-            ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingDomainLokalThresholdMs(), ConfigManager.GetPingDomainLokalMaxRto());
+        await PingEachAsync(run, resultsPanel, TestTypes.PingDomainLokal, s.PingDomainLokal.Domains,
+            s.PingDomainLokal.Count, s.PingDomainLokal.ThresholdAvgMs, s.PingDomainLokal.MaxRto);
         progress.Report((80, "Task 5 of 7|Ping Domain Lokal|Selesai"));
 
         // 6. App Tests
@@ -72,9 +74,8 @@ public class NetworkTestService
     }
 
     /// <summary>The gateway to ping: the configured one, else the first active IPv4 default gateway.</summary>
-    private static string? ResolveGateway()
+    private static string? ResolveGateway(string configured)
     {
-        var configured = ConfigManager.GetPingGatewayTarget();
         if (!string.IsNullOrWhiteSpace(configured))
         {
             return configured.Trim();
@@ -101,7 +102,7 @@ public class NetworkTestService
     {
         if (targets.Length == 0)
         {
-            await FailUnrunnableAsync(run, panel, testType, "-", "Daftar target kosong. Isi di Pengaturan.");
+            await FailUnrunnableAsync(run, panel, testType, "-", "Daftar target kosong. Isi di Jinom Assets (Integrasi → Jinom Test).");
             return;
         }
 
@@ -117,8 +118,11 @@ public class NetworkTestService
     {
         run.Cancellation.ThrowIfCancellationRequested();
         var latencies = new List<long>();
-        var interval = ConfigManager.GetPingIntervalMs();
+        // Every echo in order, null where it was lost: kept with the result for its chart.
+        var samples = new List<long?>(count);
+        var interval = TestSettings.Require().PingIntervalMs;
         string? error = null;
+        run.ReportPingStarted(testType, target, count, thresholdMs);
 
         using var ping = new Ping();
         for (var i = 0; i < count; i++)
@@ -127,13 +131,18 @@ public class NetworkTestService
             try
             {
                 var reply = await ping.SendPingAsync(target, 2000);
-                if (reply.Status == IPStatus.Success)
+                long? rtt = reply.Status == IPStatus.Success ? reply.RoundtripTime : null;
+                if (rtt is { } ms)
                 {
-                    latencies.Add(reply.RoundtripTime);
+                    latencies.Add(ms);
                 }
+                samples.Add(rtt);
+                run.ReportPingReply(rtt);
             }
             catch (PingException ex)
             {
+                samples.Add(null);
+                run.ReportPingReply(null);
                 // A name that does not resolve fails every ping the same way: say so once.
                 error ??= ex.InnerException?.Message ?? ex.Message;
                 Log.Warning(ex, "Ping error to {Target}", target);
@@ -160,6 +169,7 @@ public class NetworkTestService
             threshold_ms = thresholdMs,
             max_rto = maxRto,
             error = stats.Received == 0 ? error ?? "Tidak ada balasan" : null,
+            samples_ms = samples,
         };
 
         await run.RecordAsync(testType, target, data, passed);
@@ -182,7 +192,7 @@ public class NetworkTestService
         run.Cancellation.ThrowIfCancellationRequested();
         if (domains.Length == 0)
         {
-            await FailUnrunnableAsync(run, panel, testType, "-", "Daftar domain kosong. Isi di Pengaturan.");
+            await FailUnrunnableAsync(run, panel, testType, "-", "Daftar domain kosong. Isi di Jinom Assets (Integrasi → Jinom Test).");
             return;
         }
 

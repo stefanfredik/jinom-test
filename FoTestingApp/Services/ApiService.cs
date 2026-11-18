@@ -57,7 +57,7 @@ public class ApiService
 
     private readonly string _baseUrl = (ConfigManager.GetSetting("OpenAccessApiUrl") ?? "http://localhost/api/v1").Trim().TrimEnd('/');
 
-    private static TimeZoneInfo ServerZone => ServerTime.ResolveZone(ConfigManager.GetServerTimeZoneId());
+    private static TimeZoneInfo ServerZone => ServerTime.ResolveZone(TestSettings.Require().ServerTimezone);
 
     private static string Wire(DateTime time) => ServerTime.ToWire(time, ServerZone);
 
@@ -204,6 +204,25 @@ public class ApiService
         }
     }
 
+    // ── Test parameters ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// The test parameters set in Jinom Assets (Integrasi → Jinom Test), made current for the whole
+    /// app. Read after login and before every run, so a change there applies to the next test.
+    /// </summary>
+    public async Task<TestSettings> LoadTestSettingsAsync(CancellationToken ct = default)
+    {
+        var envelope = await ReadAsync<DataEnvelope<TestSettings>>(
+            await SendAsync(HttpMethod.Get, "reseller-certification/fo-test/settings", ct: ct), "Memuat pengaturan pengujian");
+        if (envelope?.Data is not { } settings || string.IsNullOrWhiteSpace(settings.ServerTimezone))
+        {
+            throw new ApiException("Memuat pengaturan pengujian gagal: jawaban server tidak lengkap.");
+        }
+
+        TestSettings.Use(settings);
+        return TestSettings.Require();
+    }
+
     // ── Sites ───────────────────────────────────────────────────────────────────
 
     /// <summary>The company's customers matching a name or service number (first 50).</summary>
@@ -225,28 +244,28 @@ public class ApiService
                 ServiceNumber = sub.NomorLayanan,
                 FullName = sub.Nama ?? string.Empty,
                 Address = sub.Alamat ?? string.Empty,
-                PackageMbps = PackageSpeed.ParseMbps(!string.IsNullOrWhiteSpace(sub.BandwidthDown) ? sub.BandwidthDown : sub.Paket),
+                // From the customer's data only: the technician does not type a package.
+                PackageMbps = PackageSpeed.ForService(sub.BandwidthDown, sub.Paket),
                 PackageName = sub.Paket,
                 Email = sub.Email,
             })
             .ToList() ?? [];
     }
 
-    /// <summary>The company's POPs matching a name, every page of them.</summary>
-    public async Task<List<PopOption>> GetAvailablePopsAsync(string query = "", CancellationToken ct = default)
+    /// <summary>The company's POPs, every page of them (a partner has few: they are listed, not searched).</summary>
+    public async Task<List<PopOption>> GetAvailablePopsAsync(CancellationToken ct = default)
     {
         const int perPage = 200;
         const int maxPages = 20;
         var pops = new List<PopOption>();
-        var search = string.IsNullOrWhiteSpace(query) ? string.Empty : $"&search={Uri.EscapeDataString(query.Trim())}";
 
         for (var page = 1; page <= maxPages; page++)
         {
             var result = await ReadAsync<PaginatedResponse<ApiPop>>(
-                await SendAsync(HttpMethod.Get, $"infrastructure/pops?per_page={perPage}&page={page}{search}", ct: ct), "Memuat POP");
+                await SendAsync(HttpMethod.Get, $"infrastructure/pops?per_page={perPage}&page={page}", ct: ct), "Memuat POP");
             pops.AddRange(result?.Data?
                 .Where(pop => !string.IsNullOrWhiteSpace(pop.Name))
-                .Select(pop => new PopOption { SiteId = pop.Id.ToString(), Name = pop.Name!, Address = pop.Address }) ?? []);
+                .Select(pop => new PopOption { SiteId = pop.Id.ToString(), Code = pop.Code, Name = pop.Name!, Address = pop.Address }) ?? []);
 
             if (result?.Meta is not { } meta || meta.CurrentPage >= meta.LastPage)
             {
@@ -383,6 +402,7 @@ public class OpenAccessUser
 public class PopOption
 {
     public string SiteId { get; set; } = string.Empty;
+    public string? Code { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Address { get; set; }
 
@@ -407,6 +427,11 @@ public class ApiSubscriber
     public string? Paket { get; set; }
     public string? BandwidthDown { get; set; }
     public string? BandwidthUp { get; set; }
+}
+
+public class DataEnvelope<T>
+{
+    public T? Data { get; set; }
 }
 
 public class PaginatedResponse<T>

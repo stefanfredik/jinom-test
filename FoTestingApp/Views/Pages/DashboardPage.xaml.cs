@@ -10,7 +10,8 @@ using Serilog;
 namespace FoTestingApp.Views.Pages;
 
 /// <summary>
-/// The history: counts by status, filters that apply as they change, the sessions, and one
+/// The history and its reports: counts by status, sessions per day (click a day to see it),
+/// filters that apply as they change, the sessions with a report download on each row, and one
 /// session's results beside the list. A failed load or a list the server capped is said, never
 /// shown as zero; a late answer for an earlier filter or row is dropped.
 /// </summary>
@@ -60,6 +61,8 @@ public partial class DashboardPage : Page
             if (request != _listRequest) return;
 
             SessionsGrid.ItemsSource = sessions;
+            TrendChart.SetSessions(sessions, from, to);
+            TrendTitle.Text = from is not null && to is not null && (to.Value - from.Value).TotalDays > 62 ? "Sesi per minggu" : "Sesi per hari";
             EmptyState.Visibility = sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             TotalSessionCount.Text = sessions.Count.ToString("N0");
             TotalPassCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Pass).ToString("N0");
@@ -90,10 +93,48 @@ public partial class DashboardPage : Page
         ListNotice.Visibility = Visibility.Visible;
     }
 
+    private bool _settingPeriod;
+
     private async void Filter_Changed(object sender, RoutedEventArgs e)
     {
-        // The default chip is checked while the page is still being built.
-        if (IsLoaded) await LoadSessionsAsync();
+        // The default chip is checked while the page is still being built; a period set from the
+        // chart changes both dates and loads once.
+        if (IsLoaded && !_settingPeriod) await LoadSessionsAsync();
+    }
+
+    /// <summary>A bar of the chart was clicked: the list shows that day (or week).</summary>
+    private async void TrendChart_PeriodSelected(DateTime from, DateTime to)
+    {
+        _settingPeriod = true;
+        FromDatePicker.SelectedDate = from;
+        ToDatePicker.SelectedDate = to;
+        _settingPeriod = false;
+        await LoadSessionsAsync();
+        Ui.Notify(from == to ? $"Menampilkan sesi {from:d MMMM yyyy}." : $"Menampilkan sesi {from:d MMM} – {to:d MMM yyyy}.", "Semua tanggal", () =>
+        {
+            _settingPeriod = true;
+            FromDatePicker.SelectedDate = ToDatePicker.SelectedDate = null;
+            _settingPeriod = false;
+            _ = LoadSessionsAsync();
+        });
+    }
+
+    /// <summary>A row's report, without opening the row.</summary>
+    private async void DownloadRow_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is FrameworkElement { DataContext: FoTestSession session } button)
+        {
+            button.IsEnabled = false;
+            try
+            {
+                await ReportDownload.SaveAsync(session.Id, session.CertificationId, session.TestDate);
+            }
+            finally
+            {
+                button.IsEnabled = true;
+            }
+        }
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await LoadSessionsAsync();
@@ -114,6 +155,7 @@ public partial class DashboardPage : Page
         DetailSubtitle.Text = $"{session.CertificationId} · {session.TestDate:dd MMM yyyy, HH:mm}";
         DetailStatus.Content = Ui.StatusChip(StatusVisual.Of(session.OverallStatus));
         DetailResultsPanel.Children.Clear();
+        DetailCharts.Visibility = Visibility.Collapsed;
         DetailColumn.Width = new GridLength(400);
         DetailPanel.Visibility = Visibility.Visible;
 
@@ -139,6 +181,14 @@ public partial class DashboardPage : Page
             return;
         }
 
+        var latency = ChartData.Latency(results);
+        var speed = ChartData.Download(results);
+        DetailLatency.Items = latency;
+        DetailSpeed.Items = speed;
+        DetailLatencyTitle.Visibility = DetailLatency.Visibility = latency.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        DetailSpeedTitle.Visibility = DetailSpeed.Visibility = speed.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        DetailCharts.Visibility = latency.Count + speed.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
         foreach (var result in results)
         {
             DetailResultsPanel.Children.Add(Ui.ResultRow(
@@ -157,11 +207,18 @@ public partial class DashboardPage : Page
         _shownSession = null;
     }
 
-    private void DetailReport_Click(object sender, RoutedEventArgs e)
+    private async void DetailReport_Click(object sender, RoutedEventArgs e)
     {
-        if (_shownSession is { } session && Window.GetWindow(this) is MainShell shell)
+        if (_shownSession is not { } session) return;
+
+        DetailReportBtn.IsEnabled = false;
+        try
         {
-            shell.OpenReport(session.Id);
+            await ReportDownload.SaveAsync(session.Id, session.CertificationId, session.TestDate);
+        }
+        finally
+        {
+            DetailReportBtn.IsEnabled = true;
         }
     }
 

@@ -94,7 +94,7 @@ Seluruh pengujian dieksekusi secara otomatis dan berurutan setelah pengguna memu
 
 FR-020: Ping Gateway ISP
 Parameter	Keterangan
-Target	Gateway router distribusi ISP: default gateway adapter aktif (deteksi otomatis), bisa ditimpa di Pengaturan. Bila tidak ditemukan, tes dicatat FAIL dengan alasannya.
+Target	Gateway router distribusi ISP: default gateway adapter aktif (deteksi otomatis), bisa ditimpa di Jinom Assets (Integrasi → Jinom Test). Bila tidak ditemukan, tes dicatat FAIL dengan alasannya.
 Jumlah Ping	100 kali (configurable), jeda 200 ms antar-ping
 Output	Latency Max, Min, Average, RTO count
 Threshold Pass	Average <= 10ms, RTO = 0
@@ -288,13 +288,9 @@ Speedtest	Jinom Speedtest (DL/UL Mbps) + Ookla Speedtest (DL/UL Mbps). Catatan r
 
 6.3 Navigasi Aplikasi
 Menu navigasi utama terdiri dari:
-•	Dashboard - Ringkasan aktivitas dan statistik
-•	Pengujian Baru - Form input pelanggan dan eksekusi test
-•	Hasil Pengujian - Tampilan detail hasil sesi aktif
-•	Riwayat - Daftar semua sesi pengujian sebelumnya
-•	Laporan - Generasi dan download laporan PDF
-•	Pengaturan - Konfigurasi DNS, URL target, threshold (khusus Admin)
-•	Manajemen Pengguna - CRUD akun teknisi (khusus Admin)
+•	Pengujian Baru - Pilih pelanggan (cari) atau POP (daftar), jalankan test, lihat hasil beserta grafiknya, unduh laporan
+•	Riwayat - Ringkasan, grafik sesi per hari, daftar sesi dengan tombol unduh laporan PDF di setiap baris, detail sesi
+Laporan digabung ke Riwayat. Pengaturan tidak ada di aplikasi: parameter pengujian diatur superadmin di Jinom Assets (lihat §8). Akun teknisi dikelola di Jinom Assets.
 
  
 7. Alur Kerja Utama (User Flow)
@@ -302,16 +298,15 @@ Menu navigasi utama terdiri dari:
 Langkah	Aksi Pengguna	Respons Sistem
 1	Buka aplikasi dan login	Autentikasi, tampilkan Dashboard
 2	Klik 'Pengujian Baru'	Tampilkan form input data pelanggan
-3	Isi data pelanggan, klik 'Mulai Test'	Validasi form, simpan draft, mulai eksekusi pengujian
+3	Pilih pelanggan atau POP, klik 'Mulai pengujian'	Paket diambil dari data pelanggan di Jinom Assets (tanpa kecepatan tercatat, pengujian tidak bisa dimulai); muat pengaturan terbaru, buat sesi, mulai eksekusi
 4	Menunggu (progres otomatis)	Eksekusi berurutan: Ping GW -> Ping DNS -> NSLookup -> Ping Domain -> App Test -> Speedtest
 5	Lihat hasil yang tampil real-time	Tampilkan halaman 'Hasil Pengujian' dengan semua data
-6	Klik 'Simpan & Cetak Laporan'	Simpan ke DB, generate PDF, tampilkan preview cetak
-7	Cetak atau export PDF	Kirim ke printer / simpan file PDF lokal
+6	Klik 'Unduh laporan' (di hasil atau di baris Riwayat)	Ambil sesi dari server, buat PDF, simpan di lokasi pilihan teknisi
 
  
 8. Konfigurasi Sistem
 8.1 Parameter yang Dapat Dikonfigurasi
-Seluruh parameter berikut dapat diubah melalui halaman Pengaturan oleh Admin, tanpa perlu rebuild aplikasi:
+Seluruh parameter berikut diatur superadmin di Jinom Assets, menu Integrasi → Jinom Test, tanpa rebuild aplikasi. Aplikasi membacanya (GET /api/v1/reseller-certification/fo-test/settings) setelah login dan sebelum setiap pengujian, jadi perubahan berlaku di pengujian berikutnya di semua laptop. Aplikasi tidak punya halaman pengaturan; appsettings.json hanya berisi alamat server. Selain tabel di bawah juga tersedia: batas rata-rata dan RTO maksimal tiap ping, batas waktu NSLookup dan aplikasi, jeda antar ping, URL Ookla CLI, dan User-Agent.
 
 Parameter	Default	Keterangan
 DNS Target (Ping DNS)	103.122.65.66	IP DNS Server Jinom

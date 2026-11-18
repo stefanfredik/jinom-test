@@ -47,7 +47,7 @@ public class UiContractTests
                 yield return (Rel(f), m.Groups[1].Value);
         }
 
-        foreach (var f in Sources("*.cs", "Views", "Helpers", "Services"))
+        foreach (var f in Sources("*.cs", "Views", "Helpers", "Services", "Controls"))
         {
             var s = File.ReadAllText(f);
             foreach (Match m in Regex.Matches(s, @"(?:SetResourceReference\([^,]+,\s*|FindResource\(|TryFindResource\()""([^""]+)"""))
@@ -102,7 +102,7 @@ public class UiContractTests
                 problems.Add($"{Rel(f)}: shadow (only floating elements in Themes may have one)");
         }
 
-        foreach (var f in Sources("*.cs", "Views", "Helpers"))
+        foreach (var f in Sources("*.cs", "Views", "Helpers", "Controls"))
         {
             var s = File.ReadAllText(f);
             if (Regex.IsMatch(s, @"ColorConverter\.ConvertFromString|Color\.FromRgb|Color\.FromArgb|Brushes\.(?!Transparent\b)[A-Z]"))
@@ -118,7 +118,7 @@ public class UiContractTests
     public void Ui_text_has_no_emoji()
     {
         var emoji = new Regex(@"[☀-➿]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDEFF]|\uD83E[\uDD00-\uDEFF]");
-        var found = Sources("*.xaml", "Views").Concat(Sources("*.cs", "Views", "Helpers", "Services"))
+        var found = Sources("*.xaml", "Views").Concat(Sources("*.cs", "Views", "Helpers", "Services", "Controls"))
             .Where(f => emoji.IsMatch(File.ReadAllText(f)))
             .Select(Rel)
             .ToList();
@@ -131,7 +131,7 @@ public class UiContractTests
     {
         var kinds = PackIconKinds();
         var unknown = new List<string>();
-        foreach (var f in AllXaml().Concat(Sources("*.cs", "Views", "Helpers", "Services")))
+        foreach (var f in AllXaml().Concat(Sources("*.cs", "Views", "Helpers", "Services", "Controls")))
         {
             var s = File.ReadAllText(f);
             var names = Regex.Matches(s, @"(?:\bKind|LeadingIcon|TrailingIcon)=""([A-Za-z0-9]+)""").Select(m => m.Groups[1].Value)

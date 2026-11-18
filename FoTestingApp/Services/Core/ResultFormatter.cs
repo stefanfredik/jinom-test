@@ -137,7 +137,7 @@ public static class ResultFormatter
         };
     }
 
-    private static JsonElement? Unwrap(JsonElement? data)
+    internal static JsonElement? Unwrap(JsonElement? data)
     {
         if (data is not { } root)
         {
@@ -161,7 +161,7 @@ public static class ResultFormatter
         return root;
     }
 
-    private static double? Number(JsonElement root, string name) =>
+    internal static double? Number(JsonElement root, string name) =>
         root.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : null;
 
     private static int? Int(JsonElement root, string name) =>

@@ -2,11 +2,14 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:charts="clr-namespace:FoTestingApp.Controls.Charts"
       Title="Riwayat">
 
     <!--
-      The history as a list-detail screen (jinom-assets at a large width): counts first, then the
-      filters (applied as they change), the sessions, and one session's results beside them.
+      The history and every session's report, as a list-detail screen (jinom-assets at a large
+      width): counts and the sessions per day first (click a day to see it), then the filters
+      (applied as they change), the sessions with a download per row, and one session's results
+      beside them.
     -->
     <Grid>
         <Grid.ColumnDefinitions>
@@ -24,46 +27,75 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,8,0,24">
-                <TextBlock Text="Riwayat pengujian" Style="{StaticResource Text.HeadlineSmall}" Margin="0,0,0,4"/>
-                <TextBlock Text="Sesi pengujian Anda dan perusahaan Anda, terbaru di atas." Style="{StaticResource Text.Supporting}"/>
+                <TextBlock Text="Riwayat &amp; laporan" Style="{StaticResource Text.HeadlineSmall}" Margin="0,0,0,4"/>
+                <TextBlock Text="Sesi pengujian perusahaan Anda, terbaru di atas. Unduh laporan PDF dari setiap baris." Style="{StaticResource Text.Supporting}"/>
             </StackPanel>
 
-            <!-- Counts: number first, then the word; each status with its icon. -->
-            <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,24">
-                <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock x:Name="TotalSessionCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
-                        <TextBlock Text="Total sesi" Style="{StaticResource Text.Supporting}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock x:Name="TotalPassCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" Foreground="{DynamicResource StatusOnlineBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="PASS" Style="{StaticResource Text.Supporting}"/>
+            <Grid Grid.Row="1" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <!-- Counts: number first, then the word; each status with its icon. -->
+                <UniformGrid Grid.Column="0" Columns="2" Rows="2">
+                    <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock x:Name="TotalSessionCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
+                            <TextBlock Text="Total sesi" Style="{StaticResource Text.Supporting}"/>
                         </StackPanel>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock x:Name="TotalPartialCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AlertCircle" Width="16" Height="16" Foreground="{DynamicResource StatusWarningBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="PARTIAL" Style="{StaticResource Text.Supporting}"/>
+                    </Border>
+                    <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock x:Name="TotalPassCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" Foreground="{DynamicResource StatusOnlineBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="PASS" Style="{StaticResource Text.Supporting}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource M3.FilledCard}">
-                    <StackPanel>
-                        <TextBlock x:Name="TotalFailCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16" Foreground="{DynamicResource StatusOfflineBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="FAIL" Style="{StaticResource Text.Supporting}"/>
+                    </Border>
+                    <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock x:Name="TotalPartialCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AlertCircle" Width="16" Height="16" Foreground="{DynamicResource StatusWarningBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="PARTIAL" Style="{StaticResource Text.Supporting}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource M3.FilledCard}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock x:Name="TotalFailCount" Text="-" Style="{StaticResource Text.HeadlineSmall}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16" Foreground="{DynamicResource StatusOfflineBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="FAIL" Style="{StaticResource Text.Supporting}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Sessions per day, stacked by verdict; hover for the counts, click a bar to see that day. -->
+                <Border Grid.Column="1" Style="{StaticResource M3.Card}" Padding="16,12,16,8" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock x:Name="TrendTitle" Text="Sesi per hari" Style="{StaticResource Text.TitleMedium}" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="14" Height="14" Foreground="{DynamicResource StatusOnlineBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock Text="PASS" Style="{StaticResource Text.LabelSmall}" Foreground="{DynamicResource OnSurfaceVariantBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <materialDesign:PackIcon Kind="AlertCircle" Width="14" Height="14" Foreground="{DynamicResource StatusWarningBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock Text="PARTIAL" Style="{StaticResource Text.LabelSmall}" Foreground="{DynamicResource OnSurfaceVariantBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <materialDesign:PackIcon Kind="CloseCircle" Width="14" Height="14" Foreground="{DynamicResource StatusOfflineBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock Text="FAIL" Style="{StaticResource Text.LabelSmall}" Foreground="{DynamicResource OnSurfaceVariantBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        <charts:SessionTrendChart x:Name="TrendChart" Grid.Row="1" Height="136" PeriodSelected="TrendChart_PeriodSelected"
+                                                  AutomationProperties.Name="Jumlah sesi per hari menurut status"/>
+                    </Grid>
                 </Border>
-            </UniformGrid>
+            </Grid>
 
             <!-- Filters -->
             <StackPanel Grid.Row="2" Margin="0,0,0,16">
@@ -98,7 +130,7 @@
                               SelectionChanged="SessionsGrid_SelectionChanged" Cursor="Hand"
                               AutomationProperties.Name="Daftar sesi pengujian">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID sesi" Binding="{Binding CertificationId}" Width="190"/>
+                            <DataGridTextColumn Header="ID sesi" Binding="{Binding CertificationId}" Width="180"/>
                             <DataGridTextColumn Header="Lokasi" Binding="{Binding Customer.FullName}" Width="*"/>
                             <DataGridTextColumn Header="Jenis" Binding="{Binding Customer.SiteTypeText}" Width="100"/>
                             <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageText}" Width="100"/>
@@ -116,6 +148,17 @@
                                                            Foreground="{Binding OverallStatus, Converter={StaticResource StatusToForegroundConverter}}"/>
                                             </StackPanel>
                                         </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- The session's report, straight from its row. -->
+                            <DataGridTemplateColumn Header="Laporan" Width="88">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource M3.IconButton}" Click="DownloadRow_Click" HorizontalAlignment="Left"
+                                                ToolTip="Unduh laporan PDF" AutomationProperties.Name="Unduh laporan PDF">
+                                            <materialDesign:PackIcon Kind="Download" Width="20" Height="20"/>
+                                        </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -159,14 +202,23 @@
                 </Grid>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="DetailResultsPanel" Margin="8,0,8,16"/>
+                    <StackPanel Margin="8,0,8,16">
+                        <!-- The session at a glance: latency and download against their limits. -->
+                        <StackPanel x:Name="DetailCharts" Visibility="Collapsed" Margin="16,0,16,16">
+                            <TextBlock x:Name="DetailLatencyTitle" Text="Latensi rata-rata" Style="{StaticResource Text.LabelLarge}" Margin="0,0,0,4"/>
+                            <charts:BulletChart x:Name="DetailLatency" AutomationProperties.Name="Latensi rata-rata per target"/>
+                            <TextBlock x:Name="DetailSpeedTitle" Text="Kecepatan download" Style="{StaticResource Text.LabelLarge}" Margin="0,12,0,4"/>
+                            <charts:BulletChart x:Name="DetailSpeed" AutomationProperties.Name="Kecepatan download per speedtest"/>
+                        </StackPanel>
+                        <StackPanel x:Name="DetailResultsPanel"/>
+                    </StackPanel>
                 </ScrollViewer>
 
                 <Button Grid.Row="2" x:Name="DetailReportBtn" Style="{StaticResource M3.FilledButton}" Margin="24,8,24,24"
                         HorizontalAlignment="Stretch" Click="DetailReport_Click">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Buka laporan" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="Download" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Unduh laporan" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </Grid>

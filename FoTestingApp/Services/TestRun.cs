@@ -26,6 +26,16 @@ public sealed class TestRun(ApiService api, int sessionId, CancellationToken can
 
     public TestOverallStatus OverallStatus => RunVerdict.Overall(_results);
 
+    /// <summary>A ping test began: its type, target, how many echoes and the limit in ms (for the live chart).</summary>
+    public event Action<string, string, int, int>? PingStarted;
+
+    /// <summary>One echo came back (its time in ms) or was lost (null).</summary>
+    public event Action<long?>? PingReplied;
+
+    public void ReportPingStarted(string testType, string target, int count, int thresholdMs) => PingStarted?.Invoke(testType, target, count, thresholdMs);
+
+    public void ReportPingReply(long? rttMs) => PingReplied?.Invoke(rttMs);
+
     /// <summary>Keeps a result and sends it to the API; a failed send is remembered, not thrown.</summary>
     public async Task<FoTestResult> RecordAsync(string testType, string target, object data, bool passed)
     {

@@ -31,6 +31,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="appsettings.json" />
+    <!-- The Jinom Assets logo and icon, for the windows (pack://application:,,,/Resources/...). -->
+    <Resource Include="Resources\jinom_logo.png" />
+    <Resource Include="Resources\jinom.ico" />
   </ItemGroup>
 
 </Project>

@@ -113,6 +113,10 @@ public static class Ui
     /// <summary>A short message at the bottom of the window: what happened, never a question.</summary>
     public static void Notify(string message) => Messages.Enqueue(message);
 
+    /// <summary>A message with one action on it (e.g. "Buka" for a file just saved).</summary>
+    public static void Notify(string message, string action, Action onAction) =>
+        Messages.Enqueue(message, action, _ => onAction(), null, promote: false, neverConsiderToBeDuplicate: true, durationOverride: TimeSpan.FromSeconds(8));
+
     // ── Dialogs ─────────────────────────────────────────────────────────────────
 
     /// <summary>The DialogHost identifier of the main window.</summary>

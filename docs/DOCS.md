@@ -23,29 +23,17 @@ Peran aplikasi ini di antara sistem Jinom — ia hanya berbicara ke API jinom-as
 
 ## Langkah 1 — Konfigurasi `appsettings.json`
 
-Sebelum build, sesuaikan `FoTestingApp/appsettings.json` dengan environment:
+`FoTestingApp/appsettings.json` hanya berisi alamat server Jinom Assets:
 
 ```json
 {
-  "OpenAccessApiUrl": "https://infra.jinom.net/api/v1",
-  "ServerTimeZone": "Asia/Makassar",
-  "NetworkTest": {
-    "PingIntervalMs": 200,
-    "PingGateway": {
-      "Target": ""
-    }
-  },
-  "Speedtest": {
-    "JinomServer": "https://speedtest.jinom.net",
-    "ThresholdPercentage": 85
-  }
+  "OpenAccessApiUrl": "https://infra.jinom.net/api/v1"
 }
 ```
 
-> - `OpenAccessApiUrl` untuk distribusi **wajib https** ke server produksi: sertifikat TLS diperiksa, alamat LAN `http://` hanya untuk development.
-> - `ServerTimeZone` = zona `app.timezone` jinom-assets. Waktu dikirim dalam zona server dan ditampilkan dalam zona laptop teknisi (WIB/WITA/WIT).
-> - `PingGateway.Target` kosong = default gateway adapter aktif dideteksi otomatis; bisa juga diisi di **Pengaturan**.
-> - `ThresholdPercentage` = persen minimal dari paket pelanggan agar speedtest lulus.
+> - `OpenAccessApiUrl` untuk distribusi **wajib https** ke server produksi: sertifikat TLS diperiksa, alamat LAN `http://` hanya untuk development. File `appsettings.json` di samping `.exe` menimpa nilai bawaan tanpa rebuild.
+> - **Semua parameter pengujian** (target ping/DNS, jumlah ping, batas lulus, URL aplikasi, ambang speedtest, timeout sesi) diatur superadmin di **Jinom Assets → Integrasi → Jinom Test**. Aplikasi membacanya dari `GET /api/v1/reseller-certification/fo-test/settings` setelah login dan sebelum setiap pengujian, bersama zona waktu server (`app.timezone`). Login yang tidak bisa memuat pengaturan tidak membuka aplikasi.
+> - Paket pelanggan diambil dari data pelanggan (Bandwidth Down layanan, atau kecepatan yang tertulis di nama paket, mis. "UP TO 10 MBPS"). Pelanggan tanpa kecepatan tercatat tidak bisa diuji sampai datanya dilengkapi di Jinom Assets.
 
 ---
 

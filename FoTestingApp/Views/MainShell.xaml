@@ -4,6 +4,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:helpers="clr-namespace:FoTestingApp.Helpers"
         Title="Jinom Test"
+        Icon="pack://application:,,,/Resources/jinom.ico"
         Width="1280" Height="800" MinWidth="1024" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         FontFamily="{StaticResource AppFont}"
@@ -37,7 +38,7 @@
 
                     <!-- Brand -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,4,16,24">
-                        <Image Source="pack://application:,,,/Resources/jinom_logo.png" Width="32" Height="32"/>
+                        <Image Source="pack://application:,,,/Resources/jinom_logo.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="Jinom Test" Style="{StaticResource Text.TitleMedium}"/>
                             <TextBlock Text="Sertifikasi jaringan" Style="{StaticResource Text.BodySmall}"
@@ -54,25 +55,12 @@
                                 <TextBlock Text="Pengujian baru" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
+                        <!-- The history holds every session's report (download per row): no separate report page. -->
                         <RadioButton x:Name="NavHistory" Style="{StaticResource M3.NavItem}" GroupName="Nav" Tag="Dashboard"
-                                     Checked="Nav_Checked" AutomationProperties.Name="Riwayat">
+                                     Checked="Nav_Checked" AutomationProperties.Name="Riwayat dan laporan">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="History" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                 <TextBlock Text="Riwayat" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavReport" Style="{StaticResource M3.NavItem}" GroupName="Nav" Tag="Report"
-                                     Checked="Nav_Checked" AutomationProperties.Name="Laporan">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileDocumentOutline" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                <TextBlock Text="Laporan" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavSettings" Style="{StaticResource M3.NavItem}" GroupName="Nav" Tag="Settings"
-                                     Checked="Nav_Checked" AutomationProperties.Name="Pengaturan">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CogOutline" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                <TextBlock Text="Pengaturan" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                     </StackPanel>

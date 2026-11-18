@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
+using FoTestingApp.Services.Core;
 using Serilog;
 
 namespace FoTestingApp.Services;
@@ -10,7 +11,7 @@ namespace FoTestingApp.Services;
 /// Application tests: Browsing (how long a page takes to answer), Streaming (the sites answer, and a
 /// video-sized download is fast enough) and Social Media (the sites answer).
 ///
-/// Requests carry a browser User-Agent (AppTest:UserAgent): many sites refuse a client without one,
+/// Requests carry a browser User-Agent (TestSettings.UserAgent, set in Jinom Assets): many sites refuse a client without one,
 /// which would read as the customer's internet failing. Each page is fetched on a fresh connection,
 /// so DNS, TCP and TLS are part of every measurement and a retry is not flattered by a warm one.
 /// </summary>
@@ -24,12 +25,13 @@ public class AppTestService
 
     public async Task RunAllAsync(TestRun run, System.Windows.Controls.StackPanel panel)
     {
+        var s = TestSettings.Require();
         using var client = CreateClient();
 
         // Browsing: every page within the threshold.
         run.Cancellation.ThrowIfCancellationRequested();
-        var browsingUrls = ConfigManager.GetBrowsingUrls();
-        var thresholdSec = ConfigManager.GetBrowsingThresholdSeconds();
+        var browsingUrls = s.Browsing.Urls;
+        var thresholdSec = s.Browsing.ThresholdSeconds;
         var loadTimes = new Dictionary<string, double?>();
         var errors = new Dictionary<string, string>();
         foreach (var url in browsingUrls)
@@ -50,8 +52,8 @@ public class AppTestService
 
         // Streaming: the sites answer, and the line carries a 1080p stream.
         run.Cancellation.ThrowIfCancellationRequested();
-        var streamingUrls = ConfigManager.GetStreamingUrls();
-        var streaming = await CheckAccessibilityAsync(client, streamingUrls, ConfigManager.GetStreamingThresholdSeconds(), run.Cancellation);
+        var streamingUrls = s.Streaming.Urls;
+        var streaming = await CheckAccessibilityAsync(client, streamingUrls, s.Streaming.ThresholdSeconds, run.Cancellation);
         var throughput = await MeasureStreamingThroughputAsync(client, run.Cancellation);
         streaming["Video_Throughput"] = throughput.Text;
         var streamingPass = streamingUrls.Length > 0 && streaming.Values.All(IsOk) && throughput.Ok;
@@ -60,8 +62,8 @@ public class AppTestService
 
         // Social Media: the sites answer.
         run.Cancellation.ThrowIfCancellationRequested();
-        var socialUrls = ConfigManager.GetSocialMediaUrls();
-        var social = await CheckAccessibilityAsync(client, socialUrls, ConfigManager.GetSocialMediaThresholdSeconds(), run.Cancellation);
+        var socialUrls = s.SocialMedia.Urls;
+        var social = await CheckAccessibilityAsync(client, socialUrls, s.SocialMedia.ThresholdSeconds, run.Cancellation);
         var socialPass = socialUrls.Length > 0 && social.Values.All(IsOk);
         await run.RecordAsync(TestTypes.SocialMediaTest, string.Join(", ", socialUrls), new { results = social }, socialPass);
         AddCard(panel, "Social Media", socialPass, social.Select(s => (s.Key, IsOk(s.Value), s.Value)));
@@ -75,7 +77,7 @@ public class AppTestService
         {
             Timeout = timeout ?? TimeSpan.FromSeconds(60),
         };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(ConfigManager.GetAppTestUserAgent());
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(TestSettings.Require().UserAgent);
         client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,*/*;q=0.8");
         return client;
     }

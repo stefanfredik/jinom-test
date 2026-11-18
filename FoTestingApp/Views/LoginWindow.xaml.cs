@@ -7,18 +7,20 @@ namespace FoTestingApp.Views;
 
 /// <summary>
 /// Sign in. Enter submits (the button is the default); the reason a sign-in failed is said as the
-/// server gave it; the last email used on this laptop is filled in. Closing this window without
-/// signing in closes the app.
+/// server gave it; the last email used on this laptop is filled in. Signing in also loads the test
+/// parameters from Jinom Assets: without them no test can run, so a sign-in that cannot load them
+/// does not open the app. Closing this window without signing in closes the app.
 /// </summary>
 public partial class LoginWindow : Window
 {
+    private readonly ApiService _api = new();
     private readonly AuthService _auth;
     private bool _signedIn;
 
     public LoginWindow()
     {
         InitializeComponent();
-        _auth = new AuthService(new ApiService());
+        _auth = new AuthService(_api);
 
         var lastEmail = UserPreferences.Current.LastEmail;
         if (string.IsNullOrWhiteSpace(lastEmail))
@@ -67,6 +69,20 @@ public partial class LoginWindow : Window
 
             UserPreferences.Current.LastEmail = email;
             UserPreferences.Current.Save();
+
+            LoginButtonText.Text = "Memuat pengaturan...";
+            try
+            {
+                await _api.LoadTestSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Loading the test settings after login failed");
+                await _api.LogoutAsync();
+                SessionManager.Logout();
+                ShowError(ex is ApiException ? ex.Message : $"Pengaturan pengujian gagal dimuat: {ex.Message}");
+                return;
+            }
 
             _signedIn = true;
             new MainShell().Show();

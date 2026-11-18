@@ -13,7 +13,7 @@ namespace FoTestingApp.Services;
 
 /// <summary>
 /// Speedtests: Fast.com (Netflix's servers) and Ookla's CLI. Each passes when its download reaches
-/// Speedtest:ThresholdPercentage % of the customer's package (SpeedVerdict); the result keeps the
+/// the threshold percentage (TestSettings, set in Jinom Assets) of the customer's package (SpeedVerdict); the result keeps the
 /// package and the speed it needed, so the report shows why.
 ///
 /// SRS FR-040 asks for the Jinom speedtest server; until it is up and its protocol is known, Fast.com
@@ -25,7 +25,7 @@ public class SpeedtestService
 
     public async Task RunAllAsync(TestRun run, System.Windows.Controls.StackPanel panel, int packageMbps)
     {
-        var thresholdPct = ConfigManager.GetSpeedtestThresholdPercentage();
+        var thresholdPct = TestSettings.Require().Speedtest.ThresholdPercentage;
 
         run.Cancellation.ThrowIfCancellationRequested();
         var fast = await RunFastSpeedtestAsync(run.Cancellation);
@@ -74,7 +74,7 @@ public class SpeedtestService
         try
         {
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(ConfigManager.GetAppTestUserAgent());
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(TestSettings.Require().UserAgent);
 
             var html = await client.GetStringAsync("https://fast.com", ct);
             var script = Regex.Match(html, @"/app-([a-f0-9]+)\.js");
@@ -346,7 +346,7 @@ public class SpeedtestService
             Log.Information("Downloading the Ookla Speedtest CLI");
             Directory.CreateDirectory(toolsDir);
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-            var zip = await client.GetByteArrayAsync(ConfigManager.GetOoklaCliUrl(), ct);
+            var zip = await client.GetByteArrayAsync(TestSettings.Require().Speedtest.OoklaCliUrl, ct);
             var zipPath = Path.Combine(toolsDir, "speedtest.zip");
             await File.WriteAllBytesAsync(zipPath, zip, ct);
             ZipFile.ExtractToDirectory(zipPath, toolsDir, overwriteFiles: true);
