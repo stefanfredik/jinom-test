@@ -28,9 +28,11 @@ Sebelum build, sesuaikan `FoTestingApp/appsettings.json` dengan environment:
 ```json
 {
   "OpenAccessApiUrl": "https://infra.jinom.net/api/v1",
+  "ServerTimeZone": "Asia/Makassar",
   "NetworkTest": {
+    "PingIntervalMs": 200,
     "PingGateway": {
-      "Target": "10.X.X.1"
+      "Target": ""
     }
   },
   "Speedtest": {
@@ -40,7 +42,10 @@ Sebelum build, sesuaikan `FoTestingApp/appsettings.json` dengan environment:
 }
 ```
 
-> `PingGateway.Target` harus diisi dengan IP gateway ISP yang akan diuji (kosong = ping dilewati).
+> - `OpenAccessApiUrl` untuk distribusi **wajib https** ke server produksi: sertifikat TLS diperiksa, alamat LAN `http://` hanya untuk development.
+> - `ServerTimeZone` = zona `app.timezone` jinom-assets. Waktu dikirim dalam zona server dan ditampilkan dalam zona laptop teknisi (WIB/WITA/WIT).
+> - `PingGateway.Target` kosong = default gateway adapter aktif dideteksi otomatis; bisa juga diisi di **Pengaturan**.
+> - `ThresholdPercentage` = persen minimal dari paket pelanggan agar speedtest lulus.
 
 ---
 
@@ -110,9 +115,22 @@ Installer ini bisa langsung dikopi dan dijalankan di laptop teknisi **tanpa perl
 |---|---|---|
 | `API connection failed` | `OpenAccessApiUrl` salah atau server tidak bisa dijangkau | Cek URL di `appsettings.json` dan koneksi jaringan |
 | `QuestPDF license error` | Versi QuestPDF Community | Sudah dikonfigurasi `LicenseType.Community` di `ReportService.cs` |
-| `PingGateway.Target` kosong | Field target ping tidak diisi | Isi IP gateway ISP di `appsettings.json` |
+| Ping Gateway FAIL "Gateway tidak ditemukan" | Tidak ada adapter aktif dengan default gateway | Sambungkan laptop ke jaringan pelanggan, atau isi IP gateway di Pengaturan |
+| Login "Sesi login berakhir" saat pengujian | Token dicabut/kedaluwarsa di server | Login ulang; hasil yang gagal tersimpan disebutkan di layar hasil |
 | `Build failed: WPF not supported` | Build dilakukan di Linux/macOS | Pindah ke mesin Windows |
 | `dotnet: command not found` | .NET SDK belum terinstall | Install dari [dot.net/download](https://dot.net/download) |
+
+---
+
+## Unit Test
+
+Logika perhitungan (statistik ping, kriteria lulus speedtest, parsing paket, zona waktu server, format hasil) ada di `FoTestingApp/Services/Core` tanpa ketergantungan WPF, dan diuji di `FoTestingApp.Tests` — bisa dijalankan di Windows maupun Linux:
+
+```powershell
+dotnet test FoTestingApp.Tests
+```
+
+Build aplikasi WPF di Linux/CI (compile saja, tidak bisa dijalankan): `dotnet build FoTestingApp -p:EnableWindowsTargeting=true`.
 
 ---
 

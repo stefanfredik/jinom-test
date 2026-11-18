@@ -37,6 +37,12 @@
                             <TextBlock x:Name="TotalFailCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
                         </StackPanel>
                     </Border>
+                    <Border Background="#F59E0B" CornerRadius="8" Padding="12,6" Margin="0,0,12,0" ToolTip="Total Sebagian (PARTIAL)">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AlertCircleOutline" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="TotalPartialCount" Text="0" FontSize="14" FontWeight="Bold" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
                     <Border Background="#3B82F6" CornerRadius="8" Padding="12,6" ToolTip="Total Sesi">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewList" Width="16" Height="16" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -71,6 +77,9 @@
                             <TextBlock Text="Filter" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
                         </StackPanel>
                     </Button>
+                    <!-- A failed load or a list the server cut off is said, never shown as "0". -->
+                    <TextBlock x:Name="ListNotice" Visibility="Collapsed" VerticalAlignment="Center" Margin="16,0,0,0"
+                               TextWrapping="Wrap" MaxWidth="520" FontSize="12" Foreground="{DynamicResource FailRedBrush}"/>
                 </WrapPanel>
             </Border>
 
@@ -109,7 +118,7 @@
                         <DataGridTextColumn Header="ID" Binding="{Binding CertificationId}" Width="180"/>
                         <DataGridTextColumn Header="Nama" Binding="{Binding Customer.FullName}" Width="*"/>
                         <DataGridTextColumn Header="Tipe" Binding="{Binding Customer.SiteType}" Width="80"/>
-                        <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageMbps, StringFormat='{}{0} Mbps'}" Width="90"/>
+                        <DataGridTextColumn Header="Paket" Binding="{Binding Customer.PackageText}" Width="90"/>
                         <DataGridTextColumn Header="Tanggal" Binding="{Binding TestDate, StringFormat='dd MMM yyyy HH:mm'}" Width="150"/>
                         <DataGridTemplateColumn Header="Status" Width="90">
                             <DataGridTemplateColumn.CellTemplate>

@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
+using FoTestingApp.Services.Core;
 using MaterialDesignThemes.Wpf;
 
 namespace FoTestingApp.Views.Pages;
@@ -16,16 +17,32 @@ public partial class NewTestPage : Page
 {
     private readonly ApiService _api = new();
     private int? _currentSessionId;
-    private bool _isLoadingPops;
-    private bool _isLoadingCustomers;
+
+    /// <summary>The search in flight for each picker; a newer keystroke cancels the older search.</summary>
+    private CancellationTokenSource? _popSearch;
+    private CancellationTokenSource? _customerSearch;
+
+    /// <summary>The run in progress: cancelled by "Batal" and by leaving the page, so it never goes on unseen.</summary>
+    private CancellationTokenSource? _runCts;
+
+    /// <summary>The site last tested, for "Uji Ulang" (a new session for the same site).</summary>
+    private FoCustomer? _lastCustomer;
 
     private string _testMode = "customer";
     private bool _enableRealTimeValidation = false;
+
+    private bool IsRunning => _runCts is not null;
 
     public NewTestPage()
     {
         InitializeComponent();
         DiagnosticLogsPanel.SizeChanged += DiagnosticLogsPanel_SizeChanged;
+        Unloaded += (_, _) =>
+        {
+            _runCts?.Cancel();
+            _popSearch?.Cancel();
+            _customerSearch?.Cancel();
+        };
     }
 
     // ── Stage Navigation ──────────────────────────────────────────────────────
@@ -63,10 +80,8 @@ public partial class NewTestPage : Page
         FormContainer.Visibility = Visibility.Visible;
         ApplyTestMode();
 
-        if (mode == "pop")
-        {
-            await LoadAvailablePopsAsync();
-        }
+        // ApplyTestMode starts loading the list for the mode.
+        await Task.CompletedTask;
     }
 
     private void BackToLanding_Click(object sender, RoutedEventArgs e)
@@ -109,7 +124,8 @@ public partial class NewTestPage : Page
             AddressFieldPanel.Visibility = Visibility.Collapsed;
             NotesFieldPanel.Visibility = Visibility.Visible;
             FullNameBox.IsReadOnly = true;
-            PackageMbpsBox.Text = "1000"; // Default speed to pass validation
+            // A POP has no package: its speedtest is judged on a measured speed alone.
+            PackageMbpsBox.Text = string.Empty;
             FullNameBox.Text = string.Empty;
             AddressBox.Text = string.Empty;
             NotesBox.Text = string.Empty;
@@ -151,36 +167,38 @@ public partial class NewTestPage : Page
         }
     }
 
+    /// <summary>
+    /// Loads POPs for a search, 300 ms after the last keystroke; a newer search cancels this one, so
+    /// the list always answers the text in the box (typing "budi" never ends on the results for "b").
+    /// </summary>
     private async Task LoadAvailablePopsAsync(string query = "")
     {
-        if (_isLoadingPops)
-        {
-            return;
-        }
+        _popSearch?.Cancel();
+        var search = _popSearch = new CancellationTokenSource();
 
         try
         {
-            _isLoadingPops = true;
+            if (!string.IsNullOrEmpty(query)) await Task.Delay(300, search.Token);
             if (PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Visible;
             PopStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar POP..." : $"Mencari POP: '{query}'...";
 
-            var pops = await _api.GetAvailablePopsAsync(query);
+            var pops = await _api.GetAvailablePopsAsync(query, search.Token);
+            if (search.IsCancellationRequested) return;
             PopComboBox.ItemsSource = pops;
-
-            PopStatusText.Text = pops.Count > 0
-                ? $"{pops.Count} POP tersedia."
-                : "Tidak ada POP yang tersedia.";
+            PopStatusText.Text = pops.Count > 0 ? $"{pops.Count} POP tersedia." : "Tidak ada POP yang tersedia.";
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load available POPs");
-            PopStatusText.Text = "Gagal memuat daftar POP. Silakan coba lagi.";
+            PopStatusText.Text = ex is ApiException ? ex.Message : "Gagal memuat daftar POP. Silakan coba lagi.";
             PopComboBox.ItemsSource = null;
         }
         finally
         {
-            _isLoadingPops = false;
-            if (PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Collapsed;
+            if (ReferenceEquals(_popSearch, search) && PopLoadingBar != null) PopLoadingBar.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -226,38 +244,40 @@ public partial class NewTestPage : Page
 
     private async void PopComboBox_DropDownOpened(object sender, EventArgs e)
     {
-        if (PopComboBox.ItemsSource == null && !_isLoadingPops)
+        if (PopComboBox.ItemsSource == null)
         {
             await LoadAvailablePopsAsync();
         }
     }
 
+    /// <summary>Loads customers for a search, debounced and cancelled like the POP list.</summary>
     private async Task LoadAvailableCustomersAsync(string query = "")
     {
-        if (_isLoadingCustomers) return;
+        _customerSearch?.Cancel();
+        var search = _customerSearch = new CancellationTokenSource();
 
         try
         {
-            _isLoadingCustomers = true;
+            if (!string.IsNullOrEmpty(query)) await Task.Delay(300, search.Token);
             if (CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Visible;
             CustomerStatusText.Text = string.IsNullOrWhiteSpace(query) ? "Memuat daftar pelanggan..." : $"Mencari pelanggan: '{query}'...";
-            
-            var customers = await _api.SearchCustomersAsync(query);
+
+            var customers = await _api.SearchCustomersAsync(query, search.Token);
+            if (search.IsCancellationRequested) return;
             CustomerComboBox.ItemsSource = customers;
-            
-            CustomerStatusText.Text = customers.Count > 0 
-                ? $"{customers.Count} pelanggan ditemukan." 
-                : "Pelanggan tidak ditemukan.";
+            CustomerStatusText.Text = customers.Count > 0 ? $"{customers.Count} pelanggan ditemukan." : "Pelanggan tidak ditemukan.";
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Failed to load customers");
-            CustomerStatusText.Text = "Gagal memuat pelanggan. Silakan coba lagi.";
+            CustomerStatusText.Text = ex is ApiException ? ex.Message : "Gagal memuat pelanggan. Silakan coba lagi.";
         }
         finally
         {
-            _isLoadingCustomers = false;
-            if (CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Collapsed;
+            if (ReferenceEquals(_customerSearch, search) && CustomerLoadingBar != null) CustomerLoadingBar.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -300,7 +320,9 @@ public partial class NewTestPage : Page
         // Show read-only details card
         DetailsCardIcon.Kind = PackIconKind.Account;
         DetailsNameText.Text = selectedCustomer.FullName;
-        DetailsSiteIdBadge.Visibility = Visibility.Collapsed;
+        // The service number tells two customers of the same name apart.
+        DetailsSiteIdText.Text = selectedCustomer.ServiceNumber ?? string.Empty;
+        DetailsSiteIdBadge.Visibility = string.IsNullOrWhiteSpace(selectedCustomer.ServiceNumber) ? Visibility.Collapsed : Visibility.Visible;
         
         if (!string.IsNullOrWhiteSpace(selectedCustomer.PackageName))
         {
@@ -373,7 +395,7 @@ public partial class NewTestPage : Page
 
     private async void CustomerComboBox_DropDownOpened(object sender, EventArgs e)
     {
-        if (CustomerComboBox.ItemsSource == null && !_isLoadingCustomers)
+        if (CustomerComboBox.ItemsSource == null)
         {
             await LoadAvailableCustomersAsync();
         }
@@ -408,35 +430,14 @@ public partial class NewTestPage : Page
 
     private async void StartTestBtn_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRunning)
+        {
+            MessageBox.Show("Pengujian sebelumnya masih dihentikan. Tunggu beberapa detik lalu coba lagi.", "Tunggu", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
         if (!ValidateForm()) { return; }
 
-        FormContainer.Visibility = Visibility.Collapsed;
-        ProgressContainer.Visibility = Visibility.Visible;
-        DiagnosticLogsPanel.Children.Clear();
-        
-        // Reset Stepper UI
-        Line1.Value = 0; Line2.Value = 0;
-        
-        Step2Circle.Background = (Brush)FindResource("AppBackgroundBrush");
-        Step2Circle.BorderBrush = (Brush)FindResource("BorderLightBrush");
-        Step2Icon.Foreground = (Brush)FindResource("TextLightBrush");
-        Step2Text.Foreground = (Brush)FindResource("TextLightBrush");
-        
-        Step3Circle.Background = (Brush)FindResource("AppBackgroundBrush");
-        Step3Circle.BorderBrush = (Brush)FindResource("BorderLightBrush");
-        Step3Icon.Foreground = (Brush)FindResource("TextLightBrush");
-        Step3Text.Foreground = (Brush)FindResource("TextLightBrush");
-
-        CurrentActivityText.Text = "Preparing Tests...";
-        TaskCountText.Text = "Task 1 of 7";
-        SubTaskProgressBar.Value = 0;
-        SubTaskDetailText.Text = "Initializing diagnostic engine...";
-        SaveReportBtn.Visibility = Visibility.Collapsed;
-        EndTestBtnText.Text = "Batal";
-
-        // Start pulsating the active step
-        StartStepPulse(Step1Circle);
-
+        StartTestBtn.IsEnabled = false;
         try
         {
             var isPopMode = _testMode == "pop";
@@ -444,120 +445,173 @@ public partial class NewTestPage : Page
             var selectedCustomer = !isPopMode ? CustomerComboBox.SelectedItem as FoCustomer : null;
             var customer = new FoCustomer
             {
-                Id = selectedCustomer?.Id ?? 0,
                 SiteType = isPopMode ? "pop" : "customer",
                 SiteId = isPopMode ? selectedPop?.SiteId : selectedCustomer?.SiteId,
+                ServiceNumber = selectedCustomer?.ServiceNumber,
                 FullName = isPopMode ? selectedPop?.DisplayName ?? string.Empty : FullNameBox.Text.Trim(),
-                Address = isPopMode
-                    ? selectedPop?.Address ?? "-"
-                    : AddressBox.Text.Trim(),
-                PackageMbps = int.TryParse(PackageMbpsBox.Text, out var pkg) ? pkg : 0,
+                Address = isPopMode ? selectedPop?.Address ?? "-" : AddressBox.Text.Trim(),
+                // A POP has no package; a customer's was validated as a positive number.
+                PackageMbps = !isPopMode && int.TryParse(PackageMbpsBox.Text.Trim(), out var pkg) ? pkg : 0,
+                Email = selectedCustomer?.Email,
                 TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
             };
 
-            var customerId = await _api.UpsertCustomerAsync(customer);
+            await RunSessionAsync(customer);
+        }
+        finally
+        {
+            StartTestBtn.IsEnabled = true;
+        }
+    }
 
-            var testId = $"TEST-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
-            var session = new FoTestSession
+    /// <summary>
+    /// One full test session for a site: store the site, open a session, run every test, close the
+    /// session with its status, show the results. Cancelled ("Batal", or leaving the page), the
+    /// session is closed as FAIL with a note saying so, and no results screen appears.
+    /// </summary>
+    private async Task RunSessionAsync(FoCustomer customer)
+    {
+        _lastCustomer = customer;
+        _currentSessionId = null;
+        ResetProgressUi();
+        FormContainer.Visibility = Visibility.Collapsed;
+        ResultsContainer.Visibility = Visibility.Collapsed;
+        ProgressContainer.Visibility = Visibility.Visible;
+        StartStepPulse(Step1Circle);
+
+        using var cts = new CancellationTokenSource();
+        _runCts = cts;
+        TestRun? run = null;
+        try
+        {
+            CurrentActivityText.Text = "Menyimpan data lokasi...";
+            customer.Id = await _api.UpsertCustomerAsync(customer);
+
+            var startedAt = DateTime.Now;
+            _currentSessionId = await _api.CreateTestSessionAsync(new FoTestSession
             {
-                CertificationId = testId,
-                CustomerId = customerId,
+                CertificationId = $"TEST-{startedAt:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpperInvariant()}",
+                CustomerId = customer.Id,
                 TechnicianId = SessionManager.CurrentUser?.Id ?? 0,
-                TestDate = DateTime.Now,
-                StartTime = DateTime.Now,
+                TestDate = startedAt,
+                StartTime = startedAt,
                 OverallStatus = TestOverallStatus.Fail,
-            };
+            });
 
-            _currentSessionId = await _api.CreateTestSessionAsync(session);
+            run = new TestRun(_api, _currentSessionId.Value, cts.Token);
+            await new NetworkTestService().RunAllAsync(run, DiagnosticLogsPanel, CreateProgress(), customer.PackageMbps);
 
-            await RunAllTestsAsync(_currentSessionId.Value, customer.PackageMbps);
-
-            // Transition to results view
-            await ShowResultsAsync(_currentSessionId.Value);
+            await CloseSessionAsync(run.SessionId, run.OverallStatus, notes: null);
+            ShowResults(run);
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            Serilog.Log.Information("Test session {SessionId} cancelled by the technician", _currentSessionId);
+            if (_currentSessionId is { } sessionId)
+            {
+                await CloseSessionAsync(sessionId, TestOverallStatus.Fail, "Pengujian dibatalkan oleh teknisi sebelum selesai.");
+            }
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Test execution failed");
-            CurrentActivityText.Text = "Diagnostics Failed";
+            CurrentActivityText.Text = "Pengujian gagal";
+            SubTaskDetailText.Text = ex is ApiException ? ex.Message : $"Terjadi kesalahan: {ex.Message}";
             EndTestBtnText.Text = "TUTUP";
-        }
-    }
-
-    private async System.Threading.Tasks.Task RunAllTestsAsync(int sessionId, int packageMbps)
-    {
-        var networkSvc = new NetworkTestService(_api, sessionId);
-        var progress = new Progress<(int percent, string status)>(p =>
-        {
-            var parts = p.status.Split('|');
-            if (parts.Length == 3)
+            if (_currentSessionId is { } sessionId && run is not null)
             {
-                TaskCountText.Text = parts[0];
-                CurrentActivityText.Text = parts[1];
-                SubTaskDetailText.Text = parts[2];
-                AnimateProgressBar(SubTaskProgressBar, p.percent);
-
-                var taskNumStr = parts[0].Replace("Task ", "").Split(' ')[0];
-                if (int.TryParse(taskNumStr, out int taskNum))
-                {
-                    // Update Stepper UI & Pulses
-                    if (taskNum <= 5) // Network
-                    {
-                        StartStepPulse(Step1Circle);
-                        AnimateProgressBar(Line1, (taskNum / 5.0) * 100);
-                    }
-                    else if (taskNum == 6) // Apps
-                    {
-                        StartStepPulse(Step2Circle);
-                        AnimateProgressBar(Line1, 100);
-                        Step2Circle.Background = (Brush)FindResource("PrimaryBrush");
-                        Step2Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
-                        Step2Icon.Foreground = Brushes.White;
-                        Step2Text.Foreground = (Brush)FindResource("PrimaryBrush");
-                        
-                        AnimateProgressBar(Line2, p.percent == 100 ? 100 : 50); // Partial line
-                    }
-                    else if (taskNum == 7) // Bandwidth
-                    {
-                        StartStepPulse(Step3Circle);
-                        AnimateProgressBar(Line1, 100);
-                        AnimateProgressBar(Line2, 100);
-
-                        Step2Circle.Background = (Brush)FindResource("PrimaryBrush");
-                        Step2Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
-                        Step2Icon.Foreground = Brushes.White;
-                        Step2Text.Foreground = (Brush)FindResource("PrimaryBrush");
-                        
-                        Step3Circle.Background = (Brush)FindResource("PrimaryBrush");
-                        Step3Circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
-                        Step3Icon.Foreground = Brushes.White;
-                        Step3Text.Foreground = (Brush)FindResource("PrimaryBrush");
-                    }
-                }
+                await CloseSessionAsync(sessionId, run.OverallStatus, $"Pengujian terhenti: {ex.Message}");
             }
-            else
-            {
-                SubTaskDetailText.Text = p.status;
-            }
-        });
-
-        // Pass DiagnosticLogsPanel instead of ResultsPanel so services can append their UI logs
-        try
-        {
-            await networkSvc.RunAllAsync(DiagnosticLogsPanel, progress, packageMbps);
         }
         finally
         {
-            StartStepPulse(null); // Stop pulsing
+            _runCts = null;
+            StartStepPulse(null);
         }
+    }
 
+    /// <summary>Writes a session's final status; a failure is logged and shown, not thrown.</summary>
+    private async Task CloseSessionAsync(int sessionId, TestOverallStatus status, string? notes)
+    {
         try
         {
-            await _api.UpdateSessionStatusAsync(sessionId, networkSvc.OverallStatus, DateTime.Now);
+            await _api.UpdateSessionStatusAsync(sessionId, status, DateTime.Now, notes);
         }
         catch (Exception ex)
         {
-            Serilog.Log.Warning(ex, "Failed to update session status");
+            Serilog.Log.Warning(ex, "Failed to update the status of session {SessionId}", sessionId);
+            UnsavedStatusError = ex.Message;
         }
+    }
+
+    /// <summary>Why the session's final status did not reach the server, for the results screen.</summary>
+    private string? UnsavedStatusError { get; set; }
+
+    private void ResetProgressUi()
+    {
+        UnsavedStatusError = null;
+        DiagnosticLogsPanel.Children.Clear();
+        Line1.Value = 0; Line2.Value = 0;
+        AnimateProgressBar(Line1, 0);
+        AnimateProgressBar(Line2, 0);
+
+        foreach (var (circle, icon, text) in new[] { (Step2Circle, Step2Icon, Step2Text), (Step3Circle, Step3Icon, Step3Text) })
+        {
+            circle.Background = (Brush)FindResource("AppBackgroundBrush");
+            circle.BorderBrush = (Brush)FindResource("BorderLightBrush");
+            icon.Foreground = (Brush)FindResource("TextLightBrush");
+            text.Foreground = (Brush)FindResource("TextLightBrush");
+        }
+
+        CurrentActivityText.Text = "Menyiapkan pengujian...";
+        TaskCountText.Text = "Task 1 of 7";
+        SubTaskProgressBar.Value = 0;
+        AnimateProgressBar(SubTaskProgressBar, 0);
+        SubTaskDetailText.Text = "Menyiapkan mesin diagnostik...";
+        SaveReportBtn.Visibility = Visibility.Collapsed;
+        EndTestBtnText.Text = "BATAL";
+    }
+
+    private IProgress<(int percent, string status)> CreateProgress() => new Progress<(int percent, string status)>(p =>
+    {
+        // Progress posts asynchronously: an update arriving after the run ended must not restart the stepper.
+        if (!IsRunning) return;
+        SessionManager.RecordActivity();
+
+        var parts = p.status.Split('|');
+        if (parts.Length != 3)
+        {
+            SubTaskDetailText.Text = p.status;
+            return;
+        }
+
+        TaskCountText.Text = parts[0];
+        CurrentActivityText.Text = parts[1];
+        SubTaskDetailText.Text = parts[2];
+        AnimateProgressBar(SubTaskProgressBar, p.percent);
+
+        if (!int.TryParse(parts[0].Replace("Task ", "").Split(' ')[0], out var taskNum)) return;
+
+        if (taskNum <= 5)
+        {
+            StartStepPulse(Step1Circle);
+            AnimateProgressBar(Line1, taskNum / 5.0 * 100);
+            return;
+        }
+
+        StartStepPulse(taskNum == 6 ? Step2Circle : Step3Circle);
+        AnimateProgressBar(Line1, 100);
+        AnimateProgressBar(Line2, taskNum == 6 ? 50 : 100);
+        MarkStepActive(Step2Circle, Step2Icon, Step2Text);
+        if (taskNum == 7) MarkStepActive(Step3Circle, Step3Icon, Step3Text);
+    });
+
+    private void MarkStepActive(Border circle, PackIcon icon, TextBlock text)
+    {
+        circle.Background = (Brush)FindResource("PrimaryBrush");
+        circle.BorderBrush = (Brush)FindResource("PrimaryBrush");
+        icon.Foreground = Brushes.White;
+        text.Foreground = (Brush)FindResource("PrimaryBrush");
     }
 
     private bool ValidateForm()
@@ -693,8 +747,20 @@ public partial class NewTestPage : Page
         }
     }
 
+    /// <summary>"Batal" while running cancels the run (after a yes); afterwards it closes the screen.</summary>
     private void EndTestBtn_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRunning)
+        {
+            var confirm = MessageBox.Show("Hentikan pengujian yang sedang berjalan? Sesi akan dicatat sebagai dibatalkan (FAIL).",
+                "Batalkan Pengujian", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            CurrentActivityText.Text = "Membatalkan...";
+            SubTaskDetailText.Text = "Menghentikan pengujian yang sedang berjalan...";
+            _runCts?.Cancel();
+        }
+
         StartStepPulse(null);
         ProgressContainer.Visibility = Visibility.Collapsed;
         LocationContainer.Visibility = Visibility.Visible;
@@ -708,79 +774,71 @@ public partial class NewTestPage : Page
 
     // ── Results Display ───────────────────────────────────────────────────────
 
-    private async Task ShowResultsAsync(int sessionId)
+    /// <summary>
+    /// The results of the run just finished, as measured here — the same list and verdict that were
+    /// sent — with a warning naming any result the server did not store.
+    /// </summary>
+    private void ShowResults(TestRun run)
     {
-        var results = await _api.GetResultsBySessionAsync(sessionId);
+        var results = run.Results.ToList();
+        var passCount = results.Count(r => r.Status == TestStatus.Pass);
+        var status = run.OverallStatus;
 
         ProgressContainer.Visibility = Visibility.Collapsed;
         ResultsContainer.Visibility = Visibility.Visible;
         ResultCardsPanel.Children.Clear();
 
-        var passCount = results.Count(r => r.Status == TestStatus.Pass);
-        var totalCount = results.Count;
+        ResultSummaryText.Text = $"{results.Count} pengujian dilakukan — {DateTime.Now:dd MMM yyyy, HH:mm}";
+        ResultScoreText.Text = $"{passCount}/{results.Count} test lulus";
+        (ResultStatusText.Text, ResultStatusText.Foreground) = status switch
+        {
+            TestOverallStatus.Pass => ("PASS", (Brush)FindResource("PassGreenBrush")),
+            TestOverallStatus.Partial => ("PARTIAL", (Brush)FindResource("WarnYellowBrush")),
+            _ => ("FAIL", (Brush)FindResource("FailRedBrush")),
+        };
 
-        ResultSummaryText.Text = $"{totalCount} pengujian dilakukan — {DateTime.Now:dd MMM yyyy, HH:mm}";
-        ResultScoreText.Text = $"{passCount}/{totalCount} test passed";
-
-        if (passCount == totalCount)
+        var problems = new List<string>();
+        if (run.Unsaved.Count > 0)
         {
-            ResultStatusText.Text = "PASS";
-            ResultStatusText.Foreground = (Brush)FindResource("PassGreenBrush");
+            problems.Add($"{run.Unsaved.Count} hasil tidak tersimpan di server: {string.Join(", ", run.Unsaved)}. Laporan dari server tidak akan memuatnya; ulangi pengujian bila perlu.");
         }
-        else if (passCount > 0)
+        if (UnsavedStatusError is { } statusError)
         {
-            ResultStatusText.Text = "PARTIAL";
-            ResultStatusText.Foreground = (Brush)FindResource("WarnYellowBrush");
+            problems.Add($"Status akhir sesi tidak tersimpan ({statusError}); di riwayat sesi ini bisa tampil FAIL.");
         }
-        else
-        {
-            ResultStatusText.Text = "FAIL";
-            ResultStatusText.Foreground = (Brush)FindResource("FailRedBrush");
-        }
+        UnsavedWarningText.Text = string.Join(Environment.NewLine, problems);
+        UnsavedWarning.Visibility = problems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         SaveReportBtn.Visibility = Visibility.Visible;
-        RetryFailedBtn.Visibility = passCount == totalCount ? Visibility.Collapsed : Visibility.Visible;
+        RetryFailedBtn.Visibility = status == TestOverallStatus.Pass ? Visibility.Collapsed : Visibility.Visible;
 
-        // 📂 Tambahkan Grup Akordion
         PopulateResultsWithExpanders(results);
     }
 
+    /// <summary>
+    /// Tests the same site again in a new session: the earlier session stays in the history as it
+    /// was, and the new one holds one complete, clean set of results (the API keeps every result it
+    /// is sent, so re-running into the old session would mix old failures with new passes).
+    /// </summary>
     private async void RetryFailedBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentSessionId.HasValue && int.TryParse(PackageMbpsBox.Text, out var pkgMbps))
+        if (_lastCustomer is null || IsRunning) return;
+
+        var confirm = MessageBox.Show("Jalankan ulang seluruh pengujian untuk lokasi ini sebagai sesi baru? Sesi sebelumnya tetap tersimpan di riwayat.",
+            "Uji Ulang", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        RetryFailedBtn.IsEnabled = false;
+        try
         {
-            var results = await _api.GetResultsBySessionAsync(_currentSessionId.Value);
-            var failures = results.Where(r => r.Status == TestStatus.Fail).ToList();
-
-            if (!failures.Any())
-            {
-                MessageBox.Show("Tidak ada test yang gagal untuk diulang.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var confirm = MessageBox.Show($"Ditemukan {failures.Count} test yang gagal. Apakah Anda ingin mengulang pengujian jaringan?", "Konfirmasi Ulang", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes) return;
-
-            ResultsContainer.Visibility = Visibility.Collapsed;
-            ProgressContainer.Visibility = Visibility.Visible;
-            DiagnosticLogsPanel.Children.Clear();
-            SubTaskDetailText.Text = "Starting tests...";
-            CurrentActivityText.Text = "Retrying...";
-            EndTestBtnText.Text = "CANCEL";
-
-            try
-            {
-                await RunAllTestsAsync(_currentSessionId.Value, pkgMbps);
-                await ShowResultsAsync(_currentSessionId.Value);
-            }
-            catch (Exception ex)
-            {
-                Serilog.Log.Error(ex, "Retry execution failed");
-                CurrentActivityText.Text = "Diagnostics Failed";
-                EndTestBtnText.Text = "TUTUP";
-            }
+            await RunSessionAsync(_lastCustomer);
+        }
+        finally
+        {
+            RetryFailedBtn.IsEnabled = true;
         }
     }
+
     private void PopulateResultsWithExpanders(List<FoTestResult> results)
     {
         var networkTypes = new[] { TestTypes.PingGateway, TestTypes.PingDns, TestTypes.NslookupNasional, TestTypes.NslookupInternasional, TestTypes.PingDomainLokal };
@@ -995,73 +1053,20 @@ public partial class NewTestPage : Page
 
     private void PopulateDetailRows(StackPanel panel, FoTestResult result)
     {
-        if (result.ResultData is null) return;
-
-        try
+        var rows = ResultFormatter.Rows(result.TestType, result.ResultData?.RootElement);
+        if (rows.Count == 0)
         {
-            var root = result.ResultData.RootElement;
-            if (root.ValueKind == JsonValueKind.String)
-            {
-                var doc = JsonDocument.Parse(root.GetString() ?? "{}");
-                root = doc.RootElement;
-            }
-
-            switch (result.TestType)
-            {
-                case TestTypes.PingGateway or TestTypes.PingDns or TestTypes.PingDomainLokal:
-                    AddDetailRow(panel, "Rata-rata", $"{root.GetProperty("avg_ms").GetInt64()} ms");
-                    AddDetailRow(panel, "Minimum", $"{root.GetProperty("min_ms").GetInt64()} ms");
-                    AddDetailRow(panel, "Maksimum", $"{root.GetProperty("max_ms").GetInt64()} ms");
-                    AddDetailRow(panel, "RTO (Packet Loss)", root.GetProperty("rto").GetInt32().ToString());
-                    break;
-
-                case TestTypes.NslookupNasional or TestTypes.NslookupInternasional:
-                    foreach (var domain in root.GetProperty("domains").EnumerateObject())
-                    {
-                        AddDetailRow(panel, domain.Name, domain.Value.GetString() ?? "-");
-                    }
-                    break;
-
-                case TestTypes.BrowsingTest:
-                    foreach (var r in root.GetProperty("results").EnumerateObject())
-                    {
-                        var keyName = r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " ");
-                        AddDetailRow(panel, keyName, $"{r.Value.GetDouble():F2} detik");
-                    }
-                    break;
-
-                case TestTypes.StreamingTest or TestTypes.SocialMediaTest:
-                    foreach (var r in root.GetProperty("results").EnumerateObject())
-                    {
-                        var keyName = r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " ");
-                        AddDetailRow(panel, keyName, r.Value.GetString() ?? "-");
-                    }
-                    break;
-
-                case TestTypes.SpeedtestFast:
-                    AddDetailRow(panel, "Download", $"{root.GetProperty("download_mbps").GetDouble():F1} Mbps");
-                    if (root.TryGetProperty("upload_mbps", out var uploadProp))
-                        AddDetailRow(panel, "Upload", $"{uploadProp.GetDouble():F1} Mbps");
-                    break;
-
-                case TestTypes.SpeedtestOokla:
-                    AddDetailRow(panel, "Download", $"{root.GetProperty("download_mbps").GetDouble():F1} Mbps");
-                    AddDetailRow(panel, "Upload", $"{root.GetProperty("upload_mbps").GetDouble():F1} Mbps");
-                    if (root.TryGetProperty("ping_ms", out var ping))
-                        AddDetailRow(panel, "Ping", $"{ping.GetDouble():F0} ms");
-                    if (root.TryGetProperty("server", out var server))
-                        AddDetailRow(panel, "Server", server.GetString() ?? "-");
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Serilog.Log.Warning(ex, "Failed to parse result data for {TestType}", result.TestType);
             panel.Children.Add(new TextBlock
             {
                 Text = "Data tidak tersedia", FontSize = 12,
                 Foreground = (Brush)FindResource("TextLightBrush"), FontStyle = FontStyles.Italic,
             });
+            return;
+        }
+
+        foreach (var (label, value) in rows)
+        {
+            AddDetailRow(panel, label, value);
         }
     }
 
@@ -1089,20 +1094,7 @@ public partial class NewTestPage : Page
         panel.Children.Add(row);
     }
 
-    private static string FormatTestTypeName(string testType) => testType switch
-    {
-        TestTypes.PingGateway => "Ping Gateway ISP",
-        TestTypes.PingDns => "Ping DNS Server",
-        TestTypes.NslookupNasional => "NSLookup Nasional",
-        TestTypes.NslookupInternasional => "NSLookup Internasional",
-        TestTypes.PingDomainLokal => "Ping Domain Lokal",
-        TestTypes.BrowsingTest => "Browsing Test",
-        TestTypes.StreamingTest => "Streaming Test",
-        TestTypes.SocialMediaTest => "Social Media Test",
-        TestTypes.SpeedtestFast => "Speedtest Fast.com",
-        TestTypes.SpeedtestOokla => "Speedtest Ookla",
-        _ => testType,
-    };
+    private static string FormatTestTypeName(string testType) => ResultFormatter.TestName(testType);
 
     private static PackIconKind GetTestIcon(string testType) => testType switch
     {
@@ -1126,7 +1118,7 @@ public partial class NewTestPage : Page
         progressBar.BeginAnimation(RangeBase.ValueProperty, animation);
     }
 
-    private void StartStepPulse(Border circle)
+    private void StartStepPulse(Border? circle)
     {
         StopStepPulse(Step1Circle);
         StopStepPulse(Step2Circle);

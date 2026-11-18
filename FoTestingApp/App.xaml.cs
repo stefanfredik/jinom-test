@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Windows.Markup;
 using System.Windows;
 using FoTestingApp.Helpers;
 using FoTestingApp.Services;
@@ -14,6 +16,17 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // One culture for the whole UI: XAML StringFormat follows FrameworkElement.Language (en-US by
+        // default) while code follows the thread culture, so dates showed "Aug" on one screen and
+        // "Agu" on another. The app is Indonesian throughout.
+        var culture = CultureInfo.GetCultureInfo("id-ID");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        Thread.CurrentThread.CurrentCulture = culture;
+        Thread.CurrentThread.CurrentUICulture = culture;
+        FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
+            new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
         // Global exception handlers
         DispatcherUnhandledException += (s, args) =>

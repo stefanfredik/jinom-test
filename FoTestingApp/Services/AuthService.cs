@@ -5,8 +5,7 @@ using Serilog;
 namespace FoTestingApp.Services;
 
 /// <summary>
-/// Menangani autentikasi pengguna menggunakan email + BCrypt password
-/// dari tabel `users` database OpenAccess.
+/// Logs the technician in and out through jinom-assets' API (the app never reads a database).
 /// </summary>
 public class AuthService
 {
@@ -18,23 +17,23 @@ public class AuthService
     }
 
     /// <summary>
-    /// Verifikasi email dan password terhadap API OpenAccess.
-    /// Mengembalikan User jika berhasil, null jika gagal.
+    /// Logs in through jinom-assets: the user, or why not (wrong password, server unreachable, 2FA…).
     /// </summary>
-    public async Task<User?> LoginAsync(string email, string password)
+    public async Task<LoginOutcome> LoginAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            return null;
+            return new LoginOutcome(null, "Email dan password wajib diisi.");
         }
 
-        var user = await _api.LoginAsync(email, password);
-        return user;
+        return await _api.LoginAsync(email, password);
     }
 
-    public void Logout()
+    /// <summary>Revokes the token on the server, then ends the local session.</summary>
+    public async Task LogoutAsync()
     {
         Log.Information("User logged out: {Email}", SessionManager.CurrentUser?.Email);
+        await _api.LogoutAsync();
         SessionManager.Logout();
     }
 }

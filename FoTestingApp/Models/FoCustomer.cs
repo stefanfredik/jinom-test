@@ -17,5 +17,11 @@ public class FoCustomer
     public DateTime UpdatedAt { get; set; }
 
     public string? PackageName { get; set; }
+
+    /// <summary>The customer's service number (nomor layanan), for display; site_id is their subscriber id.</summary>
+    public string? ServiceNumber { get; set; }
+    /// <summary>The package for a list: "-" for a site without one (a POP), never "0 Mbps".</summary>
+    public string PackageText => PackageMbps > 0 ? $"{PackageMbps} Mbps" : "-";
+
     public string DisplayName => string.IsNullOrWhiteSpace(PackageName) ? FullName : $"{FullName} - {PackageName}";
 }

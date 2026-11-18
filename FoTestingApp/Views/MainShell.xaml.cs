@@ -40,9 +40,25 @@ public partial class MainShell : Window
         MouseMove += (_, _) => SessionManager.RecordActivity();
         KeyDown += (_, _) => SessionManager.RecordActivity();
 
+        // A token the server refuses (expired, revoked by a login elsewhere) ends the session here,
+        // instead of every screen quietly showing nothing.
+        ApiService.SessionRejected += OnSessionRejected;
+        Closed += (_, _) => ApiService.SessionRejected -= OnSessionRejected;
+
         // Navigate ke Pengujian Baru (NewTest) sebagai halaman awal
         NavigateTo("NewTest");
     }
+
+    private void OnSessionRejected() => Dispatcher.BeginInvoke(() =>
+    {
+        if (DialogOverlay.Visibility == Visibility.Visible && BtnDialogConfirm.Tag as string == "session_expired")
+        {
+            return;
+        }
+
+        _sessionTimer.Stop();
+        ShowDialog("Sesi Berakhir", "Server menolak sesi login ini (kedaluwarsa atau login di perangkat lain). Silakan login kembali.", "OK", "session_expired", false);
+    });
 
     private void SessionTimer_Tick(object? sender, EventArgs e)
     {
@@ -102,10 +118,12 @@ public partial class MainShell : Window
         ShowDialog("Konfirmasi Keluar", "Apakah Anda yakin ingin keluar dari aplikasi?", "Keluar", "logout", true);
     }
 
-    private void DoLogout()
+    private async void DoLogout()
     {
         _sessionTimer.Stop();
-        _auth.Logout();
+        // Leaving the page cancels a test still running on it.
+        ContentFrame.Content = null;
+        await _auth.LogoutAsync();
 
         var login = new LoginWindow();
         login.Show();

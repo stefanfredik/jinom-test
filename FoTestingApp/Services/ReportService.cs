@@ -1,4 +1,5 @@
 using FoTestingApp.Models;
+using FoTestingApp.Services.Core;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -13,7 +14,8 @@ public class ReportService
 {
     static ReportService()
     {
-        // QuestPDF community license (gratis untuk non-commercial)
+        // QuestPDF Community licence: free for organisations under USD 1M annual revenue — check
+        // eligibility, or buy a Professional licence, before relying on it.
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
@@ -44,7 +46,7 @@ public class ReportService
                 page.Margin(1.5f, Unit.Centimetre);
                 page.DefaultTextStyle(x => x.FontFamily("Arial").FontSize(10));
 
-                page.Header().Element(ComposeHeader);
+                page.Header().Element(c => ComposeHeader(c, session));
                 page.Content().Element(c => ComposeContent(c, session));
                 page.Footer().Element(ComposeFooter);
             });
@@ -53,7 +55,7 @@ public class ReportService
 
     // ── Header ──────────────────────────────────────────────────────────────────
 
-    private static void ComposeHeader(IContainer container)
+    private static void ComposeHeader(IContainer container, FoTestSession session)
     {
         container.PaddingBottom(10).BorderBottom(1).BorderColor(Colors.Green.Medium).Row(row =>
         {
@@ -67,7 +69,9 @@ public class ReportService
             row.ConstantItem(120).AlignRight().Column(col =>
             {
                 col.Item().Text("Jinom Test").FontSize(9).FontColor(Colors.Grey.Darken1);
-                col.Item().Text($"Tanggal: {DateTime.Now:dd MMMM yyyy}").FontSize(9);
+                // The test's date; the print date is only a footnote.
+                col.Item().Text($"Tanggal uji: {session.TestDate:dd MMMM yyyy}").FontSize(9);
+                col.Item().Text($"Dicetak: {DateTime.Now:dd MMM yyyy HH:mm}").FontSize(7).FontColor(Colors.Grey.Darken1);
             });
         });
     }
@@ -83,8 +87,13 @@ public class ReportService
             {
                 row.RelativeItem().Text($"ID PENGUJIAN: {session.CertificationId}")
                    .FontColor(Colors.White).Bold().FontSize(11);
-                row.ConstantItem(80).AlignRight().Text($"Status: {session.OverallStatus}")
-                   .FontColor(session.OverallStatus == TestOverallStatus.Pass ? Colors.Green.Lighten3 : Colors.Red.Lighten3)
+                row.ConstantItem(120).AlignRight().Text($"Status: {session.OverallStatus.ToString().ToUpperInvariant()}")
+                   .FontColor(session.OverallStatus switch
+                   {
+                       TestOverallStatus.Pass => Colors.Green.Lighten3,
+                       TestOverallStatus.Partial => Colors.Yellow.Lighten2,
+                       _ => Colors.Red.Lighten3,
+                   })
                    .Bold().FontSize(11);
             });
 
@@ -101,11 +110,12 @@ public class ReportService
                        c.Item().PaddingTop(4);
                        if (session.Customer is not null)
                        {
-                           c.Item().Row(r => InfoRow(r, "Tipe Site", session.Customer.SiteType.ToUpper()));
+                           c.Item().Row(r => InfoRow(r, "Nama", session.Customer.FullName));
+                           c.Item().Row(r => InfoRow(r, "Tipe Site", session.Customer.SiteType.ToUpperInvariant()));
                            if (!string.IsNullOrEmpty(session.Customer.SiteId))
                                c.Item().Row(r => InfoRow(r, "Site ID", session.Customer.SiteId));
-                           c.Item().Row(r => InfoRow(r, "Alamat", session.Customer.Address));
-                           c.Item().Row(r => InfoRow(r, "Paket", $"{session.Customer.PackageMbps} Mbps"));
+                           c.Item().Row(r => InfoRow(r, "Alamat", string.IsNullOrWhiteSpace(session.Customer.Address) ? "-" : session.Customer.Address));
+                           c.Item().Row(r => InfoRow(r, "Paket", session.Customer.PackageText));
                        }
                    });
 
@@ -115,7 +125,10 @@ public class ReportService
                     c.Item().Text("DATA PENGUJIAN").Bold().FontSize(9).FontColor(Colors.Grey.Darken2);
                     c.Item().PaddingTop(4);
                     c.Item().Row(r => InfoRow(r, "Teknisi", session.Technician?.Name ?? "-"));
-                    c.Item().Row(r => InfoRow(r, "Tanggal", session.TestDate.ToString("dd/MM/yyyy HH:mm")));
+                    c.Item().Row(r => InfoRow(r, "Mulai", (session.StartTime ?? session.TestDate).ToString("dd/MM/yyyy HH:mm")));
+                    if (session.EndTime is { } end)
+                        c.Item().Row(r => InfoRow(r, "Selesai", end.ToString("dd/MM/yyyy HH:mm")));
+                    c.Item().Row(r => InfoRow(r, "Hasil", $"{session.Results.Count(x => x.Status == TestStatus.Pass)} dari {session.Results.Count} lulus"));
                     c.Item().Row(r => InfoRow(r, "Catatan", session.Notes ?? "-"));
                 });
             });
@@ -159,6 +172,12 @@ public class ReportService
 
     private static void ComposeResultsTable(IContainer container, List<FoTestResult> results)
     {
+        if (results.Count == 0)
+        {
+            container.Padding(8).Text("Belum ada hasil pengujian tersimpan untuk sesi ini.").Italic().FontSize(9);
+            return;
+        }
+
         container.Table(table =>
         {
             table.ColumnsDefinition(cols =>
@@ -191,7 +210,8 @@ public class ReportService
                 i++;
                 var bg = i % 2 == 0 ? Color.FromHex("#F4F6FA") : Colors.White;
                 var statusColor = result.Status == TestStatus.Pass ? Colors.Green.Darken2 : Colors.Red.Darken2;
-                var statusText = result.Status == TestStatus.Pass ? "PASS ✓" : "FAIL ✗";
+                // Plain words: Arial has no check mark glyph.
+                var statusText = result.Status == TestStatus.Pass ? "PASS" : "FAIL";
                 var detail = ExtractDetailText(result);
 
                 table.Cell().Background(bg).Padding(5).Text(i.ToString()).FontSize(9);
@@ -224,69 +244,11 @@ public class ReportService
 
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
-    private static string FormatTestTypeName(string testType) => testType switch
-    {
-        TestTypes.PingGateway => "Ping Gateway ISP",
-        TestTypes.PingDns => "Ping DNS Server",
-        TestTypes.NslookupNasional => "NSLookup Nasional",
-        TestTypes.NslookupInternasional => "NSLookup Internasional",
-        TestTypes.PingDomainLokal => "Ping Domain Lokal",
-        TestTypes.BrowsingTest => "Pengujian Browsing",
-        TestTypes.StreamingTest => "Pengujian Streaming",
-        TestTypes.SocialMediaTest => "Pengujian Social Media",
-        TestTypes.SpeedtestFast => "Speedtest Fast.com",
-        TestTypes.SpeedtestOokla => "Speedtest Ookla",
-        _ => testType,
-    };
+    private static string FormatTestTypeName(string testType) => ResultFormatter.TestName(testType);
 
     private static string ExtractDetailText(FoTestResult result)
     {
-        if (result.ResultData is null) { return "-"; }
-
-        try
-        {
-            var root = result.ResultData.RootElement;
-            if (root.ValueKind == JsonValueKind.String)
-            {
-                var doc = JsonDocument.Parse(root.GetString() ?? "{}");
-                root = doc.RootElement;
-            }
-
-            if (result.Status == TestStatus.Fail && root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind != JsonValueKind.Null)
-            {
-                var errMsg = errorElement.GetString();
-                if (!string.IsNullOrWhiteSpace(errMsg))
-                {
-                    return $"Gagal: {errMsg}";
-                }
-            }
-
-            return result.TestType switch
-            {
-                TestTypes.PingGateway or TestTypes.PingDns or TestTypes.PingDomainLokal =>
-                    $"Avg: {root.GetProperty("avg_ms").GetInt64()}ms | Max: {root.GetProperty("max_ms").GetInt64()}ms | RTO: {root.GetProperty("rto").GetInt32()}",
-
-                TestTypes.NslookupNasional or TestTypes.NslookupInternasional =>
-                    string.Join(", ", root.GetProperty("domains").EnumerateObject()
-                        .Select(d => $"{d.Name}: {d.Value.GetString()}")),
-
-                TestTypes.BrowsingTest =>
-                    string.Join(" | ", root.GetProperty("results").EnumerateObject()
-                        .Select(r => $"{(r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " "))}: {r.Value.GetDouble():F1}s")),
-
-                TestTypes.StreamingTest or TestTypes.SocialMediaTest =>
-                    string.Join(" | ", root.GetProperty("results").EnumerateObject()
-                        .Select(r => $"{(r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " "))}: {r.Value.GetString()}")),
-
-                TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla =>
-                    $"↓ {root.GetProperty("download_mbps").GetDouble():F1} Mbps | ↑ {(root.TryGetProperty("upload_mbps", out var uElement) ? uElement.GetDouble() : 0.0):F1} Mbps",
-
-                _ => "-",
-            };
-        }
-        catch
-        {
-            return "-";
-        }
+        var rows = ResultFormatter.Rows(result.TestType, result.ResultData?.RootElement);
+        return rows.Count == 0 ? "-" : string.Join("\n", rows.Select(r => $"{r.Label}: {r.Value}"));
     }
 }

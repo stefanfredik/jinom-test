@@ -94,8 +94,8 @@ Seluruh pengujian dieksekusi secara otomatis dan berurutan setelah pengguna memu
 
 FR-020: Ping Gateway ISP
 Parameter	Keterangan
-Target	Gateway router distribusi ISP
-Jumlah Ping	100 kali (configurable)
+Target	Gateway router distribusi ISP: default gateway adapter aktif (deteksi otomatis), bisa ditimpa di Pengaturan. Bila tidak ditemukan, tes dicatat FAIL dengan alasannya.
+Jumlah Ping	100 kali (configurable), jeda 200 ms antar-ping
 Output	Latency Max, Min, Average, RTO count
 Threshold Pass	Average <= 10ms, RTO = 0
 Tujuan	Memastikan koneksi antara router distribusi dan POP utama Jinom berjalan baik
@@ -105,57 +105,61 @@ Parameter	Keterangan
 Target DNS	DNS Jinom (103.122.65.66) - configurable
 Jumlah Ping	100 kali
 Output	Latency Max, Min, Average, RTO count
-Threshold Pass	Average <= 15ms, RTO = 0
+Threshold Pass	Average <= 35ms, RTO = 0 (configurable)
 Tujuan	Memastikan akses ke DNS Server dengan stabil untuk layanan resolusi nama domain
 
 FR-022: NSLookup Domain Nasional
 •	Sistem melakukan NSLookup terhadap domain-domain nasional yang dikonfigurasi
-•	Domain default: jinom.net, kompas.com
-•	Output: Status resolusi (Resolved / Failed) untuk setiap domain
+•	Domain default: jinom.net, kompas.com, detik.com
+•	Query langsung ke server DNS adapter tanpa cache (bukan cache Windows atau file hosts)
+•	Output: Status resolusi (Resolved / Failed / Timeout) untuk setiap domain dan server DNS yang ditanya
 •	Tujuan: Memvalidasi konfigurasi DNS internal untuk domain lokal Indonesia
 
 FR-023: NSLookup Domain Internasional
 •	Sistem melakukan NSLookup terhadap domain-domain internasional yang dikonfigurasi
-•	Domain default: google.com, facebook.com
-•	Output: Status resolusi (Resolved / Failed) untuk setiap domain
+•	Domain default: google.com, facebook.com, amazon.com
+•	Output: Status resolusi (Resolved / Failed / Timeout) untuk setiap domain
 •	Tujuan: Memverifikasi koneksi dan performa DNS menuju internet luar
 
 FR-024: Ping Domain Lokal
 Parameter	Keterangan
-Target Default	detik.com (configurable)
-Jumlah Ping	Sesuai konfigurasi (default: 10)
+Target Default	jinom.net, kompas.com (configurable)
+Jumlah Ping	Sesuai konfigurasi (default: 35)
 Output	Latency Max, Min, Average, RTO count, Target Domain
+Threshold Pass	Average <= 35ms, RTO = 0 (configurable)
 Tujuan	Menguji konektivitas dan respons jaringan ke server/layanan lokal Indonesia
 
 3.4 Modul Testing Aplikasi
 FR-030: Pengujian Browsing
 Sistem mengakses URL yang dikonfigurasi dan mengukur waktu loading halaman:
 •	URL Default: https://kompas.com, https://jinom.net
-•	Output: Waktu akses dalam satuan detik untuk setiap URL
+•	Output: Waktu akses dalam satuan detik untuk setiap URL (koneksi baru tiap pengukuran, termasuk DNS, TCP dan TLS); halaman yang tidak termuat dicatat "Gagal dimuat" beserta alasannya
 •	Threshold Pass: Waktu akses <= 10 detik
 
 FR-031: Pengujian Streaming
 Sistem memverifikasi aksesibilitas layanan streaming:
 •	URL Default: https://youtube.com, https://tiktok.com
-•	Output: Status aksesibilitas (Loaded / Failed)
-•	Threshold Pass: Status = Loaded
+•	Output: Status aksesibilitas (Loaded / Failed) dan throughput unduhan video (CDN) minimal 5 Mbps
+•	Threshold Pass: Status = Loaded (situs menjawab dengan HTTP < 500) dan throughput cukup untuk 1080p
 
 FR-032: Pengujian Social Media
 Sistem memverifikasi aksesibilitas platform media sosial:
 •	URL Default: https://whatsapp.com, https://facebook.com
 •	Output: Status aksesibilitas (Loaded / Failed)
-•	Threshold Pass: Status = Loaded
+•	Threshold Pass: Status = Loaded (situs menjawab dengan HTTP < 500)
 
 3.5 Modul Speedtest
 FR-040: Jinom Speedtest
 •	Sistem menjalankan pengujian kecepatan menggunakan server speedtest Jinom
-•	Output: Kecepatan Download (Mbps) dan Upload (Mbps)
-•	Threshold Pass: Download >= 99% dari paket yang diterima pelanggan
+•	Sementara server Jinom belum tersedia, digantikan Fast.com (server Netflix)
+•	Output: Kecepatan Download (Mbps) dan Upload (Mbps), paket pelanggan dan kecepatan minimal lulus
+•	Threshold Pass: Download >= 85% dari paket yang diterima pelanggan (Speedtest:ThresholdPercentage). Lokasi tanpa paket (POP): lulus bila kecepatan terukur
 
 FR-041: Ookla Speedtest
 •	Sistem menjalankan pengujian kecepatan menggunakan layanan Ookla (speedtest.net)
 •	Output: Kecepatan Download (Mbps) dan Upload (Mbps)
 •	Digunakan sebagai pembanding hasil Jinom Speedtest
+•	Threshold Pass: sama dengan FR-040
 
 3.6 Modul Penyimpanan & Laporan
 FR-050: Simpan Hasil ke jinom-assets
@@ -313,13 +317,13 @@ Parameter	Default	Keterangan
 DNS Target (Ping DNS)	103.122.65.66	IP DNS Server Jinom
 Jumlah Ping Gateway	100	Jumlah iterasi ping
 Jumlah Ping DNS	100	Jumlah iterasi ping DNS
-Domain NSLookup Nasional	jinom.net, kompas.com	Daftar domain yang diuji
-Domain NSLookup Internasional	google.com, facebook.com	Daftar domain internasional
-Domain Ping Lokal	detik.com	Target ping domain lokal
+Domain NSLookup Nasional	jinom.net, kompas.com, detik.com	Daftar domain yang diuji
+Domain NSLookup Internasional	google.com, facebook.com, amazon.com	Daftar domain internasional
+Domain Ping Lokal	jinom.net, kompas.com	Target ping domain lokal
 URL Browsing Test	kompas.com, jinom.net	URL untuk pengujian browsing
 URL Streaming Test	youtube.com, tiktok.com	URL untuk pengujian streaming
 URL Social Media Test	whatsapp.com, facebook.com	URL untuk pengujian sosmed
-Threshold Speedtest (%)	99	% minimal dari paket pelanggan
+Threshold Speedtest (%)	85	% minimal dari paket pelanggan
 Timeout Sesi (menit)	30	Auto logout jika tidak aktif
 
  

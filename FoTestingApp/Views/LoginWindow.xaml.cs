@@ -45,11 +45,11 @@ public partial class LoginWindow : Window
 
         try
         {
-            var user = await _auth.LoginAsync(email, password);
+            var outcome = await _auth.LoginAsync(email, password);
 
-            if (user is null)
+            if (outcome.User is null)
             {
-                ShowError("Email atau password salah. Silakan coba lagi.");
+                ShowError(outcome.Error ?? "Login gagal. Silakan coba lagi.");
                 PasswordBox.Clear();
                 return;
             }

@@ -1,8 +1,5 @@
+using System.Diagnostics;
 using System.Net.Http;
-using System.Text.Json;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
 using Serilog;
@@ -10,267 +7,202 @@ using Serilog;
 namespace FoTestingApp.Services;
 
 /// <summary>
-/// Pengujian aplikasi: Browsing (load time), Streaming, Social Media (aksesibilitas HTTP).
+/// Application tests: Browsing (how long a page takes to answer), Streaming (the sites answer, and a
+/// video-sized download is fast enough) and Social Media (the sites answer).
+///
+/// Requests carry a browser User-Agent (AppTest:UserAgent): many sites refuse a client without one,
+/// which would read as the customer's internet failing. Each page is fetched on a fresh connection,
+/// so DNS, TCP and TLS are part of every measurement and a retry is not flattered by a warm one.
 /// </summary>
 public class AppTestService
 {
-    private readonly ApiService _api;
-    private readonly int _sessionId;
-    private static readonly HttpClient _client = new(new HttpClientHandler { AllowAutoRedirect = true })
-    {
-        Timeout = TimeSpan.FromSeconds(60)
-    };
+    /// <summary>A video-sized download from a CDN, read for a few seconds to estimate throughput.</summary>
+    private const string StreamingProbeUrl = "https://speed.cloudflare.com/__down?bytes=25000000";
 
-    public AppTestService(ApiService api, int sessionId)
-    {
-        _api = api;
-        _sessionId = sessionId;
-    }
+    /// <summary>A steady 1080p stream needs about this much.</summary>
+    private const double StreamingMinMbps = 5.0;
 
-    public async Task<(int passCount, int totalCount)> RunAllAsync(StackPanel panel, IProgress<(int percent, string status)> progress)
+    public async Task RunAllAsync(TestRun run, System.Windows.Controls.StackPanel panel)
     {
-        var pass = 0;
-        var total = 0;
+        using var client = CreateClient();
 
-        // Browsing
-        total++;
+        // Browsing: every page within the threshold.
+        run.Cancellation.ThrowIfCancellationRequested();
         var browsingUrls = ConfigManager.GetBrowsingUrls();
-        var browsingResults = new Dictionary<string, double>();
         var thresholdSec = ConfigManager.GetBrowsingThresholdSeconds();
-
+        var loadTimes = new Dictionary<string, double?>();
+        var errors = new Dictionary<string, string>();
         foreach (var url in browsingUrls)
         {
-            var loadTime = await MeasureLoadTimeAsync(url, thresholdSec);
-            browsingResults[url] = loadTime;
-        }
-
-        var browsingPass = browsingResults.Values.All(t => t <= thresholdSec && t >= 0);
-        if (browsingPass) { pass++; }
-
-        try
-        {
-            await _api.SaveTestResultAsync(new FoTestResult
+            var (seconds, error) = await MeasureLoadTimeAsync(url, thresholdSec, run.Cancellation);
+            loadTimes[url] = seconds is null ? null : Math.Round(seconds.Value, 2);
+            if (error is not null)
             {
-                SessionId = _sessionId,
-                TestType = TestTypes.BrowsingTest,
-                Target = string.Join(", ", browsingUrls),
-                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = browsingResults, threshold_sec = thresholdSec })),
-                Status = browsingPass ? TestStatus.Pass : TestStatus.Fail,
-            });
+                errors[url] = error;
+            }
         }
-        catch (Exception ex) { Log.Warning(ex, "Failed to save browsing result"); }
 
-        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildHttpCard("Browsing", browsingResults.ToDictionary(
-            k => k.Key, v => v.Value >= 0 ? $"{v.Value:F1}s" : "Error"), browsingPass)));
+        var browsingPass = browsingUrls.Length > 0 && loadTimes.Values.All(t => t is not null && t <= thresholdSec);
+        await run.RecordAsync(TestTypes.BrowsingTest, string.Join(", ", browsingUrls),
+            new { results = loadTimes, errors, threshold_sec = thresholdSec, error = browsingUrls.Length == 0 ? "Daftar URL kosong." : null }, browsingPass);
+        AddCard(panel, "Browsing", browsingPass, loadTimes.Select(t => (t.Key, t.Value is { } s && s <= thresholdSec,
+            t.Value is { } v ? $"{v:0.0} detik" : errors.GetValueOrDefault(t.Key, "gagal"))));
 
-        // Streaming
-        total++;
+        // Streaming: the sites answer, and the line carries a 1080p stream.
+        run.Cancellation.ThrowIfCancellationRequested();
         var streamingUrls = ConfigManager.GetStreamingUrls();
-        var streamingThreshold = ConfigManager.GetStreamingThresholdSeconds();
-        var streamingResults = await SimulateStreamingAsync(streamingUrls, streamingThreshold);
-        var streamingPass = streamingResults.Values.All(v => !v.StartsWith("Failed") && !v.StartsWith("Error"));
-        if (streamingPass) { pass++; }
+        var streaming = await CheckAccessibilityAsync(client, streamingUrls, ConfigManager.GetStreamingThresholdSeconds(), run.Cancellation);
+        var throughput = await MeasureStreamingThroughputAsync(client, run.Cancellation);
+        streaming["Video_Throughput"] = throughput.Text;
+        var streamingPass = streamingUrls.Length > 0 && streaming.Values.All(IsOk) && throughput.Ok;
+        await run.RecordAsync(TestTypes.StreamingTest, string.Join(", ", streamingUrls), new { results = streaming }, streamingPass);
+        AddCard(panel, "Streaming", streamingPass, streaming.Select(s => (s.Key, IsOk(s.Value), s.Value)));
 
-        try
-        {
-            await _api.SaveTestResultAsync(new FoTestResult
-            {
-                SessionId = _sessionId,
-                TestType = TestTypes.StreamingTest,
-                Target = string.Join(", ", streamingUrls),
-                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = streamingResults })),
-                Status = streamingPass ? TestStatus.Pass : TestStatus.Fail,
-            });
-        }
-        catch (Exception ex) { Log.Warning(ex, "Failed to save streaming result"); }
-
-        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildHttpCard("Streaming", streamingResults, streamingPass)));
-
-        // Social Media
-        total++;
+        // Social Media: the sites answer.
+        run.Cancellation.ThrowIfCancellationRequested();
         var socialUrls = ConfigManager.GetSocialMediaUrls();
-        var socialThreshold = ConfigManager.GetSocialMediaThresholdSeconds();
-        var socialResults = await CheckAccessibilityAsync(socialUrls, socialThreshold);
-        var socialPass = socialResults.Values.All(v => v == "Loaded");
-        if (socialPass) { pass++; }
-
-        try
-        {
-            await _api.SaveTestResultAsync(new FoTestResult
-            {
-                SessionId = _sessionId,
-                TestType = TestTypes.SocialMediaTest,
-                Target = string.Join(", ", socialUrls),
-                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(new { results = socialResults })),
-                Status = socialPass ? TestStatus.Pass : TestStatus.Fail,
-            });
-        }
-        catch (Exception ex) { Log.Warning(ex, "Failed to save social media result"); }
-
-        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildHttpCard("Social Media", socialResults, socialPass)));
-
-        return (pass, total);
+        var social = await CheckAccessibilityAsync(client, socialUrls, ConfigManager.GetSocialMediaThresholdSeconds(), run.Cancellation);
+        var socialPass = socialUrls.Length > 0 && social.Values.All(IsOk);
+        await run.RecordAsync(TestTypes.SocialMediaTest, string.Join(", ", socialUrls), new { results = social }, socialPass);
+        AddCard(panel, "Social Media", socialPass, social.Select(s => (s.Key, IsOk(s.Value), s.Value)));
     }
 
-    private async Task<double> MeasureLoadTimeAsync(string url, int timeoutSec)
+    private static bool IsOk(string value) => value.StartsWith("Loaded") || value.StartsWith("Lancar");
+
+    private static HttpClient CreateClient(TimeSpan? timeout = null)
     {
-        try
+        var client = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = true, PooledConnectionLifetime = TimeSpan.Zero })
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
-            var start = DateTime.UtcNow;
-            var response = await _client.GetAsync(url, cts.Token);
-            var elapsed = (DateTime.UtcNow - start).TotalSeconds;
-            return response.IsSuccessStatusCode ? elapsed : -1;
-        }
-        catch
-        {
-            return -1;
-        }
+            Timeout = timeout ?? TimeSpan.FromSeconds(60),
+        };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(ConfigManager.GetAppTestUserAgent());
+        client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,*/*;q=0.8");
+        return client;
     }
 
-    private async Task<Dictionary<string, string>> SimulateStreamingAsync(string[] urls, int timeoutSec)
+    /// <summary>
+    /// Seconds until the page's document has arrived (redirects included), on a fresh connection.
+    /// Waits past the threshold (up to three times it) so a slow page shows its real time instead of
+    /// "error"; null with the reason when it does not load at all.
+    /// </summary>
+    private static async Task<(double? Seconds, string? Error)> MeasureLoadTimeAsync(string url, int thresholdSec, CancellationToken ct)
     {
-        var results = new Dictionary<string, string>();
-        
-        // 1. Pastikan situs utamanya bisa diakses terlebih dahulu
-        foreach (var url in urls)
-        {
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
-                var response = await _client.GetAsync(url, cts.Token);
-                results[url] = response.IsSuccessStatusCode ? "Akses Web OK" : $"Failed ({(int)response.StatusCode})";
-            }
-            catch (Exception ex)
-            {
-                results[url] = "Failed (Timeout)";
-                Log.Warning(ex, "Streaming main site access error reaching {Url}", url);
-            }
-        }
-
-        // 2. Simulasi Throughput Streaming dengan CDN Dummy (Cloudflare 25MB chunk)
-        var dummyUrl = "https://speed.cloudflare.com/__down?bytes=25000000";
+        using var client = CreateClient(TimeSpan.FromSeconds(Math.Max(thresholdSec * 3, 30)));
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)); // Batasi 5 detik
-            using var response = await _client.GetAsync(dummyUrl, HttpCompletionOption.ResponseHeadersRead, cts.Token);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
-                var buffer = new byte[81920];
-                long totalBytesRead = 0;
-                var start = DateTime.UtcNow;
-                
-                try 
-                {
-                    int bytesRead;
-                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cts.Token)) > 0)
-                    {
-                        totalBytesRead += bytesRead;
-                    }
-                }
-                catch (OperationCanceledException) { /* Diabaikan, waktu 5 detik habis (normal) */ }
-
-                var duration = (DateTime.UtcNow - start).TotalSeconds;
-                if (duration <= 0) duration = 0.1;
-
-                var mbps = (totalBytesRead * 8.0) / (1_000_000.0) / duration;
-                
-                // Standar 1080p butuh setidaknya ~5 Mbps stabil
-                if (mbps >= 5.0)
-                {
-                    results["Video_Throughput"] = $"{mbps:F1} Mbps (Lancar untuk 1080p)";
-                }
-                else
-                {
-                    results["Video_Throughput"] = $"Failed (Terlalu lambat: {mbps:F1} Mbps)";
-                }
-            }
-            else
-            {
-                results["Video_Throughput"] = "Failed (Server CDN lambat/Mati)";
-            }
+            var sw = Stopwatch.StartNew();
+            using var response = await client.GetAsync(url, HttpCompletionOption.ResponseContentRead, ct);
+            sw.Stop();
+            return (int)response.StatusCode < 500
+                ? (sw.Elapsed.TotalSeconds, null)
+                : (null, $"HTTP {(int)response.StatusCode}");
         }
-        catch (Exception)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            results["Video_Throughput"] = "Failed (Koneksi ke CDN Video gagal)";
+            throw;
         }
-
-        return results;
+        catch (TaskCanceledException)
+        {
+            return (null, "timeout");
+        }
+        catch (HttpRequestException ex)
+        {
+            Log.Warning(ex, "Browsing test could not reach {Url}", url);
+            return (null, ex.HttpRequestError.ToString());
+        }
     }
 
-    private async Task<Dictionary<string, string>> CheckAccessibilityAsync(string[] urls, int timeoutSec)
+    /// <summary>
+    /// Whether each site answers within the threshold. Any answer below 500 means the site is
+    /// reachable from this line — a 403 from bot protection is the site answering, not the internet
+    /// failing — and the status code is kept with it.
+    /// </summary>
+    private static async Task<Dictionary<string, string>> CheckAccessibilityAsync(HttpClient client, string[] urls, int timeoutSec, CancellationToken ct)
     {
         var results = new Dictionary<string, string>();
         foreach (var url in urls)
         {
+            ct.ThrowIfCancellationRequested();
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, timeoutSec)));
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
-                var response = await _client.GetAsync(url, cts.Token);
-                results[url] = response.IsSuccessStatusCode ? "Loaded" : $"Failed ({(int)response.StatusCode})";
+                using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+                var code = (int)response.StatusCode;
+                results[url] = code < 500 ? $"Loaded (HTTP {code})" : $"Failed (HTTP {code})";
             }
-            catch (Exception ex)
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                results[url] = "Failed (Timeout)";
-                Log.Warning(ex, "AppTest error reaching {Url}", url);
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                results[url] = $"Failed (timeout {timeoutSec} detik)";
+            }
+            catch (HttpRequestException ex)
+            {
+                results[url] = $"Failed ({ex.HttpRequestError})";
+                Log.Warning(ex, "App test could not reach {Url}", url);
             }
         }
 
         return results;
     }
 
-    private static Border BuildHttpCard(string label, Dictionary<string, string> results, bool pass)
+    /// <summary>Reads a large download for 5 seconds after its first byte; enough for 1080p is OK.</summary>
+    private static async Task<(bool Ok, string Text)> MeasureStreamingThroughputAsync(HttpClient client, CancellationToken ct)
     {
-        var primaryColor = pass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
-        var bgColor = pass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
-        var iconKind = pass ? MaterialDesignThemes.Wpf.PackIconKind.CheckCircle : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
-        var statusText = pass ? "COMPLETED" : "FAILED";
-        
-        string subtitle;
-        if (pass)
+        try
         {
-            subtitle = "Semua akses berhasil";
-        }
-        else
-        {
-            var failedItems = new List<string>();
-            foreach (var r in results)
+            using var response = await client.GetAsync(StreamingProbeUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+            if (!response.IsSuccessStatusCode)
             {
-                var val = r.Value;
-                if (val != null && (val.StartsWith("Failed") || val == "Error"))
+                return (false, $"Failed (CDN video HTTP {(int)response.StatusCode})");
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var window = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            window.CancelAfter(TimeSpan.FromSeconds(5));
+            var buffer = new byte[81920];
+            long total = 0;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                int read;
+                while ((read = await stream.ReadAsync(buffer, window.Token)) > 0)
                 {
-                    if (r.Key == "Video_Throughput")
-                    {
-                        if (val.Contains("(") && val.Contains(")"))
-                        {
-                            var startIdx = val.IndexOf('(') + 1;
-                            var len = val.IndexOf(')') - startIdx;
-                            failedItems.Add(val.Substring(startIdx, len));
-                        }
-                        else
-                        {
-                            failedItems.Add("Throughput video lambat");
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            var uri = new Uri(r.Key);
-                            failedItems.Add($"{uri.Host} gagal");
-                        }
-                        catch
-                        {
-                            failedItems.Add($"{r.Key} gagal");
-                        }
-                    }
+                    total += read;
                 }
             }
-            subtitle = failedItems.Count > 0 ? $"Gagal di: {string.Join(", ", failedItems)}" : "Beberapa akses gagal";
-        }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                // The 5-second window closed: the measurement is what arrived in it.
+            }
+            sw.Stop();
 
-        return FoTestingApp.Helpers.UIHelper.CreateLogCard(label, subtitle, primaryColor, bgColor, iconKind, statusText);
+            var mbps = total * 8.0 / 1_000_000 / Math.Max(sw.Elapsed.TotalSeconds, 0.1);
+            return mbps >= StreamingMinMbps
+                ? (true, $"Lancar untuk 1080p ({mbps:0.0} Mbps)")
+                : (false, $"Failed (terlalu lambat: {mbps:0.0} Mbps)");
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Streaming throughput probe failed");
+            return (false, "Failed (koneksi ke CDN video gagal)");
+        }
     }
+
+    private static void AddCard(System.Windows.Controls.StackPanel panel, string label, bool passed, IEnumerable<(string Key, bool Ok, string Value)> items)
+    {
+        var failed = items.Where(i => !i.Ok).Select(i => $"{Host(i.Key)}: {i.Value}").ToList();
+        var description = passed ? "Semua akses berhasil" : failed.Count > 0 ? $"Gagal di: {string.Join(", ", failed)}" : "Tidak ada target yang diuji";
+        panel.Dispatcher.Invoke(() => panel.Children.Add(NetworkTestService.BuildCard(label, description, passed, MaterialDesignThemes.Wpf.PackIconKind.Web)));
+    }
+
+    private static string Host(string key) =>
+        Uri.TryCreate(key, UriKind.Absolute, out var uri) ? uri.Host : key.Replace('_', ' ');
 }

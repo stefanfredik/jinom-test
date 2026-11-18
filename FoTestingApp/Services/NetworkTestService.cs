@@ -1,256 +1,249 @@
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text.Json;
-using System.Windows;
+using System.Net.Sockets;
 using System.Windows.Controls;
 using System.Windows.Media;
+using DnsClient;
 using FoTestingApp.Helpers;
 using FoTestingApp.Models;
-using FoTestingApp.Services;
+using FoTestingApp.Services.Core;
 using Serilog;
 
 namespace FoTestingApp.Services;
 
 /// <summary>
-/// Menjalankan semua pengujian jaringan (Ping Gateway, Ping DNS, NSLookup, Ping Domain Lokal)
-/// secara berurutan dan menampilkan hasil real-time ke UI.
+/// Runs the whole test package in order — Ping Gateway, Ping DNS, NSLookup, Ping Domain Lokal, then
+/// the application tests and the speedtests — showing each result as it comes. Every configured
+/// test produces a result: one that cannot run (no gateway found, an empty list in Settings) is a
+/// FAIL with its reason, never silently left out of the count.
 /// </summary>
 public class NetworkTestService
 {
-    private readonly ApiService _api;
-    private readonly int _sessionId;
-    private int _passCount;
-    private int _totalCount;
-
-    public NetworkTestService(ApiService api, int sessionId)
+    public async Task RunAllAsync(TestRun run, StackPanel resultsPanel, IProgress<(int percent, string status)> progress, int packageMbps)
     {
-        _api = api;
-        _sessionId = sessionId;
-    }
-
-    public TestOverallStatus OverallStatus =>
-        _totalCount == 0 ? TestOverallStatus.Fail :
-        _passCount == _totalCount ? TestOverallStatus.Pass :
-        _passCount > 0 ? TestOverallStatus.Partial :
-        TestOverallStatus.Fail;
-
-    /// <summary>
-    /// Jalankan semua test berurutan. Update progress bar dan panel hasil via IProgress.
-    /// </summary>
-    public async Task RunAllAsync(StackPanel resultsPanel, IProgress<(int percent, string status)> progress, int packageMbps)
-    {
-        _passCount = 0;
-        _totalCount = 0;
-
+        var ct = run.Cancellation;
         progress.Report((0, "Memulai pengujian..."));
 
-        // 1. Ping Gateway ISP
+        // 1. Ping Gateway ISP: the configured target, else the active adapter's default gateway.
         progress.Report((5, "Task 1 of 7|Ping Gateway ISP|Mengirim paket ICMP..."));
-        var gwTarget = ConfigManager.GetPingGatewayTarget();
-        if (!string.IsNullOrEmpty(gwTarget))
+        var gateway = ResolveGateway();
+        if (gateway is null)
         {
-            await RunPingTestAsync(resultsPanel, TestTypes.PingGateway, gwTarget,
+            await FailUnrunnableAsync(run, resultsPanel, TestTypes.PingGateway, "-", "Gateway tidak ditemukan: tidak ada adapter jaringan aktif dengan default gateway.");
+        }
+        else
+        {
+            await RunPingTestAsync(run, resultsPanel, TestTypes.PingGateway, gateway,
                 ConfigManager.GetPingGatewayCount(), ConfigManager.GetPingGatewayThresholdMs(), ConfigManager.GetPingGatewayMaxRto());
         }
         progress.Report((20, "Task 1 of 7|Ping Gateway ISP|Selesai"));
 
         // 2. Ping DNS
         progress.Report((22, "Task 2 of 7|Ping DNS Server|Mengirim paket ICMP..."));
-        var dnsTargets = ConfigManager.GetPingDnsTargets();
-        foreach (var target in dnsTargets)
-        {
-            await RunPingTestAsync(resultsPanel, TestTypes.PingDns, target,
-                ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs(), ConfigManager.GetPingDnsMaxRto());
-        }
+        await PingEachAsync(run, resultsPanel, TestTypes.PingDns, ConfigManager.GetPingDnsTargets(),
+            ConfigManager.GetPingDnsCount(), ConfigManager.GetPingDnsThresholdMs(), ConfigManager.GetPingDnsMaxRto());
         progress.Report((40, "Task 2 of 7|Ping DNS Server|Selesai"));
 
         // 3. NSLookup Nasional
         progress.Report((42, "Task 3 of 7|NSLookup Nasional|Resolving DNS..."));
-        await RunNslookupAsync(resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains(), ConfigManager.GetNslookupNasionalTimeoutSeconds());
+        await RunNslookupAsync(run, resultsPanel, TestTypes.NslookupNasional, ConfigManager.GetNslookupNasionalDomains(), ConfigManager.GetNslookupNasionalTimeoutSeconds());
         progress.Report((55, "Task 3 of 7|NSLookup Nasional|Selesai"));
 
         // 4. NSLookup Internasional
         progress.Report((57, "Task 4 of 7|NSLookup Internasional|Resolving DNS..."));
-        await RunNslookupAsync(resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains(), ConfigManager.GetNslookupInternasionalTimeoutSeconds());
+        await RunNslookupAsync(run, resultsPanel, TestTypes.NslookupInternasional, ConfigManager.GetNslookupInternasionalDomains(), ConfigManager.GetNslookupInternasionalTimeoutSeconds());
         progress.Report((65, "Task 4 of 7|NSLookup Internasional|Selesai"));
 
         // 5. Ping Domain Lokal
         progress.Report((67, "Task 5 of 7|Ping Domain Lokal|Mengirim paket ICMP..."));
-        var localDomains = ConfigManager.GetPingDomainLokalDomains();
-        foreach (var domain in localDomains)
-        {
-            await RunPingTestAsync(resultsPanel, TestTypes.PingDomainLokal, domain,
-                ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingDomainLokalThresholdMs(), ConfigManager.GetPingDomainLokalMaxRto());
-        }
+        await PingEachAsync(run, resultsPanel, TestTypes.PingDomainLokal, ConfigManager.GetPingDomainLokalDomains(),
+            ConfigManager.GetPingDomainLokalCount(), ConfigManager.GetPingDomainLokalThresholdMs(), ConfigManager.GetPingDomainLokalMaxRto());
         progress.Report((80, "Task 5 of 7|Ping Domain Lokal|Selesai"));
 
         // 6. App Tests
         progress.Report((82, "Task 6 of 7|Aksesibilitas Aplikasi|Loading resource..."));
-        var appSvc = new AppTestService(_api, _sessionId);
-        var appResults = await appSvc.RunAllAsync(resultsPanel, progress);
-        _passCount += appResults.passCount;
-        _totalCount += appResults.totalCount;
+        await new AppTestService().RunAllAsync(run, resultsPanel);
         progress.Report((92, "Task 6 of 7|Aksesibilitas Aplikasi|Selesai"));
 
         // 7. Speedtest
         progress.Report((93, "Task 7 of 7|Speedtest|Mengukur throughput..."));
-        var speedSvc = new SpeedtestService(_api, _sessionId);
-        var speedResults = await speedSvc.RunAllAsync(resultsPanel, packageMbps);
-        _passCount += speedResults.passCount;
-        _totalCount += speedResults.totalCount;
-        progress.Report((100, $"Task 7 of 7|Selesai|Status Akhir: {OverallStatus}"));
+        await new SpeedtestService().RunAllAsync(run, resultsPanel, packageMbps);
+        progress.Report((100, $"Task 7 of 7|Selesai|Status Akhir: {run.OverallStatus}"));
+        ct.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>The gateway to ping: the configured one, else the first active IPv4 default gateway.</summary>
+    private static string? ResolveGateway()
+    {
+        var configured = ConfigManager.GetPingGatewayTarget();
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.Trim();
+        }
+
+        try
+        {
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .Where(nic => nic.OperationalStatus == OperationalStatus.Up
+                    && nic.NetworkInterfaceType is not (NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel))
+                .SelectMany(nic => nic.GetIPProperties().GatewayAddresses)
+                .Select(g => g.Address)
+                .FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork && !a.Equals(IPAddress.Any))
+                ?.ToString();
+        }
+        catch (NetworkInformationException ex)
+        {
+            Log.Warning(ex, "Could not read the network adapters' gateways");
+            return null;
+        }
+    }
+
+    private async Task PingEachAsync(TestRun run, StackPanel panel, string testType, string[] targets, int count, int thresholdMs, int maxRto)
+    {
+        if (targets.Length == 0)
+        {
+            await FailUnrunnableAsync(run, panel, testType, "-", "Daftar target kosong. Isi di Pengaturan.");
+            return;
+        }
+
+        foreach (var target in targets)
+        {
+            await RunPingTestAsync(run, panel, testType, target, count, thresholdMs, maxRto);
+        }
     }
 
     // ── Ping Test ──────────────────────────────────────────────────────────────
 
-    private async Task RunPingTestAsync(StackPanel panel, string testType, string target, int count, int thresholdMs, int maxRto)
+    private async Task RunPingTestAsync(TestRun run, StackPanel panel, string testType, string target, int count, int thresholdMs, int maxRto)
     {
-        _totalCount++;
+        run.Cancellation.ThrowIfCancellationRequested();
         var latencies = new List<long>();
-        var rtoCount = 0;
+        var interval = ConfigManager.GetPingIntervalMs();
+        string? error = null;
 
-        using var pingSvc = new Ping();
+        using var ping = new Ping();
         for (var i = 0; i < count; i++)
         {
+            run.Cancellation.ThrowIfCancellationRequested();
             try
             {
-                var reply = await pingSvc.SendPingAsync(target, 2000);
+                var reply = await ping.SendPingAsync(target, 2000);
                 if (reply.Status == IPStatus.Success)
                 {
                     latencies.Add(reply.RoundtripTime);
                 }
-                else
-                {
-                    rtoCount++;
-                }
             }
-            catch (Exception ex)
+            catch (PingException ex)
             {
+                // A name that does not resolve fails every ping the same way: say so once.
+                error ??= ex.InnerException?.Message ?? ex.Message;
                 Log.Warning(ex, "Ping error to {Target}", target);
-                rtoCount++;
+            }
+
+            // Spaced like ping does, so routers that rate-limit ICMP do not drop back-to-back echoes as RTO.
+            if (i < count - 1 && interval > 0)
+            {
+                await Task.Delay(interval, run.Cancellation);
             }
         }
 
-        var avg = latencies.Count > 0 ? (long)latencies.Average() : 9999;
-        var max = latencies.Count > 0 ? latencies.Max() : 9999;
-        var min = latencies.Count > 0 ? latencies.Min() : 9999;
-        var status = avg <= thresholdMs && rtoCount <= maxRto ? TestStatus.Pass : TestStatus.Fail;
-
-        if (status == TestStatus.Pass) { _passCount++; }
-
-        var resultData = new { ping_count = count, avg_ms = avg, max_ms = max, min_ms = min, rto = rtoCount, threshold_ms = thresholdMs, max_rto = maxRto };
-
-        // Simpan ke API
-        try
+        var stats = PingStats.From(count, latencies);
+        var passed = stats.Passes(thresholdMs, maxRto);
+        var data = new
         {
-            await _api.SaveTestResultAsync(new FoTestResult
-            {
-                SessionId = _sessionId,
-                TestType = testType,
-                Target = target,
-                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
-                Status = status,
-            });
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to save {TestType} result", testType);
-        }
+            ping_count = stats.Sent,
+            received = stats.Received,
+            rto = stats.Rto,
+            loss_pct = Math.Round(stats.LossPercent, 1),
+            avg_ms = stats.AvgMs is null ? (double?)null : Math.Round(stats.AvgMs.Value, 1),
+            min_ms = stats.MinMs,
+            max_ms = stats.MaxMs,
+            threshold_ms = thresholdMs,
+            max_rto = maxRto,
+            error = stats.Received == 0 ? error ?? "Tidak ada balasan" : null,
+        };
 
-        // Tampilkan di UI
-        panel.Dispatcher.Invoke(() =>
-            panel.Children.Add(BuildResultCard(testType, target, status, resultData)));
+        await run.RecordAsync(testType, target, data, passed);
+
+        var label = ResultFormatter.TestName(testType);
+        var desc = stats.Received == 0
+            ? $"{target}: tidak ada balasan ({stats.Sent} RTO)"
+            : $"{target} — Avg: {ResultFormatter.Ms(stats.AvgMs)} | RTO: {stats.Rto}";
+        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildCard(label, desc, passed, MaterialDesignThemes.Wpf.PackIconKind.CheckCircle)));
     }
 
     // ── NSLookup Test ───────────────────────────────────────────────────────────
 
-    private async Task RunNslookupAsync(StackPanel panel, string testType, string[] domains, int timeoutSeconds)
+    /// <summary>
+    /// Asks the adapter's DNS servers directly, without a cache, so a server that stopped answering
+    /// fails here instead of being covered by Windows' DNS cache or the hosts file.
+    /// </summary>
+    private async Task RunNslookupAsync(TestRun run, StackPanel panel, string testType, string[] domains, int timeoutSeconds)
     {
-        _totalCount++;
+        run.Cancellation.ThrowIfCancellationRequested();
+        if (domains.Length == 0)
+        {
+            await FailUnrunnableAsync(run, panel, testType, "-", "Daftar domain kosong. Isi di Pengaturan.");
+            return;
+        }
+
+        var lookup = new LookupClient(new LookupClientOptions
+        {
+            UseCache = false,
+            Timeout = TimeSpan.FromSeconds(Math.Max(1, timeoutSeconds)),
+            Retries = 1,
+            ThrowDnsErrors = false,
+        });
+        var servers = lookup.NameServers.Select(s => s.Address.ToString()).Distinct().ToArray();
         var domainResults = new Dictionary<string, string>();
 
         foreach (var domain in domains)
         {
+            run.Cancellation.ThrowIfCancellationRequested();
             try
             {
-                var addresses = await Dns.GetHostAddressesAsync(domain).WaitAsync(TimeSpan.FromSeconds(timeoutSeconds));
-                domainResults[domain] = addresses.Length > 0 ? "Resolved" : "Failed";
+                var answer = await lookup.QueryAsync(domain, QueryType.A, cancellationToken: run.Cancellation);
+                domainResults[domain] = !answer.HasError && answer.Answers.ARecords().Any() ? "Resolved" : "Failed";
             }
-            catch (TimeoutException)
+            catch (DnsResponseException ex) when (ex.Code == DnsResponseCode.ConnectionTimeout)
             {
                 domainResults[domain] = "Timeout";
             }
-            catch
+            catch (OperationCanceledException) when (run.Cancellation.IsCancellationRequested)
             {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "NSLookup of {Domain} failed", domain);
                 domainResults[domain] = "Failed";
             }
         }
 
-        var allResolved = domainResults.Values.All(v => v == "Resolved");
-        var status = allResolved ? TestStatus.Pass : TestStatus.Fail;
-        if (status == TestStatus.Pass) { _passCount++; }
+        var passed = domainResults.Values.All(v => v == "Resolved");
+        await run.RecordAsync(testType, string.Join(", ", domains), new { domains = domainResults, dns_servers = servers }, passed);
 
-        var resultData = new { domains = domainResults };
+        var failed = domainResults.Where(d => d.Value != "Resolved").Select(d => $"{d.Key} ({d.Value})").ToList();
+        var desc = failed.Count > 0 ? $"Gagal di: {string.Join(", ", failed)}" : $"Semua domain ter-resolve lewat {string.Join(", ", servers)}";
+        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildCard(ResultFormatter.TestName(testType), desc, passed, MaterialDesignThemes.Wpf.PackIconKind.Dns)));
+    }
 
-        try
-        {
-            await _api.SaveTestResultAsync(new FoTestResult
-            {
-                SessionId = _sessionId,
-                TestType = testType,
-                Target = string.Join(", ", domains),
-                ResultData = JsonDocument.Parse(JsonSerializer.Serialize(resultData)),
-                Status = status,
-            });
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to save {TestType} result", testType);
-        }
-
-        panel.Dispatcher.Invoke(() =>
-            panel.Children.Add(BuildNslookupCard(testType, domainResults, status)));
+    /// <summary>A test that could not run is a FAIL with its reason, counted like any other.</summary>
+    private static async Task FailUnrunnableAsync(TestRun run, StackPanel panel, string testType, string target, string reason)
+    {
+        await run.RecordAsync(testType, target, new { error = reason }, passed: false);
+        panel.Dispatcher.Invoke(() => panel.Children.Add(BuildCard(ResultFormatter.TestName(testType), reason, false, MaterialDesignThemes.Wpf.PackIconKind.AlertCircle)));
     }
 
     // ── UI Card Builders ────────────────────────────────────────────────────────
 
-    private static Border BuildResultCard(string testType, string target, TestStatus status, object data)
+    internal static System.Windows.Controls.Border BuildCard(string label, string description, bool passed, MaterialDesignThemes.Wpf.PackIconKind passIcon)
     {
-        var isPass = status == TestStatus.Pass;
-        var primaryColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
-        var bgColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
-        var iconKind = isPass ? MaterialDesignThemes.Wpf.PackIconKind.CheckCircle : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
-        var statusText = isPass ? "COMPLETED" : "FAILED";
-        
-        var json = JsonSerializer.Serialize(data);
-        var parsed = JsonDocument.Parse(json);
+        var converter = new BrushConverter();
+        var primary = (SolidColorBrush)converter.ConvertFromString(passed ? "#22C55E" : "#EF4444")!;
+        var background = (SolidColorBrush)converter.ConvertFromString(passed ? "#1A22C55E" : "#1AEF4444")!;
+        var icon = passed ? passIcon : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
 
-        var label = testType switch
-        {
-            TestTypes.PingGateway => "Ping Gateway ISP",
-            TestTypes.PingDns => "Ping DNS Server",
-            TestTypes.PingDomainLokal => "Ping Domain Lokal",
-            _ => testType,
-        };
-        
-        var descText = $"Avg: {parsed.RootElement.GetProperty("avg_ms").GetInt64()}ms | RTO: {parsed.RootElement.GetProperty("rto").GetInt32()}";
-
-        return UIHelper.CreateLogCard(label, descText, primaryColor, bgColor, iconKind, statusText);
-    }
-
-    private static Border BuildNslookupCard(string testType, Dictionary<string, string> domains, TestStatus status)
-    {
-        var isPass = status == TestStatus.Pass;
-        var primaryColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#EF4444")!;
-        var bgColor = isPass ? (SolidColorBrush)new BrushConverter().ConvertFromString("#1A22C55E")! : (SolidColorBrush)new BrushConverter().ConvertFromString("#1AEF4444")!;
-        var iconKind = isPass ? MaterialDesignThemes.Wpf.PackIconKind.Dns : MaterialDesignThemes.Wpf.PackIconKind.AlertCircle;
-        var statusText = isPass ? "COMPLETED" : "FAILED";
-        
-        var label = testType == TestTypes.NslookupNasional ? "NSLookup Nasional" : "NSLookup Internasional";
-        
-        var failedDomains = domains.Where(d => d.Value != "Resolved").Select(d => d.Key).ToList();
-        var descText = failedDomains.Count > 0 ? $"Gagal di: {string.Join(", ", failedDomains)}" : "Semua domain berhasil di-resolve";
-
-        return UIHelper.CreateLogCard(label, descText, primaryColor, bgColor, iconKind, statusText);
+        return UIHelper.CreateLogCard(label, description, primary, background, icon, passed ? "PASS" : "FAIL");
     }
 }

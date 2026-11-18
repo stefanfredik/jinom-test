@@ -25,6 +25,7 @@
                             <TextBox x:Name="NslookupNasionalBox" materialDesign:HintAssist.Hint="Domain NSLookup Nasional (koma)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="44" Padding="12,8" Margin="0,0,0,10"/>
                             <TextBox x:Name="NslookupInternasionalBox" materialDesign:HintAssist.Hint="Domain NSLookup Internasional (koma)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="44" Padding="12,8" Margin="0,0,0,10"/>
 
+                            <TextBox x:Name="GatewayTargetBox" materialDesign:HintAssist.Hint="IP Gateway (kosong = deteksi otomatis)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="44" Padding="12,8" Margin="0,0,0,10"/>
                             <TextBox x:Name="SessionTimeoutBox" materialDesign:HintAssist.Hint="Timeout Sesi (menit)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="44" Padding="12,8"/>
                         </StackPanel>
                     </UniformGrid>

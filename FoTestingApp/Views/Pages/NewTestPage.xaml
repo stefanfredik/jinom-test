@@ -645,6 +645,16 @@
                         </Grid>
                     </Border>
 
+                    <!-- Results the server did not store: said, never hidden behind a PASS. -->
+                    <Border x:Name="UnsavedWarning" Visibility="Collapsed" CornerRadius="12" Padding="16,12" Margin="0,0,0,16"
+                            Background="#1AF59E0B" BorderBrush="{DynamicResource WarnYellowBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AlertCircleOutline" Width="20" Height="20" VerticalAlignment="Top" Margin="0,0,10,0"
+                                                     Foreground="{DynamicResource WarnYellowBrush}"/>
+                            <TextBlock x:Name="UnsavedWarningText" TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource TextDarkBrush}" MaxWidth="820"/>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Results Cards -->
                     <StackPanel x:Name="ResultCardsPanel">
                         <!-- Filled dynamically -->
@@ -670,7 +680,7 @@
                                 Click="RetryFailedBtn_Click" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Coba Ulang Gagal" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Uji Ulang (Sesi Baru)" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 

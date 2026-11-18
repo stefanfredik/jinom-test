@@ -163,6 +163,17 @@ public static class ConfigManager
         _config!.GetSection("AppTest:SocialMedia:Urls").Get<string[]>() ?? ["https://whatsapp.com", "https://facebook.com"];
     public static int GetSocialMediaThresholdSeconds() => int.TryParse(_config!["AppTest:SocialMedia:ThresholdSeconds"], out var v) ? v : 30;
 
+    /// <summary>Pause between echo requests, like ping's interval; 0 sends them back to back.</summary>
+    public static int GetPingIntervalMs() =>
+        int.TryParse(_config!["NetworkTest:PingIntervalMs"], out var v) ? Math.Clamp(v, 0, 5000) : 200;
+
+    /// <summary>The zone jinom-assets reads and writes times without an offset in (its app.timezone).</summary>
+    public static string GetServerTimeZoneId() => _config!["ServerTimeZone"] ?? "Asia/Makassar";
+
     // Speedtest
+    /// <summary>The share of the customer's package a download must reach to pass, 1–100 %.</summary>
+    public static int GetSpeedtestThresholdPercentage() =>
+        int.TryParse(_config!["Speedtest:ThresholdPercentage"], out var v) ? Math.Clamp(v, 1, 100) : 85;
+
     public static string GetOoklaCliUrl() => _config!["Speedtest:OoklaCliUrl"] ?? "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-win64.zip";
 }

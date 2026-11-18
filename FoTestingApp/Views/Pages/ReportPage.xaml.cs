@@ -31,14 +31,27 @@ public partial class ReportPage : Page
 
     private async Task LoadSessionsAsync()
     {
-        var sessions = await _api.GetSessionsAsync();
-        SessionComboBox.ItemsSource = sessions;
-        SessionComboBox.DisplayMemberPath = "CertificationId";
-
-        if (_sessionId.HasValue)
+        try
         {
-            var match = sessions.FirstOrDefault(s => s.Id == _sessionId);
-            if (match is not null) { SessionComboBox.SelectedItem = match; }
+            var sessions = await _api.GetSessionsAsync();
+
+            // The session just tested may be older than the newest the server lists: fetch it directly.
+            if (_sessionId is { } id && sessions.All(s => s.Id != id) && await _api.GetSessionAsync(id) is { } current)
+            {
+                sessions.Insert(0, current);
+            }
+
+            SessionComboBox.ItemsSource = sessions;
+            SessionComboBox.DisplayMemberPath = "CertificationId";
+            if (_sessionId.HasValue)
+            {
+                SessionComboBox.SelectedItem = sessions.FirstOrDefault(s => s.Id == _sessionId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Loading sessions for the report failed");
+            ReportStatus.Text = $"❌ {(ex is ApiException ? ex.Message : $"Daftar sesi gagal dimuat: {ex.Message}")}";
         }
     }
 
@@ -124,6 +137,7 @@ public partial class ReportPage : Page
         }
     }
 
+    /// <summary>The selected session as the server has it now: customer, technician and every result.</summary>
     private async Task<FoTestSession?> GetSelectedSessionWithResultsAsync()
     {
         if (SessionComboBox.SelectedItem is not FoTestSession session)
@@ -133,21 +147,20 @@ public partial class ReportPage : Page
             return null;
         }
 
-        // Load hasil test untuk sesi ini
-        session.Results = await _api.GetResultsBySessionAsync(session.Id);
-
-        // Load customer & technician jika belum ada
-        if (session.Customer is null || session.Technician is null)
+        try
         {
-            var sessions = await _api.GetSessionsAsync();
-            var full = sessions.FirstOrDefault(s => s.Id == session.Id);
-            if (full is not null)
+            var full = await _api.GetSessionAsync(session.Id) ?? session;
+            if (full.Results.Count == 0)
             {
-                session.Customer = full.Customer;
-                session.Technician = full.Technician;
+                full.Results = await _api.GetResultsBySessionAsync(session.Id);
             }
+            return full;
         }
-
-        return session;
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Loading session {SessionId} for the report failed", session.Id);
+            ReportStatus.Text = $"❌ {(ex is ApiException ? ex.Message : $"Sesi gagal dimuat: {ex.Message}")}";
+            return null;
+        }
     }
 }

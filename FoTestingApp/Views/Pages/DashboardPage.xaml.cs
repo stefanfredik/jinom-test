@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using FoTestingApp.Models;
 using FoTestingApp.Services;
+using FoTestingApp.Services.Core;
 using MaterialDesignThemes.Wpf;
 using Serilog;
 
@@ -21,32 +22,49 @@ public partial class DashboardPage : Page
 
     private async Task LoadSessionsAsync()
     {
+        ListNotice.Visibility = Visibility.Collapsed;
         try
         {
             var from = FromDatePicker.SelectedDate;
             var to = ToDatePicker.SelectedDate;
-            var statusItem = StatusFilter.SelectedItem as ComboBoxItem;
-            var statusText = statusItem?.Content?.ToString();
-            string? status = statusText == "Semua" ? null : statusText;
+            if (from is not null && to is not null && from > to)
+            {
+                ShowNotice("Tanggal awal setelah tanggal akhir.");
+                return;
+            }
 
-            Log.Information("Loading sessions with from={From}, to={To}, status={Status}", from, to, status);
+            var statusText = (StatusFilter.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            var status = statusText == "Semua" ? null : statusText;
 
             var sessions = await _api.GetSessionsAsync(from, to, null, status);
-            Log.Information("Got {Count} sessions from API", sessions.Count);
-
             SessionsGrid.ItemsSource = sessions;
 
             TotalSessionCount.Text = sessions.Count.ToString();
             TotalPassCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Pass).ToString();
             TotalFailCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Fail).ToString();
-            
-            Log.Information("Dashboard stats updated");
+            TotalPartialCount.Text = sessions.Count(s => s.OverallStatus == TestOverallStatus.Partial).ToString();
+
+            if (sessions.Count >= ApiService.SessionListLimit)
+            {
+                // The server sends at most this many: the counts cover only the newest of them.
+                ShowNotice($"Menampilkan {ApiService.SessionListLimit} sesi terbaru saja; angka di atas hanya menghitung sesi ini. Persempit rentang tanggal untuk data lengkap.");
+                ListNotice.Foreground = (Brush)FindResource("TextLightBrush");
+            }
         }
         catch (Exception ex)
         {
-            // Log tangkapan atau tampilkan jika perlu
             Log.Error(ex, "Error in LoadSessionsAsync");
+            SessionsGrid.ItemsSource = null;
+            TotalSessionCount.Text = TotalPassCount.Text = TotalFailCount.Text = TotalPartialCount.Text = "-";
+            ShowNotice(ex is ApiException ? ex.Message : $"Riwayat gagal dimuat: {ex.Message}");
         }
+    }
+
+    private void ShowNotice(string text)
+    {
+        ListNotice.Text = text;
+        ListNotice.Foreground = (Brush)FindResource("FailRedBrush");
+        ListNotice.Visibility = Visibility.Visible;
     }
 
     private async void FilterBtn_Click(object sender, RoutedEventArgs e) =>
@@ -58,36 +76,49 @@ public partial class DashboardPage : Page
         await ShowSessionDetail(session);
     }
 
+    /// <summary>The session whose detail was asked for last; an older answer arriving late is dropped.</summary>
+    private int _detailRequest;
+
     private async Task ShowSessionDetail(FoTestSession session)
     {
+        var request = ++_detailRequest;
         DetailTitle.Text = session.Customer?.FullName ?? "Detail";
         DetailSubtitle.Text = $"{session.CertificationId} — {session.TestDate:dd MMM yyyy HH:mm}";
-
         DetailResultsPanel.Children.Clear();
+        DetailColumn.Width = new GridLength(360);
+        DetailPanel.Visibility = Visibility.Visible;
 
-        var results = await _api.GetResultsBySessionAsync(session.Id);
+        string? message = null;
+        List<FoTestResult> results = [];
+        try
+        {
+            results = await _api.GetResultsBySessionAsync(session.Id);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Results of session {SessionId} could not be loaded", session.Id);
+            message = ex is ApiException ? ex.Message : "Hasil pengujian gagal dimuat.";
+        }
 
-        if (results.Count == 0)
+        if (request != _detailRequest) return;
+
+        if (message is not null || results.Count == 0)
         {
             DetailResultsPanel.Children.Add(new TextBlock
             {
-                Text = "Tidak ada data hasil pengujian.",
-                Foreground = (Brush)FindResource("TextLightBrush"),
+                Text = message ?? "Tidak ada data hasil pengujian.",
+                Foreground = (Brush)FindResource(message is null ? "TextLightBrush" : "FailRedBrush"),
                 FontSize = 13,
+                TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 16, 0, 0),
             });
-        }
-        else
-        {
-            foreach (var result in results)
-            {
-                DetailResultsPanel.Children.Add(CreateResultCard(result));
-            }
+            return;
         }
 
-        // Show panel
-        DetailColumn.Width = new GridLength(360);
-        DetailPanel.Visibility = Visibility.Visible;
+        foreach (var result in results)
+        {
+            DetailResultsPanel.Children.Add(CreateResultCard(result));
+        }
     }
 
     private void CloseDetail_Click(object sender, RoutedEventArgs e)
@@ -185,20 +216,7 @@ public partial class DashboardPage : Page
         return card;
     }
 
-    private static string FormatTestTypeName(string testType) => testType switch
-    {
-        TestTypes.PingGateway => "Ping Gateway",
-        TestTypes.PingDns => "Ping DNS",
-        TestTypes.NslookupNasional => "NSLookup Nasional",
-        TestTypes.NslookupInternasional => "NSLookup Internasional",
-        TestTypes.PingDomainLokal => "Ping Domain Lokal",
-        TestTypes.BrowsingTest => "Browsing Test",
-        TestTypes.StreamingTest => "Streaming Test",
-        TestTypes.SocialMediaTest => "Social Media Test",
-        TestTypes.SpeedtestFast => "Speedtest Fast.com",
-        TestTypes.SpeedtestOokla => "Speedtest Ookla",
-        _ => testType,
-    };
+    private static string FormatTestTypeName(string testType) => ResultFormatter.TestName(testType);
 
     private static PackIconKind GetTestIcon(string testType) => testType switch
     {
@@ -211,55 +229,6 @@ public partial class DashboardPage : Page
         _ => PackIconKind.TestTube,
     };
 
-    private static string ExtractDetailText(FoTestResult result)
-    {
-        if (result.ResultData is null) return "-";
-
-        try
-        {
-            var root = result.ResultData.RootElement;
-            if (root.ValueKind == JsonValueKind.String)
-            {
-                var doc = JsonDocument.Parse(root.GetString() ?? "{}");
-                root = doc.RootElement;
-            }
-
-            // Jika status Fail dan terdapat pesan "error", prioritaskan tampilkan errornya
-            if (result.Status == TestStatus.Fail && root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind != JsonValueKind.Null)
-            {
-                var errMsg = errorElement.GetString();
-                if (!string.IsNullOrWhiteSpace(errMsg))
-                {
-                    return $"Gagal: {errMsg}";
-                }
-            }
-
-            return result.TestType switch
-            {
-                TestTypes.PingGateway or TestTypes.PingDns or TestTypes.PingDomainLokal =>
-                    $"Avg: {root.GetProperty("avg_ms").GetInt64()}ms | Max: {root.GetProperty("max_ms").GetInt64()}ms | RTO: {root.GetProperty("rto").GetInt32()}",
-
-                TestTypes.NslookupNasional or TestTypes.NslookupInternasional =>
-                    string.Join(", ", root.GetProperty("domains").EnumerateObject()
-                        .Select(d => $"{d.Name}: {d.Value.GetString()}")),
-
-                TestTypes.BrowsingTest =>
-                    string.Join(" | ", root.GetProperty("results").EnumerateObject()
-                        .Select(r => $"{(r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " "))}: {r.Value.GetDouble():F1}s")),
-
-                TestTypes.StreamingTest or TestTypes.SocialMediaTest =>
-                    string.Join(" | ", root.GetProperty("results").EnumerateObject()
-                        .Select(r => $"{(r.Name.StartsWith("http") ? new Uri(r.Name).Host : r.Name.Replace("_", " "))}: {r.Value.GetString()}")),
-
-                TestTypes.SpeedtestFast or TestTypes.SpeedtestOokla =>
-                    $"↓ {root.GetProperty("download_mbps").GetDouble():F1} Mbps | ↑ {(root.TryGetProperty("upload_mbps", out var uElement) ? uElement.GetDouble() : 0.0):F1} Mbps",
-
-                _ => "-",
-            };
-        }
-        catch
-        {
-            return "-";
-        }
-    }
+    private static string ExtractDetailText(FoTestResult result) =>
+        ResultFormatter.Summary(result.TestType, result.ResultData?.RootElement, result.Status == TestStatus.Pass);
 }

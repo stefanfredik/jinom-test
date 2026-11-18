@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unit tests for the app's pure logic (ping statistics, speed verdicts, package parsing, server
+    time, result formatting). They link the files under Services/Core and the models instead of
+    referencing the WPF project, so they build and run on any OS: dotnet test.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\FoTestingApp\Services\Core\*.cs" Link="Core\%(Filename)%(Extension)" />
+    <Compile Include="..\FoTestingApp\Models\FoTestResult.cs" Link="Models\FoTestResult.cs" />
+    <Compile Include="..\FoTestingApp\Models\FoTestSession.cs" Link="Models\FoTestSession.cs" />
+    <Compile Include="..\FoTestingApp\Models\FoCustomer.cs" Link="Models\FoCustomer.cs" />
+    <Compile Include="..\FoTestingApp\Models\User.cs" Link="Models\User.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+</Project>
