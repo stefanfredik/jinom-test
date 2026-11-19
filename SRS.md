@@ -298,7 +298,7 @@ Laporan digabung ke Riwayat. Pengaturan tidak ada di aplikasi: parameter penguji
 Langkah	Aksi Pengguna	Respons Sistem
 1	Buka aplikasi dan login	Autentikasi, tampilkan Dashboard
 2	Klik 'Pengujian Baru'	Tampilkan form input data pelanggan
-3	Pilih pelanggan atau POP, klik 'Mulai pengujian'	Paket diambil dari data pelanggan di Jinom Assets (tanpa kecepatan tercatat, pengujian tidak bisa dimulai); muat pengaturan terbaru, buat sesi, mulai eksekusi
+3	Pilih pelanggan atau POP, klik 'Mulai pengujian'	Paket diambil dari data pelanggan di Jinom Assets (bila kecepatan tidak terbaca, teknisi mengisi kecepatan paket dalam Mbps dan isian itu dicatat di catatan teknis); muat pengaturan terbaru, buat sesi, mulai eksekusi
 4	Menunggu (progres otomatis)	Eksekusi berurutan: Ping GW -> Ping DNS -> NSLookup -> Ping Domain -> App Test -> Speedtest
 5	Lihat hasil yang tampil real-time	Tampilkan halaman 'Hasil Pengujian' dengan semua data
 6	Klik 'Unduh laporan' (di hasil atau di baris Riwayat)	Ambil sesi dari server, buat PDF, simpan di lokasi pilihan teknisi

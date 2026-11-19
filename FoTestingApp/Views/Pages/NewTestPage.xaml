@@ -167,21 +167,19 @@
                             </Grid>
                         </Border>
 
-                        <!-- The package comes from the customer's data in Jinom Assets; without a speed there the
-                             speedtest has nothing to judge against, so the test cannot start. -->
-                        <Border x:Name="PackageNotice" Visibility="Collapsed" CornerRadius="{StaticResource Shape.Card}" Padding="16" Margin="0,0,0,16"
-                                Background="{DynamicResource ErrorContainerBrush}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Kind="SpeedometerSlow" Width="20" Height="20" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                         Foreground="{DynamicResource OnErrorContainerBrush}"/>
-                                <TextBlock x:Name="PackageNoticeText" Grid.Column="1" Style="{StaticResource Text.BodyMedium}"
-                                           Foreground="{DynamicResource OnErrorContainerBrush}"/>
-                            </Grid>
-                        </Border>
+                        <!-- The package comes from the customer's data in Jinom Assets; when no speed can be read
+                             there, the technician types the one on the customer's package. -->
+                        <StackPanel x:Name="PackageSpeedPanel" Visibility="Collapsed" Margin="0,0,0,16">
+                            <TextBox x:Name="PackageSpeedBox" Style="{StaticResource M3.TextField}" MaxLength="5"
+                                     materialDesign:HintAssist.Hint="Kecepatan paket (Mbps) *"
+                                     materialDesign:TextFieldAssist.LeadingIcon="Speedometer"
+                                     InputScope="Number" PreviewTextInput="PackageSpeedBox_PreviewTextInput"
+                                     DataObject.Pasting="PackageSpeedBox_Pasting"
+                                     TextChanged="PackageSpeedBox_TextChanged" AutomationProperties.Name="Kecepatan paket dalam Mbps"/>
+                            <TextBlock x:Name="PackageSpeedHint" Style="{StaticResource Text.BodySmall}" Margin="16,4,16,0"
+                                       Foreground="{DynamicResource OnSurfaceVariantBrush}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="PackageSpeedWarningText" Style="{StaticResource Text.FieldError}"/>
+                        </StackPanel>
 
                         <!-- Fields -->
                         <Grid x:Name="FieldsGrid">

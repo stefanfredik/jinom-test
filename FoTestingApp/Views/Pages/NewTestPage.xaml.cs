@@ -79,8 +79,8 @@ public partial class NewTestPage : Page
     {
         _enableRealTimeValidation = false;
         ClearErrors();
-        SelectedDetailsCard.Visibility = PackageNotice.Visibility = Visibility.Collapsed;
-        FullNameBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
+        SelectedDetailsCard.Visibility = PackageSpeedPanel.Visibility = Visibility.Collapsed;
+        FullNameBox.Text = AddressBox.Text = NotesBox.Text = PackageSpeedBox.Text = string.Empty;
         PopList.ItemsSource = null;
         PopStatusText.Text = string.Empty;
         CustomerComboBox.SelectedItem = null;
@@ -88,7 +88,7 @@ public partial class NewTestPage : Page
 
         var isPop = _testMode == "pop";
         FormTitle.Text = isPop ? "Uji di POP" : "Uji di pelanggan";
-        FormSubtitle.Text = isPop ? "Pilih POP yang diuji, lalu mulai." : "Cari pelanggan, periksa datanya, lalu mulai. Paket diambil dari data pelanggan.";
+        FormSubtitle.Text = isPop ? "Pilih POP yang diuji, lalu mulai." : "Cari pelanggan, periksa datanya, lalu mulai.";
         PopSelectionPanel.Visibility = isPop ? Visibility.Visible : Visibility.Collapsed;
         CustomerSelectionPanel.Visibility = isPop ? Visibility.Collapsed : Visibility.Visible;
         // A POP is chosen, not typed; it has no package. A customer's name and address are asked
@@ -188,7 +188,7 @@ public partial class NewTestPage : Page
 
         if (CustomerComboBox.SelectedItem is not FoCustomer customer)
         {
-            SelectedDetailsCard.Visibility = PackageNotice.Visibility = Visibility.Collapsed;
+            SelectedDetailsCard.Visibility = PackageSpeedPanel.Visibility = Visibility.Collapsed;
             NameFieldPanel.Visibility = AddressFieldPanel.Visibility = Visibility.Collapsed;
             FullNameBox.Text = AddressBox.Text = NotesBox.Text = string.Empty;
             StartTestBtn.IsEnabled = true;
@@ -214,13 +214,12 @@ public partial class NewTestPage : Page
         NameFieldPanel.Visibility = string.IsNullOrWhiteSpace(FullNameBox.Text) ? Visibility.Visible : Visibility.Collapsed;
         AddressFieldPanel.Visibility = string.IsNullOrWhiteSpace(AddressBox.Text) ? Visibility.Visible : Visibility.Collapsed;
 
+        // No speed in the customer's data: the technician types the one on the customer's package.
         var missingSpeed = customer.PackageMbps <= 0;
-        PackageNoticeText.Text = missingSpeed
-            ? $"Kecepatan paket pelanggan ini belum tercatat di Jinom Assets{(string.IsNullOrWhiteSpace(customer.PackageName) ? "" : $" (paket \"{customer.PackageName}\")")}. " +
-              "Isi Bandwidth Down layanannya di Jinom Assets, lalu pilih pelanggan ini lagi."
-            : string.Empty;
-        PackageNotice.Visibility = missingSpeed ? Visibility.Visible : Visibility.Collapsed;
-        StartTestBtn.IsEnabled = !missingSpeed;
+        PackageSpeedBox.Text = string.Empty;
+        PackageSpeedHint.Text = missingSpeed ? "Kecepatan paket tidak tercatat. Isi sesuai paket pelanggan." : string.Empty;
+        PackageSpeedPanel.Visibility = missingSpeed ? Visibility.Visible : Visibility.Collapsed;
+        StartTestBtn.IsEnabled = true;
     }
 
     /// <summary>"Home 20 · 20 Mbps", or the name alone with a warning sign in words when no speed is known.</summary>
@@ -273,6 +272,7 @@ public partial class NewTestPage : Page
     {
         SetError(FullNameBox, NameWarningText, null);
         SetError(AddressBox, AddressWarningText, null);
+        SetError(PackageSpeedBox, PackageSpeedWarningText, null);
     }
 
     /// <summary>A status line under a picker; in the error colour when something went wrong.</summary>
@@ -285,6 +285,10 @@ public partial class NewTestPage : Page
     private static string? NameError(string text) => string.IsNullOrWhiteSpace(text) ? "Nama pelanggan wajib diisi." : null;
 
     private static string? AddressError(string text) => string.IsNullOrWhiteSpace(text) ? "Alamat pelanggan wajib diisi." : null;
+
+    private static string? PackageSpeedError(string text) => PackageSpeed.ParseManual(text) is null
+        ? string.IsNullOrWhiteSpace(text) ? "Kecepatan paket wajib diisi." : $"Isi angka 1–{PackageSpeed.MaxManualMbps:N0} Mbps."
+        : null;
 
 
     private bool ValidateForm()
@@ -304,23 +308,20 @@ public partial class NewTestPage : Page
             CustomerComboBox.Focus();
             return false;
         }
-        if (customer.PackageMbps <= 0)
-        {
-            PackageNotice.Visibility = Visibility.Visible;
-            return false;
-        }
-
         _enableRealTimeValidation = true;
+        var speedError = customer.PackageMbps > 0 ? null : PackageSpeedError(PackageSpeedBox.Text);
         var nameError = NameError(FullNameBox.Text);
         var addressError = AddressError(AddressBox.Text);
+        SetError(PackageSpeedBox, PackageSpeedWarningText, speedError);
         SetError(FullNameBox, NameWarningText, nameError);
         SetError(AddressBox, AddressWarningText, addressError);
 
         // A field in error that was hidden behind the details card is shown.
         if (nameError is not null) NameFieldPanel.Visibility = Visibility.Visible;
         if (addressError is not null) AddressFieldPanel.Visibility = Visibility.Visible;
+        if (speedError is not null) PackageSpeedBox.Focus();
 
-        return nameError is null && addressError is null;
+        return speedError is null && nameError is null && addressError is null;
     }
 
     private void FullNameBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -332,6 +333,25 @@ public partial class NewTestPage : Page
     private void AddressBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_enableRealTimeValidation) SetError(AddressBox, AddressWarningText, AddressError(AddressBox.Text));
+    }
+
+    private void PackageSpeedBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_enableRealTimeValidation) SetError(PackageSpeedBox, PackageSpeedWarningText, PackageSpeedError(PackageSpeedBox.Text));
+    }
+
+    /// <summary>Digits only: the speed is whole Mbps.</summary>
+    private void PackageSpeedBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+    {
+        e.Handled = !e.Text.All(char.IsAsciiDigit);
+    }
+
+    private void PackageSpeedBox_Pasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (e.DataObject.GetData(typeof(string)) is not string text || !text.Trim().All(char.IsAsciiDigit))
+        {
+            e.CancelCommand();
+        }
     }
 
     // ── Step 3: running ────────────────────────────────────────────────────────
@@ -351,6 +371,8 @@ public partial class NewTestPage : Page
             var isPopMode = _testMode == "pop";
             var selectedPop = isPopMode ? PopList.SelectedItem as PopOption : null;
             var selectedCustomer = !isPopMode ? CustomerComboBox.SelectedItem as FoCustomer : null;
+            // The speed in the customer's data, else the one the technician typed (validated above).
+            var typedMbps = selectedCustomer is { PackageMbps: <= 0 } ? PackageSpeed.ParseManual(PackageSpeedBox.Text) : null;
             var customer = new FoCustomer
             {
                 SiteType = isPopMode ? "pop" : "customer",
@@ -358,11 +380,11 @@ public partial class NewTestPage : Page
                 ServiceNumber = selectedCustomer?.ServiceNumber,
                 FullName = isPopMode ? selectedPop?.DisplayName ?? string.Empty : FullNameBox.Text.Trim(),
                 Address = isPopMode ? selectedPop?.Address ?? "-" : AddressBox.Text.Trim(),
-                // A POP has no package; a customer's is the speed in their data (validated above).
-                PackageMbps = selectedCustomer?.PackageMbps ?? 0,
+                // A POP has no package.
+                PackageMbps = typedMbps ?? selectedCustomer?.PackageMbps ?? 0,
                 PackageName = selectedCustomer?.PackageName,
                 Email = selectedCustomer?.Email,
-                TechnicalNotes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim(),
+                TechnicalNotes = PackageSpeed.WithTypedSpeed(NotesBox.Text, typedMbps),
             };
 
             await RunSessionAsync(customer);

@@ -33,7 +33,7 @@ Peran aplikasi ini di antara sistem Jinom — ia hanya berbicara ke API jinom-as
 
 > - `OpenAccessApiUrl` untuk distribusi **wajib https** ke server produksi: sertifikat TLS diperiksa, alamat LAN `http://` hanya untuk development. File `appsettings.json` di samping `.exe` menimpa nilai bawaan tanpa rebuild.
 > - **Semua parameter pengujian** (target ping/DNS, jumlah ping, batas lulus, URL aplikasi, ambang speedtest, timeout sesi) diatur superadmin di **Jinom Assets → Integrasi → Jinom Test**. Aplikasi membacanya dari `GET /api/v1/reseller-certification/fo-test/settings` setelah login dan sebelum setiap pengujian, bersama zona waktu server (`app.timezone`). Login yang tidak bisa memuat pengaturan tidak membuka aplikasi.
-> - Paket pelanggan diambil dari data pelanggan (Bandwidth Down layanan, atau kecepatan yang tertulis di nama paket, mis. "UP TO 10 MBPS"). Pelanggan tanpa kecepatan tercatat tidak bisa diuji sampai datanya dilengkapi di Jinom Assets.
+> - Paket pelanggan diambil dari data pelanggan (Bandwidth Down layanan, atau kecepatan yang tertulis di nama paket, mis. "UP TO 10 MBPS"). Bila kecepatan tidak terbaca dari data pelanggan, teknisi mengisinya sendiri (Mbps, sesuai paket pelanggan); kecepatan itu dicatat di catatan teknis pengujian.
 
 ---
 

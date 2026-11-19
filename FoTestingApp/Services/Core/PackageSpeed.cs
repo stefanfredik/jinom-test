@@ -73,6 +73,39 @@ public static partial class PackageSpeed
         return fromBandwidth > 0 ? fromBandwidth : ParseNameMbps(packageName);
     }
 
+    /// <summary>The highest speed a technician may type: 10 Gbps.</summary>
+    public const int MaxManualMbps = 10_000;
+
+    /// <summary>
+    /// The speed a technician typed for a customer whose data has none: whole Mbps from 1 to
+    /// <see cref="MaxManualMbps"/>, else null.
+    /// </summary>
+    public static int? ParseManual(string? text)
+    {
+        return int.TryParse(text?.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var mbps) && mbps is >= 1 and <= MaxManualMbps
+            ? mbps
+            : null;
+    }
+
+    /// <summary>
+    /// The technician's notes for the session; a speed they typed goes first, so the record shows the
+    /// package speed did not come from the customer's data. Null when there is nothing to note.
+    /// </summary>
+    public static string? WithTypedSpeed(string? notes, int? typedMbps)
+    {
+        var lines = new List<string>();
+        if (typedMbps is int mbps)
+        {
+            lines.Add($"Kecepatan paket diisi teknisi: {mbps} Mbps.");
+        }
+        if (!string.IsNullOrWhiteSpace(notes))
+        {
+            lines.Add(notes.Trim());
+        }
+
+        return lines.Count == 0 ? null : string.Join(Environment.NewLine, lines);
+    }
+
     /// <summary>
     /// "1.000" (thousands) is 1000, "1,5" or "1.5" (one decimal part of one or two digits) is 1.5.
     /// </summary>

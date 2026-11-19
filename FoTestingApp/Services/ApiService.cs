@@ -244,7 +244,7 @@ public class ApiService
                 ServiceNumber = sub.NomorLayanan,
                 FullName = sub.Nama ?? string.Empty,
                 Address = sub.Alamat ?? string.Empty,
-                // From the customer's data only: the technician does not type a package.
+                // From the customer's data; 0 when none says, and the technician types it on the form.
                 PackageMbps = PackageSpeed.ForService(sub.BandwidthDown, sub.Paket),
                 PackageName = sub.Paket,
                 Email = sub.Email,

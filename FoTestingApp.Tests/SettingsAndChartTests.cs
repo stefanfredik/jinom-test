@@ -76,7 +76,7 @@ public class TestSettingsTests
     }
 }
 
-/// <summary>The package speed comes from the customer's data, never typed.</summary>
+/// <summary>The package speed comes from the customer's data, else the technician types it.</summary>
 public class PackageFromDataTests
 {
     [Theory]
@@ -90,6 +90,29 @@ public class PackageFromDataTests
     [InlineData(null, null, 0)]
     public void Reads_the_speed_from_the_bandwidth_else_a_speed_written_in_the_name(string? bandwidthDown, string? package, int mbps) =>
         Assert.Equal(mbps, PackageSpeed.ForService(bandwidthDown, package));
+
+    [Theory]
+    [InlineData("50", 50)]
+    [InlineData(" 100 ", 100)]
+    [InlineData("10000", 10000)]
+    [InlineData("10001", null)] // above 10 Gbps
+    [InlineData("0", null)]
+    [InlineData("", null)]
+    [InlineData("  ", null)]
+    [InlineData("20.5", null)] // whole Mbps only
+    [InlineData("-5", null)]
+    [InlineData("20 Mbps", null)]
+    public void Accepts_a_typed_speed_of_whole_Mbps_up_to_10_Gbps(string text, int? mbps) =>
+        Assert.Equal(mbps, PackageSpeed.ParseManual(text));
+
+    [Fact]
+    public void Notes_a_typed_speed_ahead_of_the_technicians_notes()
+    {
+        Assert.Equal($"Kecepatan paket diisi teknisi: 30 Mbps.{Environment.NewLine}ONT baru", PackageSpeed.WithTypedSpeed(" ONT baru ", 30));
+        Assert.Equal("Kecepatan paket diisi teknisi: 30 Mbps.", PackageSpeed.WithTypedSpeed("", 30));
+        Assert.Equal("ONT baru", PackageSpeed.WithTypedSpeed("ONT baru", null));
+        Assert.Null(PackageSpeed.WithTypedSpeed("  ", null));
+    }
 }
 
 /// <summary>What the charts show, from stored results.</summary>
